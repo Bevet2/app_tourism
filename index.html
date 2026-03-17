@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Cap Horizon | App Tourisme</title>
+    <meta
+      name="description"
+      content="Accueil d'une application de tourisme avec planning et espace collaborateurs."
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=Manrope:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="background-orb orb-one"></div>
+    <div class="background-orb orb-two"></div>
+
+    <div class="app-shell">
+      <header class="topbar">
+        <div class="brand-block">
+          <span class="brand-kicker">App Tourisme</span>
+          <h1>Cap Horizon</h1>
+        </div>
+
+        <nav class="tab-nav" aria-label="Navigation principale">
+          <button class="tab-link active" data-panel="home" aria-selected="true">
+            Accueil
+          </button>
+          <button class="tab-link" data-panel="calendar" aria-selected="false">
+            Mon calendrier
+          </button>
+          <button class="tab-link" data-panel="team" aria-selected="false">
+            Mes collaborateurs
+          </button>
+        </nav>
+      </header>
+
+      <main>
+        <section class="hero-card">
+          <div class="hero-copy">
+            <p class="eyebrow">Votre base de voyage partagée</p>
+            <h2>Planifiez vos aventures, coordonnez votre agenda et gardez l'équipe alignée.</h2>
+            <p class="hero-text">
+              Une webapp d'accueil pensée pour le tourisme, avec une vue claire sur vos
+              départs, vos rendez-vous et les personnes qui construisent l'expérience avec vous.
+            </p>
+
+            <div class="hero-actions">
+              <button class="primary-action" data-target="calendar">Voir mon calendrier</button>
+              <button class="secondary-action" data-target="team">Voir les collaborateurs</button>
+            </div>
+          </div>
+
+          <div class="hero-preview">
+            <div class="preview-card">
+              <span class="preview-label">Prochain départ</span>
+              <strong>Lyon → Annecy</strong>
+              <p>Vendredi 22 mars · 08:30</p>
+            </div>
+            <div class="preview-card accent-card">
+              <span class="preview-label">Collaboration</span>
+              <strong>5 guides actifs</strong>
+              <p>Documents, planning et échanges réunis.</p>
+            </div>
+          </div>
+        </section>
+
+        <section class="overview-grid">
+          <article class="stat-card">
+            <span>Circuits actifs</span>
+            <strong>12</strong>
+            <p>Des itinéraires prêts à être lancés cette semaine.</p>
+          </article>
+          <article class="stat-card">
+            <span>Rendez-vous du jour</span>
+            <strong>4</strong>
+            <p>Briefing équipe, transferts et accueil voyageurs.</p>
+          </article>
+          <article class="stat-card">
+            <span>Collaborateurs connectés</span>
+            <strong>9</strong>
+            <p>Guides, partenaires locaux et coordinateurs.</p>
+          </article>
+        </section>
+
+        <section class="panel-stack">
+          <article class="content-panel active" id="panel-home" data-panel="home">
+            <div class="panel-header">
+              <div>
+                <p class="panel-kicker">Accueil</p>
+                <h3>Vue d'ensemble de votre activité tourisme</h3>
+              </div>
+              <span class="panel-chip">Mise à jour en direct</span>
+            </div>
+
+            <div class="panel-grid">
+              <div class="info-card scenic-card">
+                <p class="card-kicker">Destination phare</p>
+                <h4>Côte d'Azur printanière</h4>
+                <p>
+                  Un circuit premium qui mêle balades côtières, ateliers cuisine locale
+                  et nuits en hôtels partenaires.
+                </p>
+              </div>
+
+              <div class="info-card">
+                <p class="card-kicker">Priorités du jour</p>
+                <ul class="task-list">
+                  <li>Confirmer les transports pour le groupe Riviera.</li>
+                  <li>Partager le programme final avec l'équipe d'accueil.</li>
+                  <li>Valider les disponibilités du guide bilingue.</li>
+                </ul>
+              </div>
+
+              <div class="info-card">
+                <p class="card-kicker">Expérience voyageurs</p>
+                <div class="rating-row">
+                  <strong>4,8 / 5</strong>
+                  <span>Basé sur les retours des 30 derniers jours</span>
+                </div>
+              </div>
+            </div>
+          </article>
+
+          <article class="content-panel" id="panel-calendar" data-panel="calendar">
+            <div class="panel-header">
+              <div>
+                <p class="panel-kicker">Mon calendrier</p>
+                <h3>Planning de la semaine</h3>
+              </div>
+              <span class="panel-chip warm-chip">Semaine du 18 mars</span>
+            </div>
+
+            <div class="calendar-layout">
+              <div class="calendar-card highlighted-day">
+                <span class="day-badge">Lundi</span>
+                <strong>Réunion lancement Nice Explorer</strong>
+                <p>09:00 · Vérification du parcours et brief sécurité.</p>
+              </div>
+
+              <div class="calendar-card">
+                <span class="day-badge">Mardi</span>
+                <strong>Visite terrain à Menton</strong>
+                <p>11:30 · Rencontre partenaire hébergement.</p>
+              </div>
+
+              <div class="calendar-card">
+                <span class="day-badge">Mercredi</span>
+                <strong>Session planning équipe</strong>
+                <p>14:00 · Coordination des guides et navettes.</p>
+              </div>
+
+              <div class="calendar-card">
+                <span class="day-badge">Jeudi</span>
+                <strong>Accueil du groupe Panorama</strong>
+                <p>08:00 · Check-in, badges et kit de bienvenue.</p>
+              </div>
+
+              <div class="calendar-card">
+                <span class="day-badge">Vendredi</span>
+                <strong>Départ circuit lac & montagne</strong>
+                <p>08:30 · Départ gare de Lyon avec suivi live.</p>
+              </div>
+            </div>
+          </article>
+
+          <article class="content-panel" id="panel-team" data-panel="team">
+            <div class="panel-header">
+              <div>
+                <p class="panel-kicker">Mes collaborateurs</p>
+                <h3>L'équipe qui anime vos voyages</h3>
+              </div>
+              <span class="panel-chip green-chip">9 personnes disponibles</span>
+            </div>
+
+            <div class="collaborators-grid">
+              <article class="team-card">
+                <div class="avatar">SL</div>
+                <div>
+                  <h4>Sofia Laurent</h4>
+                  <p>Coordinatrice circuits</p>
+                </div>
+                <span class="status online">En ligne</span>
+              </article>
+
+              <article class="team-card">
+                <div class="avatar">MB</div>
+                <div>
+                  <h4>Marc Bernard</h4>
+                  <p>Guide local montagne</p>
+                </div>
+                <span class="status away">Sur le terrain</span>
+              </article>
+
+              <article class="team-card">
+                <div class="avatar">IK</div>
+                <div>
+                  <h4>Ines Karim</h4>
+                  <p>Partenariats hébergement</p>
+                </div>
+                <span class="status online">Disponible</span>
+              </article>
+
+              <article class="team-card">
+                <div class="avatar">TD</div>
+                <div>
+                  <h4>Thomas Dubois</h4>
+                  <p>Expérience voyageurs</p>
+                </div>
+                <span class="status busy">En rendez-vous</span>
+              </article>
+            </div>
+          </article>
+        </section>
+      </main>
+    </div>
+
+    <script src="script.js"></script>
+  </body>
+</html>
