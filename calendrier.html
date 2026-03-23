@@ -3,10 +3,10 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Route Pilote | Tableau de bord chauffeur</title>
+    <title>Route Pilote | Mon Calendrier</title>
     <meta
       name="description"
-      content="Accueil simple pour organiser l'activit&eacute; d'un chauffeur qui transporte des clients sur les r&eacute;gions touristiques de France."
+      content="Page calendrier pour le planning chauffeur et les courses planifi&eacute;es."
     />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -23,8 +23,8 @@
           <span class="brand-kicker">Route Pilote</span>
           <h1><a class="brand-home" href="index.html">Tableau de bord chauffeur</a></h1>
           <p class="brand-text">
-            Une page d'accueil simple et directe pour suivre les clients, les trajets,
-            les v&eacute;hicules et l'activit&eacute; du jour.
+            Page d&eacute;di&eacute;e au calendrier chauffeur, avec une vue plus claire sur les
+            courses et les horaires.
           </p>
         </div>
 
@@ -45,13 +45,13 @@
               </span>
               <span class="nav-trigger-copy">
                 <span class="nav-trigger-label">Navigation</span>
-                <strong id="nav-current-label">Ouvrir une page</strong>
+                <strong id="nav-current-label">Mon Calendrier</strong>
               </span>
               <span class="nav-trigger-caret" aria-hidden="true">&#9662;</span>
             </button>
 
             <div class="nav-panel" id="nav-menu-panel" hidden>
-              <a class="nav-option" href="calendrier.html">
+              <a class="nav-option active" href="calendrier.html" aria-current="page">
                 <span class="nav-option-index">01</span>
                 <strong>Mon Calendrier</strong>
                 <span class="nav-option-text">Vue compl&egrave;te du planning et des courses.</span>
@@ -94,100 +94,55 @@
       <main>
         <section class="hero-panel">
           <div class="hero-copy">
-            <p class="eyebrow">R&eacute;sum&eacute; de la journ&eacute;e</p>
-            <h2>Retrouvez l'essentiel en un coup d'oeil avant chaque d&eacute;part.</h2>
+            <p class="eyebrow">Page d&eacute;di&eacute;e</p>
+            <h2>Le planning complet des courses chauffeur.</h2>
             <p class="hero-text">
-              Cette base regroupe les six espaces cl&eacute;s de votre activit&eacute; de chauffeur.
-              Le bloc calendrier reste visible sur l'accueil, et le menu ouvre les pages
-              d&eacute;di&eacute;es que nous allons d&eacute;tailler ensuite.
+              Cette page servira &agrave; afficher les vues jour, semaine et mission, avec les
+              clients, les v&eacute;hicules et les horaires de prise en charge.
             </p>
 
             <div class="hero-actions">
-              <a class="primary-action" href="#home-calendar">Voir le calendrier</a>
-              <a class="secondary-action" href="trajets.html">Ouvrir la page trajets</a>
+              <a class="primary-action" href="index.html">Retour &agrave; l'accueil</a>
+              <a class="secondary-action" href="index.html#home-calendar">Voir le bloc calendrier</a>
             </div>
           </div>
 
           <div class="hero-aside">
             <article class="route-card">
-              <span class="small-label">Prochain service</span>
-              <strong>Paris &rarr; Giverny</strong>
-              <p>08:15 &middot; 6 clients &middot; VTC 01</p>
+              <span class="small-label">Vue pr&eacute;vue</span>
+              <strong>Semaine chauffeur</strong>
+              <p>Jour, semaine, affectation client et v&eacute;hicule.</p>
             </article>
 
             <div class="summary-strip">
               <article class="summary-item">
-                <span>Trajets du jour</span>
-                <strong>3</strong>
+                <span>Prochains d&eacute;parts</span>
+                <strong>12</strong>
               </article>
               <article class="summary-item">
-                <span>V&eacute;hicules pr&ecirc;ts</span>
-                <strong>4</strong>
+                <span>Retards &agrave; suivre</span>
+                <strong>1</strong>
               </article>
               <article class="summary-item">
-                <span>Factures &agrave; suivre</span>
+                <span>Clients pr&eacute;vus</span>
+                <strong>53</strong>
+              </article>
+              <article class="summary-item">
+                <span>V&eacute;hicules li&eacute;s</span>
                 <strong>5</strong>
-              </article>
-              <article class="summary-item">
-                <span>Collaborateurs</span>
-                <strong>2</strong>
               </article>
             </div>
           </div>
         </section>
 
-        <section class="module-grid" aria-label="Acc&egrave;s rapides">
-          <a class="module-card" href="calendrier.html">
-            <span class="module-index">01</span>
-            <strong>Mon Calendrier</strong>
-            <p>Acc&eacute;der &agrave; la page compl&egrave;te du planning chauffeur.</p>
-            <span class="module-pill">Planning</span>
-          </a>
-
-          <a class="module-card" href="collaborateurs.html">
-            <span class="module-index">02</span>
-            <strong>Mes Collaborateurs</strong>
-            <p>Voir la page d&eacute;di&eacute;e &agrave; l'&eacute;quipe terrain et aux contacts.</p>
-            <span class="module-pill">Equipe</span>
-          </a>
-
-          <a class="module-card" href="vehicules.html">
-            <span class="module-index">03</span>
-            <strong>Mes V&eacute;hicules</strong>
-            <p>Retrouver la future page de gestion de la flotte et des entretiens.</p>
-            <span class="module-pill">Flotte</span>
-          </a>
-
-          <a class="module-card" href="finances.html">
-            <span class="module-index">04</span>
-            <strong>Finances</strong>
-            <p>Acc&eacute;der &agrave; la page de suivi des recettes, frais et paiements.</p>
-            <span class="module-pill">Budget</span>
-          </a>
-
-          <a class="module-card" href="trajets.html">
-            <span class="module-index">05</span>
-            <strong>Trajets</strong>
-            <p>Ouvrir la page qui servira aux transferts et circuits du jour.</p>
-            <span class="module-pill">Parcours</span>
-          </a>
-
-          <a class="module-card" href="factures.html">
-            <span class="module-index">06</span>
-            <strong>Factures</strong>
-            <p>Consulter la future page des documents clients et des relances.</p>
-            <span class="module-pill">Documents</span>
-          </a>
-        </section>
-
-        <section class="workspace" id="home-calendar">
+        <section class="workspace">
           <article class="content-panel active" aria-label="Mon Calendrier">
             <div class="panel-header">
               <div>
                 <p class="panel-kicker">Mon Calendrier</p>
                 <h3>Les 7 prochains jours de courses planifi&eacute;es</h3>
               </div>
-              <span class="panel-status">Toujours visible</span>
+              <span class="panel-status">Page d&eacute;di&eacute;e</span>
             </div>
 
             <div class="calendar-overview">

@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Route Pilote | Mes Collaborateurs</title>
+    <meta
+      name="description"
+      content="Page collaborateurs pour suivre l'&eacute;quipe terrain et les contacts utiles."
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=Manrope:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="page-shell">
+      <header class="topbar">
+        <div class="brand-block">
+          <span class="brand-kicker">Route Pilote</span>
+          <h1><a class="brand-home" href="index.html">Tableau de bord chauffeur</a></h1>
+          <p class="brand-text">
+            Page d&eacute;di&eacute;e &agrave; l'&eacute;quipe terrain, aux contacts utiles et aux
+            disponibilit&eacute;s.
+          </p>
+        </div>
+
+        <div class="quick-nav-shell">
+          <div class="nav-menu" id="nav-menu">
+            <button
+              class="nav-trigger"
+              id="nav-trigger"
+              type="button"
+              aria-haspopup="true"
+              aria-expanded="false"
+              aria-controls="nav-menu-panel"
+            >
+              <span class="nav-trigger-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" focusable="false">
+                  <path d="M4 7h16M4 12h16M4 17h16" />
+                </svg>
+              </span>
+              <span class="nav-trigger-copy">
+                <span class="nav-trigger-label">Navigation</span>
+                <strong id="nav-current-label">Mes Collaborateurs</strong>
+              </span>
+              <span class="nav-trigger-caret" aria-hidden="true">&#9662;</span>
+            </button>
+
+            <div class="nav-panel" id="nav-menu-panel" hidden>
+              <a class="nav-option" href="calendrier.html">
+                <span class="nav-option-index">01</span>
+                <strong>Mon Calendrier</strong>
+                <span class="nav-option-text">Vue compl&egrave;te du planning et des courses.</span>
+              </a>
+
+              <a class="nav-option active" href="collaborateurs.html" aria-current="page">
+                <span class="nav-option-index">02</span>
+                <strong>Mes Collaborateurs</strong>
+                <span class="nav-option-text">Contacts utiles et disponibilit&eacute;s de l'&eacute;quipe.</span>
+              </a>
+
+              <a class="nav-option" href="vehicules.html">
+                <span class="nav-option-index">03</span>
+                <strong>Mes V&eacute;hicules</strong>
+                <span class="nav-option-text">Etat, capacit&eacute; et suivi de la flotte.</span>
+              </a>
+
+              <a class="nav-option" href="finances.html">
+                <span class="nav-option-index">04</span>
+                <strong>Finances</strong>
+                <span class="nav-option-text">Recettes, d&eacute;penses et suivi financier.</span>
+              </a>
+
+              <a class="nav-option" href="trajets.html">
+                <span class="nav-option-index">05</span>
+                <strong>Trajets</strong>
+                <span class="nav-option-text">Parcours, horaires et points de prise en charge.</span>
+              </a>
+
+              <a class="nav-option" href="factures.html">
+                <span class="nav-option-index">06</span>
+                <strong>Factures</strong>
+                <span class="nav-option-text">Documents clients et paiements &agrave; suivre.</span>
+              </a>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <main>
+        <section class="hero-panel">
+          <div class="hero-copy">
+            <p class="eyebrow">Page d&eacute;di&eacute;e</p>
+            <h2>Organiser l'&eacute;quipe terrain et les contacts utiles.</h2>
+            <p class="hero-text">
+              Cette page servira &agrave; regrouper les profils, les r&ocirc;les, les t&eacute;l&eacute;phones
+              et les disponibilit&eacute;s des collaborateurs qui interviennent sur les trajets.
+            </p>
+
+            <div class="hero-actions">
+              <a class="primary-action" href="index.html">Retour &agrave; l'accueil</a>
+              <a class="secondary-action" href="calendrier.html">Voir le calendrier complet</a>
+            </div>
+          </div>
+
+          <div class="hero-aside">
+            <article class="route-card">
+              <span class="small-label">Equipe</span>
+              <strong>Chauffeurs, guides et relais</strong>
+              <p>Une base claire pour coordonner tout le terrain.</p>
+            </article>
+
+            <div class="summary-strip">
+              <article class="summary-item">
+                <span>Contacts actifs</span>
+                <strong>9</strong>
+              </article>
+              <article class="summary-item">
+                <span>Disponibles</span>
+                <strong>5</strong>
+              </article>
+              <article class="summary-item">
+                <span>En mission</span>
+                <strong>3</strong>
+              </article>
+              <article class="summary-item">
+                <span>Urgences</span>
+                <strong>1</strong>
+              </article>
+            </div>
+          </div>
+        </section>
+
+        <section class="workspace">
+          <article class="content-panel active" aria-label="Mes Collaborateurs">
+            <div class="panel-header">
+              <div>
+                <p class="panel-kicker">Mes Collaborateurs</p>
+                <h3>Une base claire pour l'&eacute;quipe terrain</h3>
+              </div>
+              <span class="panel-status">En pr&eacute;paration</span>
+            </div>
+
+            <div class="placeholder-grid">
+              <article class="detail-card emphasis-card">
+                <p class="detail-kicker">Equipe</p>
+                <h4>Chauffeurs, guides et contacts utiles</h4>
+                <p>
+                  On pourra y regrouper les profils, t&eacute;l&eacute;phones, disponibilit&eacute;s
+                  et r&ocirc;les de chaque collaborateur.
+                </p>
+              </article>
+
+              <article class="detail-card">
+                <p class="detail-kicker">A ajouter ensuite</p>
+                <ul class="feature-list">
+                  <li>Fiche contact rapide</li>
+                  <li>Statut disponible ou en mission</li>
+                  <li>Affectation par trajet</li>
+                </ul>
+              </article>
+
+              <article class="detail-card">
+                <p class="detail-kicker">Exemple de vue</p>
+                <p class="mini-note">
+                  Sofia Martin<br />
+                  Guide FR / EN<br />
+                  Disponible aujourd'hui
+                </p>
+              </article>
+            </div>
+          </article>
+        </section>
+      </main>
+    </div>
+
+    <script src="script.js"></script>
+  </body>
+</html>

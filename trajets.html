@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Route Pilote | Trajets</title>
+    <meta
+      name="description"
+      content="Page trajets pour organiser les transferts, les circuits et les prises en charge."
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=Manrope:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="page-shell">
+      <header class="topbar">
+        <div class="brand-block">
+          <span class="brand-kicker">Route Pilote</span>
+          <h1><a class="brand-home" href="index.html">Tableau de bord chauffeur</a></h1>
+          <p class="brand-text">
+            Page d&eacute;di&eacute;e aux trajets, aux circuits touristiques et aux points de prise
+            en charge.
+          </p>
+        </div>
+
+        <div class="quick-nav-shell">
+          <div class="nav-menu" id="nav-menu">
+            <button
+              class="nav-trigger"
+              id="nav-trigger"
+              type="button"
+              aria-haspopup="true"
+              aria-expanded="false"
+              aria-controls="nav-menu-panel"
+            >
+              <span class="nav-trigger-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" focusable="false">
+                  <path d="M4 7h16M4 12h16M4 17h16" />
+                </svg>
+              </span>
+              <span class="nav-trigger-copy">
+                <span class="nav-trigger-label">Navigation</span>
+                <strong id="nav-current-label">Trajets</strong>
+              </span>
+              <span class="nav-trigger-caret" aria-hidden="true">&#9662;</span>
+            </button>
+
+            <div class="nav-panel" id="nav-menu-panel" hidden>
+              <a class="nav-option" href="calendrier.html">
+                <span class="nav-option-index">01</span>
+                <strong>Mon Calendrier</strong>
+                <span class="nav-option-text">Vue compl&egrave;te du planning et des courses.</span>
+              </a>
+
+              <a class="nav-option" href="collaborateurs.html">
+                <span class="nav-option-index">02</span>
+                <strong>Mes Collaborateurs</strong>
+                <span class="nav-option-text">Contacts utiles et disponibilit&eacute;s de l'&eacute;quipe.</span>
+              </a>
+
+              <a class="nav-option" href="vehicules.html">
+                <span class="nav-option-index">03</span>
+                <strong>Mes V&eacute;hicules</strong>
+                <span class="nav-option-text">Etat, capacit&eacute; et suivi de la flotte.</span>
+              </a>
+
+              <a class="nav-option" href="finances.html">
+                <span class="nav-option-index">04</span>
+                <strong>Finances</strong>
+                <span class="nav-option-text">Recettes, d&eacute;penses et suivi financier.</span>
+              </a>
+
+              <a class="nav-option active" href="trajets.html" aria-current="page">
+                <span class="nav-option-index">05</span>
+                <strong>Trajets</strong>
+                <span class="nav-option-text">Parcours, horaires et points de prise en charge.</span>
+              </a>
+
+              <a class="nav-option" href="factures.html">
+                <span class="nav-option-index">06</span>
+                <strong>Factures</strong>
+                <span class="nav-option-text">Documents clients et paiements &agrave; suivre.</span>
+              </a>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <main>
+        <section class="hero-panel">
+          <div class="hero-copy">
+            <p class="eyebrow">Page d&eacute;di&eacute;e</p>
+            <h2>Pr&eacute;parer les transferts et les circuits du jour.</h2>
+            <p class="hero-text">
+              Cette page servira &agrave; organiser les parcours, les adresses de prise en charge,
+              les passagers, les bagages et les horaires d'arriv&eacute;e attendus.
+            </p>
+
+            <div class="hero-actions">
+              <a class="primary-action" href="index.html">Retour &agrave; l'accueil</a>
+              <a class="secondary-action" href="calendrier.html">Voir la page calendrier</a>
+            </div>
+          </div>
+
+          <div class="hero-aside">
+            <article class="route-card">
+              <span class="small-label">Parcours</span>
+              <strong>Transferts et circuits</strong>
+              <p>Une vue claire pour chaque mission du jour.</p>
+            </article>
+
+            <div class="summary-strip">
+              <article class="summary-item">
+                <span>Trajets actifs</span>
+                <strong>7</strong>
+              </article>
+              <article class="summary-item">
+                <span>D&eacute;parts matin</span>
+                <strong>3</strong>
+              </article>
+              <article class="summary-item">
+                <span>Retours soir</span>
+                <strong>2</strong>
+              </article>
+              <article class="summary-item">
+                <span>Points pickup</span>
+                <strong>9</strong>
+              </article>
+            </div>
+          </div>
+        </section>
+
+        <section class="workspace">
+          <article class="content-panel active" aria-label="Trajets">
+            <div class="panel-header">
+              <div>
+                <p class="panel-kicker">Trajets</p>
+                <h3>Une vue pr&ecirc;te pour les transferts et circuits</h3>
+              </div>
+              <span class="panel-status">En pr&eacute;paration</span>
+            </div>
+
+            <div class="placeholder-grid">
+              <article class="detail-card emphasis-card">
+                <p class="detail-kicker">Parcours</p>
+                <h4>Organiser les d&eacute;parts et les itin&eacute;raires</h4>
+                <p>
+                  Cette page pourra ensuite afficher les points de prise en charge, les
+                  &eacute;tapes, les horaires et les informations clients.
+                </p>
+              </article>
+
+              <article class="detail-card">
+                <p class="detail-kicker">A ajouter ensuite</p>
+                <ul class="feature-list">
+                  <li>Adresse de d&eacute;part et destination</li>
+                  <li>Nombre de passagers et bagages</li>
+                  <li>Notes sp&eacute;ciales pour chaque trajet</li>
+                </ul>
+              </article>
+
+              <article class="detail-card">
+                <p class="detail-kicker">Exemple de vue</p>
+                <p class="mini-note">
+                  Nice &rarr; Monaco<br />
+                  4 clients<br />
+                  Arriv&eacute;e demand&eacute;e 09:45
+                </p>
+              </article>
+            </div>
+          </article>
+        </section>
+      </main>
+    </div>
+
+    <script src="script.js"></script>
+  </body>
+</html>
