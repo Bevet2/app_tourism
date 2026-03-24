@@ -14,7 +14,7 @@
       href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=Manrope:wght@400;500;600;700&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="styles.css" />
+    <link rel="stylesheet" href="styles.css?v=20260324-vehicules-21" />
   </head>
   <body>
     <div class="page-shell">
@@ -94,90 +94,210 @@
       <main>
         <section class="hero-panel">
           <div class="hero-copy">
-            <p class="eyebrow">Page d&eacute;di&eacute;e</p>
-            <h2>G&eacute;rer la flotte et l'&eacute;tat des v&eacute;hicules.</h2>
+            <p class="eyebrow">Page v&eacute;hicules</p>
+            <h2>Ajouter et retrouver rapidement les v&eacute;hicules utilis&eacute;s.</h2>
             <p class="hero-text">
-              Cette page servira &agrave; suivre les places disponibles, les entretiens, les
-              contr&ocirc;les, le kilom&eacute;trage et la pr&eacute;paration des v&eacute;hicules.
+              Cette page sert &agrave; enregistrer les v&eacute;hicules avec les informations
+              essentielles: marque, mod&egrave;le, couleur, plaque d'immatriculation et consommation.
             </p>
 
             <div class="hero-actions">
               <a class="primary-action" href="index.html">Retour &agrave; l'accueil</a>
-              <a class="secondary-action" href="trajets.html">Voir la page trajets</a>
+              <button class="secondary-action" id="open-vehicle-form" type="button">
+                Ajouter un v&eacute;hicule
+              </button>
             </div>
           </div>
 
           <div class="hero-aside">
             <article class="route-card">
               <span class="small-label">Flotte</span>
-              <strong>Disponibilit&eacute; et entretien</strong>
-              <p>Un point d'entr&eacute;e pour tous les v&eacute;hicules mobilis&eacute;s.</p>
+              <strong>Liste simple des v&eacute;hicules</strong>
+              <p>Une base rapide pour retrouver les v&eacute;hicules d&eacute;j&agrave; ajout&eacute;s.</p>
             </article>
 
             <div class="summary-strip">
               <article class="summary-item">
-                <span>V&eacute;hicules pr&ecirc;ts</span>
-                <strong>4</strong>
+                <span>V&eacute;hicules ajout&eacute;s</span>
+                <strong id="vehicle-count-summary">0</strong>
               </article>
               <article class="summary-item">
-                <span>En entretien</span>
-                <strong>1</strong>
+                <span>Plaques enregistr&eacute;es</span>
+                <strong id="vehicle-plate-summary">0</strong>
               </article>
               <article class="summary-item">
-                <span>Capacit&eacute; totale</span>
-                <strong>31</strong>
+                <span>Formulaire</span>
+                <strong>Simple</strong>
               </article>
               <article class="summary-item">
-                <span>Controle proche</span>
-                <strong>2</strong>
+                <span>Stockage</span>
+                <strong>Local</strong>
               </article>
             </div>
           </div>
         </section>
 
         <section class="workspace">
-          <article class="content-panel active" aria-label="Mes V&eacute;hicules">
+          <article class="content-panel active vehicle-panel" aria-label="Mes V&eacute;hicules">
             <div class="panel-header">
               <div>
                 <p class="panel-kicker">Mes V&eacute;hicules</p>
-                <h3>Une base simple pour g&eacute;rer la flotte</h3>
+                <h3>Les v&eacute;hicules d&eacute;j&agrave; ajout&eacute;s</h3>
               </div>
-              <span class="panel-status">En pr&eacute;paration</span>
+              <span class="panel-status">Gestion simple</span>
             </div>
 
-            <div class="placeholder-grid">
-              <article class="detail-card emphasis-card">
-                <p class="detail-kicker">Flotte</p>
-                <h4>Etat, disponibilit&eacute; et capacit&eacute;</h4>
-                <p>
-                  Cette section pourra ensuite centraliser les places disponibles, les
-                  contr&ocirc;les et les prochains entretiens.
-                </p>
-              </article>
-
-              <article class="detail-card">
-                <p class="detail-kicker">A ajouter ensuite</p>
-                <ul class="feature-list">
-                  <li>Kilom&eacute;trage et entretien</li>
-                  <li>Carburant et niveau de pr&eacute;paration</li>
-                  <li>Capacit&eacute; par nombre de clients</li>
-                </ul>
-              </article>
-
-              <article class="detail-card">
-                <p class="detail-kicker">Exemple de vue</p>
-                <p class="mini-note">
-                  Mercedes Vito<br />
-                  8 places<br />
-                  R&eacute;vision dans 12 jours
-                </p>
-              </article>
+            <div class="vehicle-toolbar">
+              <p class="vehicle-toolbar-text">
+                Ajoutez un v&eacute;hicule pour retrouver rapidement sa marque, son mod&egrave;le,
+                sa couleur, sa plaque, sa consommation, son type et son &eacute;tat.
+              </p>
+              <button class="panel-action" id="add-vehicle-button" type="button">
+                <span class="panel-action-icon" aria-hidden="true">+</span>
+                Ajouter un v&eacute;hicule
+              </button>
             </div>
+
+            <div class="vehicle-filter-bar" aria-label="Filtres des v&eacute;hicules">
+              <div class="vehicle-filter-copy">
+                <p class="detail-kicker">Filtres</p>
+                <p class="vehicle-filter-summary" id="vehicle-filter-summary" aria-live="polite">
+                  Tous les v&eacute;hicules affich&eacute;s
+                </p>
+              </div>
+
+              <div class="vehicle-filter-controls">
+                <label class="field-group vehicle-filter-group">
+                  <span>Type</span>
+                  <select id="vehicle-type-filter" name="vehicleTypeFilter">
+                    <option value="all">Tous les types</option>
+                    <option value="owner">Mon v&eacute;hicule</option>
+                    <option value="collaborator">V&eacute;hicule d'un collaborateur</option>
+                    <option value="rental">V&eacute;hicule lou&eacute;</option>
+                  </select>
+                </label>
+
+                <div class="vehicle-filter-inline">
+                  <label class="field-group vehicle-filter-group">
+                    <span>&Eacute;tat</span>
+                    <select id="vehicle-status-filter" name="vehicleStatusFilter">
+                      <option value="all">Tous les &eacute;tats</option>
+                      <option value="available">Disponible</option>
+                      <option value="in_use">En utilisation</option>
+                      <option value="repair">R&eacute;paration</option>
+                      <option value="rental_ended">Location termin&eacute;e</option>
+                    </select>
+                  </label>
+
+                  <button class="secondary-action vehicle-filter-reset" id="reset-vehicle-filters" type="button">
+                    R&eacute;initialiser
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <form class="vehicle-form-card" id="vehicle-form-card" hidden>
+              <div class="vehicle-form-head">
+                <div>
+                  <p class="detail-kicker" id="vehicle-form-kicker">Nouveau v&eacute;hicule</p>
+                  <h4 id="vehicle-form-title">Ajouter un v&eacute;hicule &agrave; la liste</h4>
+                </div>
+                <button class="form-close" id="cancel-vehicle-form" type="button" aria-label="Fermer le formulaire">
+                  &#10005;
+                </button>
+              </div>
+
+              <div class="vehicle-form-grid">
+                <label class="field-group">
+                  <span>Marque</span>
+                  <input id="vehicle-brand" name="brand" type="text" placeholder="Mercedes" required />
+                </label>
+
+                <label class="field-group">
+                  <span>Mod&egrave;le</span>
+                  <input id="vehicle-model" name="model" type="text" placeholder="Vito Tourer" required />
+                </label>
+
+                <label class="field-group">
+                  <span>Couleur</span>
+                  <input id="vehicle-color" name="color" type="text" placeholder="Noir" required />
+                </label>
+
+                <label class="field-group">
+                  <span>Plaque d'immatriculation</span>
+                  <input id="vehicle-plate" name="plate" type="text" placeholder="AB-123-CD" required />
+                </label>
+
+                <label class="field-group">
+                  <span>Type de v&eacute;hicule</span>
+                  <select id="vehicle-type" name="vehicleType">
+                    <option value="owner">Mon v&eacute;hicule</option>
+                    <option value="collaborator">V&eacute;hicule d'un collaborateur</option>
+                    <option value="rental">V&eacute;hicule lou&eacute;</option>
+                  </select>
+                </label>
+
+                <label class="field-group">
+                  <span>&Eacute;tat du v&eacute;hicule</span>
+                  <select id="vehicle-status" name="vehicleStatus">
+                    <option value="available">Disponible</option>
+                    <option value="in_use">En utilisation</option>
+                    <option value="repair">R&eacute;paration</option>
+                    <option value="rental_ended">Location termin&eacute;e</option>
+                  </select>
+                </label>
+
+                <label class="field-group field-group-wide" id="vehicle-rental-end-field" hidden>
+                  <span>Location jusqu'au</span>
+                  <input id="vehicle-rental-end-date" name="rentalEndDate" type="date" />
+                </label>
+
+                <div class="field-row">
+                  <label class="field-group">
+                    <span>Consommation</span>
+                    <input
+                      id="vehicle-consumption"
+                      name="consumption"
+                      type="number"
+                      inputmode="decimal"
+                      min="0"
+                      step="0.1"
+                      placeholder="7.5"
+                      required
+                    />
+                  </label>
+
+                  <label class="field-group">
+                    <span>Unit&eacute;</span>
+                    <select id="vehicle-consumption-unit" name="consumptionUnit">
+                      <option value="L/100 km">L/100 km</option>
+                      <option value="kWh/100 km">kWh/100 km</option>
+                    </select>
+                  </label>
+                </div>
+              </div>
+
+              <p class="form-message" id="vehicle-form-message" hidden></p>
+
+              <div class="form-actions">
+                <button class="primary-action" id="submit-vehicle-form" type="submit">
+                  Enregistrer le v&eacute;hicule
+                </button>
+                <button class="secondary-action" id="reset-vehicle-form" type="button">
+                  Effacer
+                </button>
+                <button class="danger-action" id="exclude-vehicle-button" type="button" hidden>
+                  Exclure le v&eacute;hicule
+                </button>
+              </div>
+            </form>
+
+            <div class="vehicle-list" id="vehicle-list" aria-live="polite"></div>
           </article>
         </section>
       </main>
     </div>
 
-    <script src="script.js"></script>
+    <script src="script.js?v=20260324-vehicules-20"></script>
   </body>
 </html>
