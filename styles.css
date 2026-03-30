@@ -521,6 +521,14 @@ button {
   font-weight: 700;
 }
 
+.panel-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
 .panel-action {
   appearance: none;
   -webkit-appearance: none;
@@ -1135,8 +1143,9 @@ button {
 
 .calendar-week {
   display: grid;
-  grid-template-columns: repeat(7, minmax(0, 1fr));
+  grid-template-columns: repeat(7, minmax(156px, 1fr));
   gap: 14px;
+  min-width: 1180px;
 }
 
 .calendar-day {
@@ -1162,10 +1171,9 @@ button {
 }
 
 .calendar-day-name {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
+  display: grid;
   gap: 8px;
+  justify-items: start;
 }
 
 .calendar-day-name strong {
@@ -1187,6 +1195,7 @@ button {
   font-size: 0.75rem;
   font-weight: 700;
   white-space: nowrap;
+  justify-self: start;
 }
 
 .day-trip-list {
@@ -1196,12 +1205,28 @@ button {
 }
 
 .trip-item {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
   border: 1px solid rgba(29, 78, 99, 0.08);
   background: var(--bg-strong);
   border-radius: 18px;
-  padding: 14px;
+  padding: 12px;
   display: grid;
-  gap: 8px;
+  gap: 7px;
+  transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+  min-width: 0;
+}
+
+.trip-item:hover,
+.trip-item:focus-visible,
+.trip-item.active {
+  transform: translateY(-2px);
+  border-color: rgba(29, 78, 99, 0.2);
+  box-shadow: 0 16px 28px rgba(29, 78, 99, 0.1);
+  outline: none;
 }
 
 .trip-time {
@@ -1217,21 +1242,54 @@ button {
 
 .trip-route {
   font-weight: 800;
-  line-height: 1.45;
+  line-height: 1.4;
+  font-size: 0.98rem;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
 }
 
 .trip-meta {
   display: grid;
   gap: 4px;
   color: var(--text-soft);
-  font-size: 0.9rem;
+  font-size: 0.84rem;
   line-height: 1.45;
 }
 
+.trip-meta span {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 1;
+  overflow: hidden;
+}
+
+.trip-meta span:last-child {
+  display: none;
+}
+
 .trip-note {
-  color: var(--olive);
   font-size: 0.84rem;
   font-weight: 700;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 1;
+  overflow: hidden;
+}
+
+.trip-note-ready {
+  color: var(--olive);
+}
+
+.trip-note-warning {
+  color: #9a6523;
+}
+
+.calendar-day-empty {
+  margin: 0;
+  color: var(--text-soft);
+  line-height: 1.6;
 }
 
 .placeholder-grid {
@@ -1264,9 +1322,10 @@ button {
 
 .emphasis-card {
   background:
-    linear-gradient(160deg, rgba(29, 78, 99, 0.9), rgba(92, 122, 79, 0.84)),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.08), transparent);
+    linear-gradient(160deg, rgba(18, 57, 74, 0.97), rgba(74, 108, 73, 0.93)),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.1), transparent);
   border-color: transparent;
+  box-shadow: 0 22px 36px rgba(16, 46, 60, 0.18);
 }
 
 .emphasis-card,
@@ -1274,6 +1333,618 @@ button {
 .emphasis-card .detail-kicker,
 .emphasis-card h4 {
   color: #f9fcff;
+}
+
+.emphasis-card .detail-kicker {
+  color: rgba(249, 252, 255, 0.8);
+}
+
+.emphasis-card p {
+  color: rgba(249, 252, 255, 0.92);
+}
+
+.emphasis-card h4 {
+  color: #ffffff;
+  text-shadow: 0 1px 1px rgba(12, 33, 44, 0.24);
+}
+
+.emphasis-card .mission-badge {
+  background: rgba(255, 255, 255, 0.24);
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+.emphasis-card .mission-badge.priority-high {
+  background: rgba(255, 216, 138, 0.9);
+  color: #6f4410;
+  border-color: rgba(255, 216, 138, 0.95);
+}
+
+.emphasis-card .mission-badge.priority-vip {
+  background: rgba(14, 102, 134, 0.78);
+  color: #ffffff;
+  border-color: rgba(255, 255, 255, 0.18);
+}
+
+.emphasis-card .planner-selection-actions .primary-action {
+  background: rgba(14, 102, 134, 0.95);
+  color: #f9fcff;
+}
+
+.emphasis-card .planner-selection-actions .secondary-action {
+  background: rgba(255, 255, 255, 0.96);
+  color: #22333b;
+}
+
+.calendar-command-grid {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr 0.9fr;
+  gap: 16px;
+  margin-bottom: 18px;
+}
+
+.mini-stat-stack {
+  display: grid;
+  gap: 12px;
+  margin-top: 10px;
+}
+
+.mini-stat-block {
+  display: grid;
+  gap: 4px;
+  padding: 14px 16px;
+  border-radius: 18px;
+  background: rgba(29, 78, 99, 0.06);
+}
+
+.mini-stat-block strong {
+  font-family: "Space Grotesk", "Segoe UI", sans-serif;
+  font-size: 1.8rem;
+}
+
+.mini-stat-block span {
+  color: var(--text-soft);
+}
+
+.planner-layout {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 18px;
+}
+
+.mission-form-card {
+  margin-bottom: 18px;
+  padding: 24px;
+  border: 1px solid rgba(28, 41, 49, 0.08);
+  background: var(--bg-card);
+  border-radius: 26px;
+  display: grid;
+  gap: 18px;
+}
+
+.mission-form-card[hidden] {
+  display: none;
+}
+
+.mission-form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.mission-stop-builder {
+  gap: 14px;
+}
+
+.mission-stop-builder-head,
+.mission-stop-row-head {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.mission-stop-builder-copy,
+.stop-budget,
+.stop-meeting {
+  margin: 6px 0 0;
+  color: var(--text-soft);
+  line-height: 1.55;
+}
+
+.mission-stops-list {
+  display: grid;
+  gap: 14px;
+}
+
+.mission-stop-row {
+  border: 1px solid rgba(29, 78, 99, 0.08);
+  background: rgba(255, 255, 255, 0.74);
+  border-radius: 22px;
+  padding: 16px;
+  display: grid;
+  gap: 14px;
+}
+
+.mission-stop-row-grid,
+.mission-pricing-preview-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.mission-pricing-preview {
+  border: 1px solid rgba(29, 78, 99, 0.08);
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.84), rgba(248, 243, 234, 0.94));
+  border-radius: 22px;
+  padding: 18px;
+}
+
+.mission-pricing-preview-grid > div {
+  display: grid;
+  gap: 6px;
+}
+
+.mission-pricing-preview-grid span {
+  color: var(--text-soft);
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.mission-pricing-preview-grid strong {
+  font-size: 1.14rem;
+}
+
+.planner-board,
+.planner-selection-card,
+.planner-selection-grid,
+.planner-side,
+.planner-support-grid,
+.resource-list,
+.alert-list,
+.trip-list,
+.trip-detail-grid,
+.stop-list,
+.trip-metric-grid {
+  display: grid;
+  gap: 16px;
+}
+
+.planning-day-column,
+.trip-list-card,
+.trip-detail-shell,
+.side-card {
+  border: 1px solid rgba(28, 41, 49, 0.08);
+  background: var(--bg-card);
+  border-radius: 26px;
+  padding: 20px;
+}
+
+.planner-board {
+  overflow-x: auto;
+  padding-bottom: 6px;
+}
+
+.planner-side {
+  grid-template-columns: minmax(0, 1.18fr) minmax(320px, 0.82fr);
+  align-items: start;
+}
+
+.planner-support-grid {
+  align-content: start;
+}
+
+.planning-day-header,
+.planner-selection-actions,
+.side-card-header,
+.resource-card-head {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.planning-day-header h4,
+.side-card-header h4,
+.trip-list-card h4 {
+  margin: 8px 0 0;
+  font-size: 1.18rem;
+}
+
+.planning-day-summary,
+.status-pill,
+.resource-status {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 12px;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.planning-day-summary {
+  background: rgba(29, 78, 99, 0.08);
+  color: var(--navy);
+}
+
+.planner-selection-actions {
+  flex-wrap: wrap;
+  margin-top: 14px;
+}
+
+.planning-mission-stack {
+  display: grid;
+  gap: 14px;
+  margin-top: 18px;
+}
+
+.planning-mission-card {
+  border: 1px solid rgba(29, 78, 99, 0.1);
+  background: linear-gradient(160deg, rgba(255, 255, 255, 0.92), rgba(248, 243, 234, 0.98));
+  border-radius: 22px;
+  padding: 18px;
+  display: grid;
+  gap: 14px;
+}
+
+.planning-mission-card.is-ready {
+  border-color: rgba(95, 122, 79, 0.22);
+}
+
+.planning-mission-card.has-alert {
+  border-color: rgba(216, 153, 74, 0.28);
+}
+
+.planning-mission-head {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.planning-mission-head h5,
+.trip-focus-card h4,
+.trip-assignment-card h4,
+.trip-route-card h4,
+.trip-cost-card h4,
+.trip-billing-card h4,
+.trip-constraints-card h4 {
+  margin: 6px 0 0;
+  font-size: 1.16rem;
+  line-height: 1.2;
+}
+
+.mission-code,
+.trip-list-code {
+  display: inline-flex;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: var(--sand);
+}
+
+.status-ready {
+  background: rgba(95, 122, 79, 0.15);
+  color: var(--olive);
+}
+
+.status-warning {
+  background: rgba(216, 153, 74, 0.18);
+  color: #9a6523;
+}
+
+.mission-meta,
+.mission-badges,
+.assignment-note-row,
+.mission-kpis {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.mission-meta span,
+.mission-kpis span,
+.trip-list-meta,
+.resource-copy,
+.trip-formula-note {
+  color: var(--text-soft);
+  line-height: 1.55;
+}
+
+.mission-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 8px 10px;
+  border-radius: 999px;
+  background: rgba(29, 78, 99, 0.08);
+  color: var(--navy);
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+.mission-badge.priority-high {
+  background: rgba(216, 153, 74, 0.18);
+  color: #9a6523;
+}
+
+.mission-badge.priority-vip {
+  background: rgba(29, 78, 99, 0.16);
+  color: var(--navy);
+}
+
+.assignment-form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.assignment-field {
+  min-width: 0;
+}
+
+.assignment-field-wide {
+  grid-column: 1 / -1;
+}
+
+.assignment-note {
+  margin: 0;
+  padding: 11px 13px;
+  border-radius: 16px;
+  font-weight: 700;
+}
+
+.note-success {
+  background: rgba(95, 122, 79, 0.14);
+  color: var(--olive);
+}
+
+.note-warning {
+  background: rgba(216, 153, 74, 0.16);
+  color: #9a6523;
+}
+
+.note-neutral {
+  background: rgba(29, 78, 99, 0.08);
+  color: var(--navy);
+}
+
+.small-action {
+  width: fit-content;
+  padding: 11px 14px;
+  border-radius: 14px;
+}
+
+.mission-kpis {
+  justify-content: space-between;
+}
+
+.mission-kpis div {
+  min-width: 150px;
+  display: grid;
+  gap: 4px;
+}
+
+.mission-kpis strong {
+  font-size: 1rem;
+}
+
+.resource-card,
+.alert-item,
+.trip-list-item,
+.stop-item,
+.trip-metric-card {
+  border: 1px solid rgba(29, 78, 99, 0.08);
+  background: rgba(255, 255, 255, 0.84);
+  border-radius: 20px;
+  padding: 16px;
+}
+
+.resource-card {
+  display: grid;
+  gap: 12px;
+}
+
+.resource-status-available {
+  background: rgba(95, 122, 79, 0.14);
+  color: var(--olive);
+}
+
+.resource-status-limited {
+  background: rgba(216, 153, 74, 0.18);
+  color: #9a6523;
+}
+
+.resource-status-off {
+  background: rgba(154, 47, 47, 0.12);
+  color: #9a2f2f;
+}
+
+.resource-meta-grid {
+  display: grid;
+  gap: 6px;
+  color: var(--text-soft);
+}
+
+.alert-item p,
+.trip-list-copy {
+  margin: 0;
+  color: var(--text-soft);
+  line-height: 1.6;
+}
+
+.alert-warning {
+  border-color: rgba(216, 153, 74, 0.28);
+}
+
+.alert-neutral {
+  border-color: rgba(29, 78, 99, 0.12);
+}
+
+.alert-success {
+  border-color: rgba(95, 122, 79, 0.22);
+}
+
+.trip-dashboard {
+  display: grid;
+  grid-template-columns: minmax(280px, 0.72fr) minmax(0, 1.28fr);
+  gap: 18px;
+}
+
+.trip-list {
+  margin-top: 18px;
+}
+
+.trip-list-item {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 100%;
+  text-align: left;
+  display: grid;
+  gap: 8px;
+  cursor: pointer;
+  transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.trip-list-item:hover,
+.trip-list-item:focus-visible,
+.trip-list-item.active {
+  transform: translateY(-2px);
+  border-color: rgba(29, 78, 99, 0.2);
+  box-shadow: 0 16px 28px rgba(29, 78, 99, 0.1);
+  outline: none;
+}
+
+.trip-detail-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.trip-detail-grid > .trip-focus-card,
+.trip-detail-grid > .trip-assignment-card {
+  min-height: 100%;
+}
+
+.trip-focus-card p {
+  margin: 0;
+}
+
+.stop-list,
+.trip-metric-grid {
+  margin-top: 12px;
+}
+
+.trip-route-map-shell {
+  margin-top: 12px;
+  display: grid;
+  gap: 10px;
+}
+
+.trip-route-map {
+  min-height: 320px;
+  border: 1px solid rgba(29, 78, 99, 0.1);
+  border-radius: 22px;
+  overflow: hidden;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.18);
+}
+
+.trip-route-map-caption,
+.map-fallback {
+  margin: 0;
+  color: var(--text-soft);
+  line-height: 1.55;
+}
+
+.map-fallback {
+  padding: 20px;
+}
+
+.stop-item {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 12px;
+  align-items: start;
+}
+
+.stop-item p {
+  margin: 4px 0 0;
+  color: var(--text-soft);
+}
+
+.stop-budget,
+.stop-meeting {
+  font-size: 0.9rem;
+}
+
+.stop-index {
+  width: 34px;
+  height: 34px;
+  border-radius: 12px;
+  display: inline-grid;
+  place-items: center;
+  background: rgba(29, 78, 99, 0.08);
+  color: var(--navy);
+  font-weight: 800;
+}
+
+.trip-metric-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.trip-metric-card {
+  display: grid;
+  gap: 8px;
+}
+
+.trip-metric-card span {
+  color: var(--text-soft);
+  font-size: 0.84rem;
+  font-weight: 700;
+}
+
+.trip-metric-card strong {
+  font-size: 1.22rem;
+}
+
+.pac-container {
+  z-index: 3000 !important;
+  border: 1px solid rgba(29, 78, 99, 0.12);
+  border-radius: 18px;
+  box-shadow: 0 18px 32px rgba(29, 78, 99, 0.12);
+  font-family: "Manrope", "Segoe UI", sans-serif;
+}
+
+@media (max-width: 1024px) {
+  .calendar-command-grid,
+  .planner-layout,
+  .planner-side,
+  .trip-dashboard,
+  .trip-detail-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 680px) {
+  .assignment-form-grid,
+  .trip-metric-grid,
+  .mission-stop-row-grid,
+  .mission-pricing-preview-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .mission-kpis,
+  .mission-meta,
+  .mission-badges,
+  .assignment-note-row,
+  .planning-day-header,
+  .resource-card-head,
+  .mission-stop-builder-head,
+  .mission-stop-row-head {
+    flex-direction: column;
+    align-items: flex-start;
+  }
 }
 
 @keyframes panel-rise {
@@ -1293,6 +1964,7 @@ button {
   .hero-panel,
   .calendar-overview,
   .vehicle-form-grid,
+  .mission-form-grid,
   .placeholder-grid {
     grid-template-columns: 1fr;
   }
@@ -1344,6 +2016,11 @@ button {
   .panel-header {
     flex-direction: column;
     align-items: flex-start;
+  }
+
+  .panel-header-actions {
+    width: 100%;
+    justify-content: flex-start;
   }
 
   .vehicle-toolbar {
