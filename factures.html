@@ -14,7 +14,7 @@
       href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=Manrope:wght@400;500;600;700&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="styles.css" />
+    <link rel="stylesheet" href="styles.css?v=20260328-factures-24" />
   </head>
   <body>
     <div class="page-shell">
@@ -93,11 +93,12 @@
       <main>
         <section class="hero-panel">
           <div class="hero-copy">
-            <p class="eyebrow">Page d&eacute;di&eacute;e</p>
-            <h2>Suivre les documents clients et les paiements.</h2>
+            <p class="eyebrow">Page factures</p>
+            <h2>Construire une base claire pour vos factures clients.</h2>
             <p class="hero-text">
-              Cette page servira &agrave; g&eacute;rer les factures, les statuts de paiement,
-              les relances et le t&eacute;l&eacute;chargement des documents PDF.
+              Cette premi&egrave;re version reprend la structure d'une vraie facture PDF
+              pour poser une base propre: &eacute;metteur, client, d&eacute;tail de course,
+              mode de paiement, totaux et mentions.
             </p>
 
             <div class="hero-actions">
@@ -109,74 +110,368 @@
           <div class="hero-aside">
             <article class="route-card">
               <span class="small-label">Facturation</span>
-              <strong>Documents et paiements</strong>
-              <p>Une vue simple pour suivre les dossiers clients.</p>
+              <strong>Modele de facture generique</strong>
+              <p>Une base neutre pour ensuite g&eacute;n&eacute;rer vos propres documents.</p>
             </article>
 
             <div class="summary-strip">
               <article class="summary-item">
-                <span>Factures &eacute;mises</span>
-                <strong>18</strong>
+                <span>Factures creees</span>
+                <strong id="invoice-count-summary">1</strong>
               </article>
               <article class="summary-item">
-                <span>En attente</span>
-                <strong>5</strong>
+                <span>Interlocuteur</span>
+                <strong id="invoice-client-summary">Societe exemple</strong>
               </article>
               <article class="summary-item">
-                <span>Pay&eacute;es</span>
-                <strong>13</strong>
+                <span>Total actif</span>
+                <strong id="invoice-total-summary">90,00 &euro;</strong>
               </article>
               <article class="summary-item">
-                <span>Relances</span>
-                <strong>2</strong>
+                <span>Type</span>
+                <strong id="invoice-payment-summary">Facture client</strong>
               </article>
             </div>
           </div>
         </section>
 
         <section class="workspace">
-          <article class="content-panel active" aria-label="Factures">
+          <article class="content-panel active invoice-panel" aria-label="Factures">
             <div class="panel-header">
               <div>
                 <p class="panel-kicker">Factures</p>
-                <h3>Un espace simple pour les documents clients</h3>
+                <h3>Une base de travail pour vos documents clients</h3>
               </div>
-              <span class="panel-status">En pr&eacute;paration</span>
+              <span class="panel-status">Creation simple</span>
             </div>
 
-            <div class="placeholder-grid">
-              <article class="detail-card emphasis-card">
-                <p class="detail-kicker">Facturation</p>
-                <h4>Suivre les documents envoy&eacute;s ou en attente</h4>
-                <p>
-                  On pourra ensuite afficher les factures, les statuts de paiement et les
-                  relances &agrave; faire.
-                </p>
-              </article>
+            <div class="invoice-toolbar">
+              <p class="invoice-toolbar-text">
+                Ajoutez ici vos factures clients et vos factures externes. Chaque document
+                restera visible dans la grille avec son d&eacute;tail complet si vous l'ouvrez.
+              </p>
+              <button class="panel-action" id="add-invoice-button" type="button">
+                <span class="panel-action-icon" aria-hidden="true">+</span>
+                Ajouter une facture
+              </button>
+            </div>
 
-              <article class="detail-card">
-                <p class="detail-kicker">A ajouter ensuite</p>
-                <ul class="feature-list">
-                  <li>Factures pay&eacute;es ou impay&eacute;es</li>
-                  <li>Recherche par client ou date</li>
-                  <li>T&eacute;l&eacute;chargement PDF</li>
-                </ul>
-              </article>
-
-              <article class="detail-card">
-                <p class="detail-kicker">Exemple de vue</p>
-                <p class="mini-note">
-                  Client Dupont Voyages<br />
-                  Facture F-2026-014<br />
-                  Paiement en attente
+            <div class="invoice-filter-bar" aria-label="Filtres des factures">
+              <div class="invoice-filter-copy">
+                <p class="detail-kicker">Filtres</p>
+                <p class="invoice-filter-summary" id="invoice-filter-summary" aria-live="polite">
+                  Toutes les factures affich&eacute;es
                 </p>
-              </article>
+              </div>
+
+              <div class="invoice-filter-controls">
+                <div class="invoice-filter-inline">
+                  <label class="field-group invoice-filter-group">
+                    <span>Type</span>
+                    <select id="invoice-type-filter" name="invoiceTypeFilter">
+                      <option value="all">Tous les types</option>
+                      <option value="client">Facture client</option>
+                      <option value="external">Facture externe</option>
+                    </select>
+                  </label>
+
+                  <label class="field-group invoice-filter-group">
+                    <span>Reglement</span>
+                    <select id="invoice-payment-status-filter" name="invoicePaymentStatusFilter">
+                      <option value="all">Toutes</option>
+                      <option value="paid">Reglees</option>
+                      <option value="unpaid">Non reglees</option>
+                    </select>
+                  </label>
+
+                  <button class="secondary-action invoice-filter-reset" id="reset-invoice-filters" type="button">
+                    R&eacute;initialiser
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <form class="invoice-form-card" id="invoice-form-card" hidden>
+              <div class="invoice-form-head">
+                <div>
+                  <p class="detail-kicker" id="invoice-form-kicker">Nouvelle facture</p>
+                  <h4 id="invoice-form-title">Renseigner les informations du document</h4>
+                </div>
+                <button class="form-close" id="cancel-invoice-form" type="button" aria-label="Fermer le formulaire">
+                  &#10005;
+                </button>
+              </div>
+
+              <div class="invoice-form-grid">
+                <section class="invoice-form-section" id="invoice-core-section">
+                  <div class="invoice-form-section-head">
+                    <span class="invoice-form-section-title">Facture</span>
+                    <p id="invoice-core-section-text">Informations generales du document.</p>
+                  </div>
+
+                  <div class="invoice-form-section-grid">
+                    <label class="field-group field-group-wide">
+                      <span>Type de facture</span>
+                      <select id="invoice-type" name="invoiceType">
+                        <option value="client">Facture client</option>
+                        <option value="external">Facture externe</option>
+                      </select>
+                    </label>
+
+                    <label class="field-group">
+                      <span>Numero de facture</span>
+                      <input id="invoice-number" name="invoiceNumber" type="text" placeholder="0028" required />
+                    </label>
+
+                    <label class="field-group">
+                      <span>Date d'emission</span>
+                      <input id="invoice-issued-at" name="issuedAt" type="date" required />
+                    </label>
+
+                    <label class="field-group field-group-wide">
+                      <span>Mode de paiement</span>
+                      <select id="invoice-payment-method" name="paymentMethod">
+                        <option value="wire">Virement</option>
+                        <option value="card">Carte</option>
+                        <option value="cash">Especes</option>
+                        <option value="cheque">Cheque</option>
+                      </select>
+                    </label>
+
+                    <label class="field-group">
+                      <span>Date de reglement</span>
+                      <input id="invoice-settled-at" name="settledAt" type="date" />
+                    </label>
+
+                    <label class="field-group field-group-wide" id="invoice-external-flow-field" hidden>
+                      <span>Nature de la facture externe</span>
+                      <select id="invoice-external-flow" name="invoiceExternalFlow">
+                        <option value="payable">Facture a payer</option>
+                        <option value="receivable">Facture a recevoir</option>
+                      </select>
+                    </label>
+
+                    <label class="field-group field-group-wide" id="invoice-attachment-field" hidden>
+                      <span>Fichier de la facture externe</span>
+                      <input
+                        id="invoice-attachment"
+                        name="invoiceAttachment"
+                        type="file"
+                        accept=".pdf,.png,.jpg,.jpeg,.webp,.doc,.docx,.xls,.xlsx,.txt"
+                      />
+                      <small class="field-help" id="invoice-attachment-help">
+                        Ajoutez le fichier de la facture pour le retrouver plus tard dans l'application.
+                      </small>
+                    </label>
+                  </div>
+                </section>
+
+                <section class="invoice-form-section" id="invoice-seller-section">
+                  <div class="invoice-form-section-head">
+                    <span class="invoice-form-section-title" id="invoice-seller-section-title">Emetteur</span>
+                    <p id="invoice-seller-section-text">Informations de votre activite.</p>
+                  </div>
+
+                  <div class="invoice-form-section-grid">
+                    <label class="field-group field-group-wide">
+                      <span>Nom ou raison sociale</span>
+                      <input id="invoice-seller-name" name="sellerName" type="text" placeholder="Nom de votre activite" required />
+                    </label>
+
+                    <label class="field-group field-group-wide">
+                      <span>Adresse</span>
+                      <input id="invoice-seller-address" name="sellerAddress" type="text" placeholder="12, avenue du Centre" required />
+                    </label>
+
+                    <label class="field-group">
+                      <span>Code postal et ville</span>
+                      <input id="invoice-seller-location" name="sellerLocation" type="text" placeholder="75000 Paris" required />
+                    </label>
+
+                    <label class="field-group">
+                      <span>Telephone</span>
+                      <input id="invoice-seller-phone" name="sellerPhone" type="text" placeholder="0612345678" />
+                    </label>
+
+                    <label class="field-group">
+                      <span>Registre EVTC</span>
+                      <input id="invoice-seller-evtc" name="sellerEvtc" type="text" placeholder="EVTC000000000" />
+                    </label>
+
+                    <label class="field-group">
+                      <span>SIRET</span>
+                      <input id="invoice-seller-siret" name="sellerSiret" type="text" placeholder="12345678900010" />
+                    </label>
+                  </div>
+                </section>
+
+                <section class="invoice-form-section" id="invoice-client-section">
+                  <div class="invoice-form-section-head">
+                    <span class="invoice-form-section-title">Client</span>
+                    <p id="invoice-client-section-text">Entreprise et contact de facturation.</p>
+                  </div>
+
+                  <div class="invoice-form-section-grid">
+                    <label class="field-group field-group-wide">
+                      <span>Nom du client</span>
+                      <input id="invoice-client-name" name="clientName" type="text" placeholder="Societe exemple" required />
+                    </label>
+
+                    <label class="field-group field-group-wide">
+                      <span>Adresse</span>
+                      <input id="invoice-client-address" name="clientAddress" type="text" placeholder="24, rue des Voyages" />
+                    </label>
+
+                    <label class="field-group">
+                      <span>Code postal et ville</span>
+                      <input id="invoice-client-location" name="clientLocation" type="text" placeholder="69000 Lyon" />
+                    </label>
+
+                    <label class="field-group">
+                      <span>SIRET</span>
+                      <input id="invoice-client-siret" name="clientSiret" type="text" placeholder="12345678900011" />
+                    </label>
+
+                    <label class="field-group">
+                      <span>TVA intracommunautaire</span>
+                      <input id="invoice-client-vat" name="clientVat" type="text" placeholder="FR12345678901" />
+                    </label>
+
+                    <label class="field-group">
+                      <span>Contact</span>
+                      <input id="invoice-client-contact" name="clientContact" type="text" placeholder="Sophie Martin" />
+                    </label>
+
+                    <label class="field-group">
+                      <span>Email</span>
+                      <input id="invoice-client-email" name="clientEmail" type="email" placeholder="contact@client-exemple.fr" />
+                    </label>
+
+                    <label class="field-group">
+                      <span>Telephone</span>
+                      <input id="invoice-client-phone" name="clientPhone" type="text" placeholder="0601020304" />
+                    </label>
+                  </div>
+                </section>
+
+                <section class="invoice-form-section" id="invoice-service-section">
+                  <div class="invoice-form-section-head">
+                    <span class="invoice-form-section-title" id="invoice-service-section-title">Prestation</span>
+                    <p id="invoice-service-section-text">Details de la course ou du service facture.</p>
+                  </div>
+
+                  <div class="invoice-form-section-grid">
+                    <label class="field-group field-group-wide">
+                      <span id="invoice-service-description-label">Designation / objet</span>
+                      <input id="invoice-service-description" name="serviceDescription" type="text" placeholder="Transfert touristique prive" required />
+                    </label>
+
+                    <label class="field-group" id="invoice-service-date-field">
+                      <span>Date de prise en charge</span>
+                      <input id="invoice-service-date" name="serviceDate" type="date" required />
+                    </label>
+
+                    <label class="field-group" id="invoice-service-pickup-field">
+                      <span>Lieu de prise en charge</span>
+                      <input id="invoice-service-pickup" name="servicePickup" type="text" placeholder="Gare centrale" required />
+                    </label>
+
+                    <label class="field-group" id="invoice-service-destination-field">
+                      <span>Destination</span>
+                      <input id="invoice-service-destination" name="serviceDestination" type="text" placeholder="Centre-ville" required />
+                    </label>
+
+                    <label class="field-group" id="invoice-service-passengers-field">
+                      <span>Nombre de passagers</span>
+                      <input id="invoice-service-passengers" name="servicePassengers" type="number" min="0" step="1" placeholder="4" />
+                    </label>
+
+                    <label class="field-group" id="invoice-service-distance-field">
+                      <span>Kilometres parcourus</span>
+                      <input id="invoice-service-distance" name="serviceDistance" type="number" min="0" step="1" placeholder="35" />
+                    </label>
+                  </div>
+                </section>
+
+                <section class="invoice-form-section">
+                  <div class="invoice-form-section-head">
+                    <span class="invoice-form-section-title">Montants et mentions</span>
+                    <p>Le total TTC sera calcule automatiquement.</p>
+                  </div>
+
+                  <div class="invoice-form-section-grid">
+                    <label class="field-group">
+                      <span>Total HT</span>
+                      <input id="invoice-total-ht" name="totalHt" type="number" min="0" step="0.01" placeholder="120.00" required />
+                    </label>
+
+                    <label class="field-group">
+                      <span>TVA 10 %</span>
+                      <input id="invoice-vat-10" name="vat10" type="number" min="0" step="0.01" placeholder="0.00" />
+                    </label>
+
+                    <label class="field-group">
+                      <span>TVA 20 %</span>
+                      <input id="invoice-vat-20" name="vat20" type="number" min="0" step="0.01" placeholder="0.00" />
+                    </label>
+
+                    <label class="field-group">
+                      <span>Assurance</span>
+                      <input id="invoice-insurance" name="insurance" type="text" placeholder="Assurance VTC exemple" />
+                    </label>
+
+                    <label class="field-group field-group-wide">
+                      <span>Mention legale</span>
+                      <textarea id="invoice-tax-note" name="taxNote" rows="3" placeholder="TVA non applicable conformement a l'article 293 B du CGI."></textarea>
+                    </label>
+                  </div>
+                </section>
+              </div>
+
+              <p class="form-message" id="invoice-form-message" hidden></p>
+
+              <div class="form-actions">
+                <button class="primary-action" id="submit-invoice-form" type="submit">Ajouter la facture</button>
+                <button class="secondary-action" id="reset-invoice-form" type="button">Reinitialiser</button>
+              </div>
+            </form>
+
+            <div class="invoice-intro">
+              <p class="invoice-intro-text">
+                Toutes les factures apparaissent ici sous forme de grille. Vous pouvez y ranger
+                vos factures clients et vos factures externes, puis ouvrir le document complet au clic.
+              </p>
+              <span class="invoice-source-pill">Factures clients + factures externes</span>
+            </div>
+
+            <div class="invoice-board">
+              <div class="invoice-record-list" id="invoice-record-list" aria-live="polite"></div>
+              <div class="invoice-preview-shell" id="invoice-preview" aria-live="polite" hidden></div>
+              <div class="invoice-note-grid">
+                <article class="detail-card invoice-note-card">
+                  <p class="detail-kicker">Ce que l'on garde</p>
+                  <ul class="feature-list">
+                    <li>Bloc &eacute;metteur bien lisible</li>
+                    <li>Bloc client avec contact direct</li>
+                    <li>D&eacute;tail course + montant + mode de paiement</li>
+                  </ul>
+                </article>
+
+                <article class="detail-card invoice-note-card">
+                  <p class="detail-kicker">Ce que l'on pourra ajouter</p>
+                  <ul class="feature-list">
+                    <li>Num&eacute;rotation automatique</li>
+                    <li>Export PDF</li>
+                    <li>Statut pay&eacute;e ou en attente</li>
+                  </ul>
+                </article>
+              </div>
             </div>
           </article>
         </section>
       </main>
     </div>
 
-    <script src="script.js"></script>
+    <script src="script.js?v=20260328-factures-24"></script>
   </body>
 </html>
