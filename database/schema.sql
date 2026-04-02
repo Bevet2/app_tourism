@@ -6,6 +6,18 @@ BEGIN
     CREATE TYPE collaborator_status AS ENUM ('available', 'limited', 'off');
   END IF;
 
+  IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'collaborator_role') THEN
+    CREATE TYPE collaborator_role AS ENUM ('guide', 'driver');
+  END IF;
+
+  IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'collaborator_availability_status') THEN
+    CREATE TYPE collaborator_availability_status AS ENUM ('available', 'on_mission', 'unavailable');
+  END IF;
+
+  IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'collaborator_language_level') THEN
+    CREATE TYPE collaborator_language_level AS ENUM ('basic', 'intermediate', 'conversational', 'fluent');
+  END IF;
+
   IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'vehicle_ownership_type') THEN
     CREATE TYPE vehicle_ownership_type AS ENUM ('company', 'collaborator', 'rental');
   END IF;
@@ -37,6 +49,22 @@ BEGIN
   IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'invoice_status') THEN
     CREATE TYPE invoice_status AS ENUM ('draft', 'sent', 'paid', 'cancelled');
   END IF;
+
+  IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'invoice_document_type') THEN
+    CREATE TYPE invoice_document_type AS ENUM ('client', 'external');
+  END IF;
+
+  IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'invoice_payment_status') THEN
+    CREATE TYPE invoice_payment_status AS ENUM ('paid', 'unpaid');
+  END IF;
+
+  IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'invoice_external_flow') THEN
+    CREATE TYPE invoice_external_flow AS ENUM ('payable', 'receivable');
+  END IF;
+
+  IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'invoice_payment_method') THEN
+    CREATE TYPE invoice_payment_method AS ENUM ('wire', 'card', 'cash', 'cheque');
+  END IF;
 END
 $$;
 
@@ -59,35 +87,50 @@ CREATE TABLE IF NOT EXISTS customers (
 CREATE TABLE IF NOT EXISTS collaborators (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   company_id UUID NOT NULL REFERENCES companies(id) ON DELETE CASCADE,
-  full_name TEXT NOT NULL,
-  role_title TEXT NOT NULL,
+  full_name TEXT NOT NULL DEFAULT '',
+  first_name TEXT,
+  last_name TEXT,
+  role collaborator_role NOT NULL DEFAULT 'guide',
+  role_title TEXT NOT NULL DEFAULT '',
   phone TEXT,
   email TEXT,
   languages TEXT[] NOT NULL DEFAULT '{}',
   status collaborator_status NOT NULL DEFAULT 'available',
+  availability_status collaborator_availability_status NOT NULL DEFAULT 'available',
   can_drive BOOLEAN NOT NULL DEFAULT FALSE,
   hourly_rate NUMERIC(10, 2) NOT NULL DEFAULT 0,
-  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS collaborator_languages (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  collaborator_id UUID NOT NULL REFERENCES collaborators(id) ON DELETE CASCADE,
+  language_name TEXT NOT NULL,
+  proficiency_level collaborator_language_level NOT NULL DEFAULT 'basic',
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
 CREATE TABLE IF NOT EXISTS vehicles (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   company_id UUID NOT NULL REFERENCES companies(id) ON DELETE CASCADE,
   owner_collaborator_id UUID REFERENCES collaborators(id) ON DELETE SET NULL,
-  ownership_type vehicle_ownership_type NOT NULL,
-  label TEXT NOT NULL,
+  ownership_type vehicle_ownership_type NOT NULL DEFAULT 'company',
+  label TEXT NOT NULL DEFAULT '',
   registration_plate TEXT NOT NULL,
   brand TEXT,
   model TEXT,
   color TEXT,
-  seats INTEGER NOT NULL CHECK (seats > 0),
+  seats INTEGER NOT NULL DEFAULT 4 CHECK (seats > 0),
   luggage_capacity INTEGER NOT NULL DEFAULT 0 CHECK (luggage_capacity >= 0),
   energy_kind energy_kind NOT NULL DEFAULT 'diesel',
-  avg_consumption NUMERIC(8, 2) NOT NULL CHECK (avg_consumption > 0),
+  avg_consumption NUMERIC(8, 2) NOT NULL DEFAULT 6.50 CHECK (avg_consumption > 0),
   consumption_unit TEXT NOT NULL DEFAULT 'L/100 km',
   status vehicle_status NOT NULL DEFAULT 'available',
   rental_end_date DATE,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   UNIQUE (company_id, registration_plate)
 );
 
@@ -171,25 +214,214 @@ CREATE TABLE IF NOT EXISTS mission_cost_snapshots (
 CREATE TABLE IF NOT EXISTS invoices (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   company_id UUID NOT NULL REFERENCES companies(id) ON DELETE CASCADE,
-  customer_id UUID NOT NULL REFERENCES customers(id) ON DELETE RESTRICT,
+  customer_id UUID REFERENCES customers(id) ON DELETE SET NULL,
   mission_id UUID UNIQUE REFERENCES missions(id) ON DELETE SET NULL,
   invoice_number TEXT NOT NULL,
   status invoice_status NOT NULL DEFAULT 'draft',
+  document_type invoice_document_type NOT NULL DEFAULT 'client',
+  source_label TEXT,
+  payment_status invoice_payment_status NOT NULL DEFAULT 'unpaid',
+  external_flow invoice_external_flow NOT NULL DEFAULT 'payable',
+  payment_method invoice_payment_method NOT NULL DEFAULT 'wire',
   issued_at DATE,
   due_at DATE,
+  settled_at DATE,
   subtotal_amount NUMERIC(10, 2) NOT NULL DEFAULT 0,
+  vat_10_amount NUMERIC(10, 2) NOT NULL DEFAULT 0,
+  vat_20_amount NUMERIC(10, 2) NOT NULL DEFAULT 0,
   tax_amount NUMERIC(10, 2) NOT NULL DEFAULT 0,
   total_amount NUMERIC(10, 2) NOT NULL DEFAULT 0,
   paid_at DATE,
+  seller_name TEXT,
+  seller_address TEXT,
+  seller_location TEXT,
+  seller_phone TEXT,
+  seller_evtc TEXT,
+  seller_siret TEXT,
+  client_name TEXT,
+  client_address TEXT,
+  client_location TEXT,
+  client_siret TEXT,
+  client_vat TEXT,
+  client_contact TEXT,
+  client_email TEXT,
+  client_phone TEXT,
+  service_description TEXT,
+  service_date DATE,
+  service_pickup TEXT,
+  service_destination TEXT,
+  service_passengers_count INTEGER NOT NULL DEFAULT 0 CHECK (service_passengers_count >= 0),
+  service_distance_km NUMERIC(8, 2) NOT NULL DEFAULT 0 CHECK (service_distance_km >= 0),
+  insurance_label TEXT,
+  tax_note TEXT,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   UNIQUE (company_id, invoice_number)
 );
+
+CREATE TABLE IF NOT EXISTS invoice_attachments (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  invoice_id UUID NOT NULL UNIQUE REFERENCES invoices(id) ON DELETE CASCADE,
+  file_name TEXT NOT NULL,
+  content_type TEXT NOT NULL DEFAULT 'application/octet-stream',
+  file_size_bytes BIGINT NOT NULL DEFAULT 0 CHECK (file_size_bytes >= 0),
+  file_payload BYTEA,
+  uploaded_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+ALTER TABLE IF EXISTS collaborators
+  ALTER COLUMN full_name SET DEFAULT '',
+  ALTER COLUMN role_title SET DEFAULT '';
+
+ALTER TABLE IF EXISTS collaborators
+  ADD COLUMN IF NOT EXISTS first_name TEXT,
+  ADD COLUMN IF NOT EXISTS last_name TEXT,
+  ADD COLUMN IF NOT EXISTS role collaborator_role NOT NULL DEFAULT 'guide',
+  ADD COLUMN IF NOT EXISTS availability_status collaborator_availability_status NOT NULL DEFAULT 'available',
+  ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW();
+
+ALTER TABLE IF EXISTS vehicles
+  ALTER COLUMN label SET DEFAULT '',
+  ALTER COLUMN seats SET DEFAULT 4,
+  ALTER COLUMN luggage_capacity SET DEFAULT 0,
+  ALTER COLUMN ownership_type SET DEFAULT 'company',
+  ALTER COLUMN energy_kind SET DEFAULT 'diesel',
+  ALTER COLUMN avg_consumption SET DEFAULT 6.50,
+  ALTER COLUMN consumption_unit SET DEFAULT 'L/100 km',
+  ALTER COLUMN status SET DEFAULT 'available';
+
+ALTER TABLE IF EXISTS vehicles
+  ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW();
+
+ALTER TABLE IF EXISTS invoices
+  ALTER COLUMN customer_id DROP NOT NULL;
+
+ALTER TABLE IF EXISTS invoices
+  ADD COLUMN IF NOT EXISTS document_type invoice_document_type NOT NULL DEFAULT 'client',
+  ADD COLUMN IF NOT EXISTS source_label TEXT,
+  ADD COLUMN IF NOT EXISTS payment_status invoice_payment_status NOT NULL DEFAULT 'unpaid',
+  ADD COLUMN IF NOT EXISTS external_flow invoice_external_flow NOT NULL DEFAULT 'payable',
+  ADD COLUMN IF NOT EXISTS payment_method invoice_payment_method NOT NULL DEFAULT 'wire',
+  ADD COLUMN IF NOT EXISTS settled_at DATE,
+  ADD COLUMN IF NOT EXISTS vat_10_amount NUMERIC(10, 2) NOT NULL DEFAULT 0,
+  ADD COLUMN IF NOT EXISTS vat_20_amount NUMERIC(10, 2) NOT NULL DEFAULT 0,
+  ADD COLUMN IF NOT EXISTS seller_name TEXT,
+  ADD COLUMN IF NOT EXISTS seller_address TEXT,
+  ADD COLUMN IF NOT EXISTS seller_location TEXT,
+  ADD COLUMN IF NOT EXISTS seller_phone TEXT,
+  ADD COLUMN IF NOT EXISTS seller_evtc TEXT,
+  ADD COLUMN IF NOT EXISTS seller_siret TEXT,
+  ADD COLUMN IF NOT EXISTS client_name TEXT,
+  ADD COLUMN IF NOT EXISTS client_address TEXT,
+  ADD COLUMN IF NOT EXISTS client_location TEXT,
+  ADD COLUMN IF NOT EXISTS client_siret TEXT,
+  ADD COLUMN IF NOT EXISTS client_vat TEXT,
+  ADD COLUMN IF NOT EXISTS client_contact TEXT,
+  ADD COLUMN IF NOT EXISTS client_email TEXT,
+  ADD COLUMN IF NOT EXISTS client_phone TEXT,
+  ADD COLUMN IF NOT EXISTS service_description TEXT,
+  ADD COLUMN IF NOT EXISTS service_date DATE,
+  ADD COLUMN IF NOT EXISTS service_pickup TEXT,
+  ADD COLUMN IF NOT EXISTS service_destination TEXT,
+  ADD COLUMN IF NOT EXISTS service_passengers_count INTEGER NOT NULL DEFAULT 0,
+  ADD COLUMN IF NOT EXISTS service_distance_km NUMERIC(8, 2) NOT NULL DEFAULT 0,
+  ADD COLUMN IF NOT EXISTS insurance_label TEXT,
+  ADD COLUMN IF NOT EXISTS tax_note TEXT,
+  ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW();
+
+UPDATE collaborators
+SET first_name = COALESCE(NULLIF(first_name, ''), split_part(full_name, ' ', 1))
+WHERE COALESCE(full_name, '') <> '';
+
+UPDATE collaborators
+SET last_name = COALESCE(
+    NULLIF(last_name, ''),
+    NULLIF(BTRIM(REGEXP_REPLACE(full_name, '^\S+\s*', '')), '')
+  )
+WHERE COALESCE(full_name, '') <> '';
+
+UPDATE collaborators
+SET role = CASE
+  WHEN can_drive = TRUE THEN 'driver'::collaborator_role
+  WHEN LOWER(role_title) LIKE '%chauffeur%' THEN 'driver'::collaborator_role
+  ELSE 'guide'::collaborator_role
+END
+WHERE role IS NOT NULL;
+
+UPDATE collaborators
+SET availability_status = CASE status
+  WHEN 'limited' THEN 'on_mission'::collaborator_availability_status
+  WHEN 'off' THEN 'unavailable'::collaborator_availability_status
+  ELSE 'available'::collaborator_availability_status
+END
+WHERE availability_status IS NOT NULL;
+
+UPDATE collaborators
+SET full_name = BTRIM(CONCAT_WS(' ', first_name, last_name))
+WHERE COALESCE(full_name, '') = ''
+  AND COALESCE(first_name, '') <> '';
+
+UPDATE collaborators
+SET role_title = CASE
+  WHEN role = 'driver' THEN 'Chauffeur'
+  ELSE 'Guide'
+END
+WHERE COALESCE(role_title, '') = '';
+
+UPDATE vehicles
+SET label = BTRIM(CONCAT_WS(' ', brand, model))
+WHERE COALESCE(label, '') = ''
+  AND (COALESCE(brand, '') <> '' OR COALESCE(model, '') <> '');
+
+UPDATE invoices
+SET payment_status = CASE
+  WHEN paid_at IS NOT NULL OR status = 'paid' THEN 'paid'::invoice_payment_status
+  ELSE 'unpaid'::invoice_payment_status
+END
+WHERE payment_status IS NOT NULL;
+
+UPDATE invoices
+SET settled_at = COALESCE(settled_at, paid_at)
+WHERE settled_at IS NULL
+  AND paid_at IS NOT NULL;
+
+UPDATE invoices
+SET source_label = CASE
+  WHEN document_type = 'external' THEN 'Facture externe'
+  ELSE 'Facture client'
+END
+WHERE COALESCE(source_label, '') = '';
+
+CREATE UNIQUE INDEX IF NOT EXISTS idx_collaborator_languages_unique_name
+  ON collaborator_languages (collaborator_id, LOWER(language_name));
+
+INSERT INTO collaborator_languages (collaborator_id, language_name, proficiency_level)
+SELECT
+  collaborators.id,
+  unnest_language.language_name,
+  'basic'::collaborator_language_level
+FROM collaborators
+CROSS JOIN LATERAL UNNEST(collaborators.languages) AS unnest_language(language_name)
+ON CONFLICT DO NOTHING;
 
 CREATE INDEX IF NOT EXISTS idx_collaborators_company_status
   ON collaborators(company_id, status);
 
+CREATE INDEX IF NOT EXISTS idx_collaborators_company_role_availability
+  ON collaborators(company_id, role, availability_status);
+
+CREATE INDEX IF NOT EXISTS idx_collaborator_languages_collaborator
+  ON collaborator_languages(collaborator_id);
+
 CREATE INDEX IF NOT EXISTS idx_vehicles_company_status
   ON vehicles(company_id, status);
+
+CREATE INDEX IF NOT EXISTS idx_vehicles_company_ownership_status
+  ON vehicles(company_id, ownership_type, status);
+
+CREATE INDEX IF NOT EXISTS idx_vehicles_owner_collaborator
+  ON vehicles(owner_collaborator_id);
 
 CREATE INDEX IF NOT EXISTS idx_missions_company_date
   ON missions(company_id, service_date);
@@ -199,3 +431,9 @@ CREATE INDEX IF NOT EXISTS idx_mission_assignments_collaborator
 
 CREATE INDEX IF NOT EXISTS idx_fuel_price_reference_lookup
   ON fuel_price_reference(company_id, energy_kind, valid_from);
+
+CREATE INDEX IF NOT EXISTS idx_invoices_company_document_payment
+  ON invoices(company_id, document_type, payment_status);
+
+CREATE INDEX IF NOT EXISTS idx_invoices_service_date
+  ON invoices(service_date);
