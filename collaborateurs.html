@@ -14,7 +14,7 @@
       href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=Manrope:wght@400;500;600;700&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="styles.css" />
+    <link rel="stylesheet" href="styles.css?v=20260328-factures-24" />
   </head>
   <body>
     <div class="page-shell">
@@ -94,90 +94,256 @@
       <main>
         <section class="hero-panel">
           <div class="hero-copy">
-            <p class="eyebrow">Page d&eacute;di&eacute;e</p>
-            <h2>Organiser l'&eacute;quipe terrain et les contacts utiles.</h2>
+            <p class="eyebrow">Page collaborateurs</p>
+            <h2>Ajouter et retrouver rapidement les personnes qui travaillent avec vous.</h2>
             <p class="hero-text">
-              Cette page servira &agrave; regrouper les profils, les r&ocirc;les, les t&eacute;l&eacute;phones
-              et les disponibilit&eacute;s des collaborateurs qui interviennent sur les trajets.
+              Cette page sert &agrave; enregistrer les collaborateurs avec les informations
+              essentielles: pr&eacute;nom, nom, fonction et langues parl&eacute;es avec leur niveau.
             </p>
 
             <div class="hero-actions">
               <a class="primary-action" href="index.html">Retour &agrave; l'accueil</a>
-              <a class="secondary-action" href="calendrier.html">Voir le calendrier complet</a>
+              <button class="secondary-action" id="open-collaborator-form" type="button">
+                Ajouter un collaborateur
+              </button>
             </div>
           </div>
 
           <div class="hero-aside">
             <article class="route-card">
               <span class="small-label">Equipe</span>
-              <strong>Chauffeurs, guides et relais</strong>
-              <p>Une base claire pour coordonner tout le terrain.</p>
+              <strong>Liste simple des collaborateurs</strong>
+              <p>Une base rapide pour retrouver les guides et les chauffeurs d&eacute;j&agrave; ajout&eacute;s.</p>
             </article>
 
             <div class="summary-strip">
               <article class="summary-item">
-                <span>Contacts actifs</span>
-                <strong>9</strong>
+                <span>Collaborateurs ajout&eacute;s</span>
+                <strong id="collaborator-count-summary">0</strong>
               </article>
               <article class="summary-item">
-                <span>Disponibles</span>
-                <strong>5</strong>
+                <span>Guides</span>
+                <strong id="guide-count-summary">0</strong>
               </article>
               <article class="summary-item">
-                <span>En mission</span>
-                <strong>3</strong>
+                <span>Chauffeurs</span>
+                <strong id="driver-count-summary">0</strong>
               </article>
               <article class="summary-item">
-                <span>Urgences</span>
-                <strong>1</strong>
+                <span>Langues suivies</span>
+                <strong id="language-count-summary">0</strong>
               </article>
             </div>
           </div>
         </section>
 
         <section class="workspace">
-          <article class="content-panel active" aria-label="Mes Collaborateurs">
+          <article class="content-panel active collaborator-panel" aria-label="Mes Collaborateurs">
             <div class="panel-header">
               <div>
                 <p class="panel-kicker">Mes Collaborateurs</p>
-                <h3>Une base claire pour l'&eacute;quipe terrain</h3>
+                <h3>Les collaborateurs d&eacute;j&agrave; ajout&eacute;s</h3>
               </div>
-              <span class="panel-status">En pr&eacute;paration</span>
+              <span class="panel-status">Gestion simple</span>
             </div>
 
-            <div class="placeholder-grid">
-              <article class="detail-card emphasis-card">
-                <p class="detail-kicker">Equipe</p>
-                <h4>Chauffeurs, guides et contacts utiles</h4>
-                <p>
-                  On pourra y regrouper les profils, t&eacute;l&eacute;phones, disponibilit&eacute;s
-                  et r&ocirc;les de chaque collaborateur.
-                </p>
-              </article>
-
-              <article class="detail-card">
-                <p class="detail-kicker">A ajouter ensuite</p>
-                <ul class="feature-list">
-                  <li>Fiche contact rapide</li>
-                  <li>Statut disponible ou en mission</li>
-                  <li>Affectation par trajet</li>
-                </ul>
-              </article>
-
-              <article class="detail-card">
-                <p class="detail-kicker">Exemple de vue</p>
-                <p class="mini-note">
-                  Sofia Martin<br />
-                  Guide FR / EN<br />
-                  Disponible aujourd'hui
-                </p>
-              </article>
+            <div class="collaborator-toolbar">
+              <p class="collaborator-toolbar-text">
+                Ajoutez un collaborateur pour retrouver rapidement son nom, sa fonction
+                et les langues qu'il peut utiliser avec vos clients.
+              </p>
+              <button class="panel-action" id="add-collaborator-button" type="button">
+                <span class="panel-action-icon" aria-hidden="true">+</span>
+                Ajouter un collaborateur
+              </button>
             </div>
+
+            <form class="collaborator-form-card" id="collaborator-form-card" hidden>
+              <div class="collaborator-form-head">
+                <div>
+                  <p class="detail-kicker" id="collaborator-form-kicker">Nouveau collaborateur</p>
+                  <h4 id="collaborator-form-title">Ajouter un collaborateur &agrave; la liste</h4>
+                </div>
+                <button class="form-close" id="cancel-collaborator-form" type="button" aria-label="Fermer le formulaire">
+                  &#10005;
+                </button>
+              </div>
+
+              <div class="collaborator-form-grid">
+                <label class="field-group">
+                  <span>Pr&eacute;nom</span>
+                  <input id="collaborator-first-name" name="firstName" type="text" placeholder="Sofia" required />
+                </label>
+
+                <label class="field-group">
+                  <span>Nom</span>
+                  <input id="collaborator-last-name" name="lastName" type="text" placeholder="Martin" required />
+                </label>
+
+                <label class="field-group">
+                  <span>Fonction</span>
+                  <select id="collaborator-role" name="role">
+                    <option value="guide">Guide</option>
+                    <option value="driver">Chauffeur</option>
+                  </select>
+                </label>
+
+                <label class="field-group">
+                  <span>Disponibilite</span>
+                  <select id="collaborator-status" name="availabilityStatus">
+                    <option value="available">Disponible</option>
+                    <option value="on_mission">En mission</option>
+                    <option value="unavailable">Indisponible</option>
+                  </select>
+                </label>
+
+                <div class="collaborator-vehicle-builder" id="collaborator-vehicle-builder" hidden>
+                  <div class="collaborator-vehicle-head">
+                    <div>
+                      <span class="vehicle-meta-label">Vehicule associe</span>
+                      <p class="collaborator-language-note">
+                        Si ce collaborateur est chauffeur, vous pouvez lui associer un vehicule
+                        qui sera ajoute automatiquement dans <strong>Mes Vehicules</strong>.
+                      </p>
+                    </div>
+
+                    <button
+                      class="secondary-action collaborator-vehicle-toggle"
+                      id="toggle-collaborator-vehicle"
+                      type="button"
+                    >
+                      Ajouter un vehicule
+                    </button>
+                  </div>
+
+                  <div class="collaborator-linked-vehicles" id="collaborator-linked-vehicles" hidden>
+                    <span class="vehicle-meta-label">Vehicules associes</span>
+                    <div class="collaborator-linked-vehicle-list" id="collaborator-linked-vehicle-list"></div>
+                  </div>
+
+                  <div class="collaborator-vehicle-fields" id="collaborator-vehicle-fields" hidden>
+                    <div class="collaborator-vehicle-grid">
+                      <label class="field-group">
+                        <span>Marque</span>
+                        <input id="collaborator-vehicle-brand" name="collaboratorVehicleBrand" type="text" placeholder="Mercedes" />
+                      </label>
+
+                      <label class="field-group">
+                        <span>Modele</span>
+                        <input id="collaborator-vehicle-model" name="collaboratorVehicleModel" type="text" placeholder="Vito Tourer" />
+                      </label>
+
+                      <label class="field-group">
+                        <span>Couleur</span>
+                        <input id="collaborator-vehicle-color" name="collaboratorVehicleColor" type="text" placeholder="Noir" />
+                      </label>
+
+                      <label class="field-group">
+                        <span>Plaque d'immatriculation</span>
+                        <input id="collaborator-vehicle-plate" name="collaboratorVehiclePlate" type="text" placeholder="AB-123-CD" />
+                      </label>
+
+                      <label class="field-group field-group-wide">
+                        <span>Etat du vehicule</span>
+                        <select id="collaborator-vehicle-status" name="collaboratorVehicleStatus">
+                          <option value="available">Disponible</option>
+                          <option value="in_use">En utilisation</option>
+                          <option value="repair">Reparation</option>
+                        </select>
+                      </label>
+
+                      <div class="field-row collaborator-vehicle-consumption-row">
+                        <label class="field-group">
+                          <span>Consommation</span>
+                          <input
+                            id="collaborator-vehicle-consumption"
+                            name="collaboratorVehicleConsumption"
+                            type="number"
+                            inputmode="decimal"
+                            min="0"
+                            step="0.1"
+                            placeholder="7.5"
+                          />
+                        </label>
+
+                        <label class="field-group">
+                          <span>Unite</span>
+                          <select id="collaborator-vehicle-consumption-unit" name="collaboratorVehicleConsumptionUnit">
+                            <option value="L/100 km">L/100 km</option>
+                            <option value="kWh/100 km">kWh/100 km</option>
+                          </select>
+                        </label>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="collaborator-language-builder">
+                  <div class="collaborator-language-head">
+                    <div>
+                      <span class="vehicle-meta-label">Langues</span>
+                      <p class="collaborator-language-note">
+                        Ajoutez une langue puis son niveau avant d'enregistrer le collaborateur.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div class="collaborator-language-row">
+                    <label class="field-group collaborator-language-autocomplete">
+                      <span>Langue</span>
+                      <input
+                        id="collaborator-language-name"
+                        name="languageName"
+                        type="text"
+                        placeholder="Anglais"
+                        autocomplete="off"
+                      />
+                      <div
+                        class="collaborator-language-suggestions"
+                        id="collaborator-language-suggestions"
+                        role="listbox"
+                        aria-label="Suggestions de langues"
+                        hidden
+                      ></div>
+                    </label>
+
+                    <label class="field-group">
+                      <span>Niveau</span>
+                      <select id="collaborator-language-level" name="languageLevel">
+                        <option value="basic">Notions</option>
+                        <option value="intermediate">Intermediaire</option>
+                        <option value="conversational">Conversationnel</option>
+                        <option value="fluent">Courant</option>
+                      </select>
+                    </label>
+
+                    <button class="secondary-action collaborator-language-add" id="add-collaborator-language" type="button">
+                      Ajouter la langue
+                    </button>
+                  </div>
+
+                  <div class="collaborator-language-list" id="collaborator-language-list" aria-live="polite"></div>
+                </div>
+              </div>
+
+              <p class="form-message" id="collaborator-form-message" hidden></p>
+
+              <div class="form-actions">
+                <button class="primary-action" id="submit-collaborator-form" type="submit">
+                  Enregistrer le collaborateur
+                </button>
+                <button class="secondary-action" id="reset-collaborator-form" type="button">
+                  Effacer
+                </button>
+              </div>
+            </form>
+
+            <div class="collaborator-list" id="collaborator-list" aria-live="polite"></div>
           </article>
         </section>
       </main>
     </div>
 
-    <script src="script.js"></script>
+    <script src="script.js?v=20260328-factures-24"></script>
   </body>
 </html>

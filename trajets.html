@@ -3,10 +3,10 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Route Pilote | Trajets et couts</title>
+    <title>Route Pilote | Trajets</title>
     <meta
       name="description"
-      content="Page trajets pour suivre les parcours, les couts carburant et les informations de mission."
+      content="Page trajets pour organiser les transferts, les circuits et les prises en charge."
     />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -14,17 +14,17 @@
       href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=Manrope:wght@400;500;600;700&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="styles.css" />
+    <link rel="stylesheet" href="styles.css?v=20260328-factures-24" />
   </head>
   <body>
     <div class="page-shell">
       <header class="topbar">
         <div class="brand-block">
           <span class="brand-kicker">Route Pilote</span>
-          <h1><a class="brand-home" href="index.html">Pilotage des missions</a></h1>
+          <h1><a class="brand-home" href="index.html">Tableau de bord chauffeur</a></h1>
           <p class="brand-text">
-            Page d'exploitation des trajets pour suivre les parcours, les couts estim&eacute;s et
-            les informations de facturation li&eacute;es &agrave; chaque mission.
+            Page d&eacute;di&eacute;e aux trajets, aux circuits touristiques et aux points de prise
+            en charge.
           </p>
         </div>
 
@@ -54,7 +54,7 @@
               <a class="nav-option" href="calendrier.html">
                 <span class="nav-option-index">01</span>
                 <strong>Mon Calendrier</strong>
-                <span class="nav-option-text">Planifier les missions, l'&eacute;quipe et la flotte.</span>
+                <span class="nav-option-text">Vue compl&egrave;te du planning et des courses.</span>
               </a>
 
               <a class="nav-option" href="collaborateurs.html">
@@ -78,7 +78,7 @@
               <a class="nav-option active" href="trajets.html" aria-current="page">
                 <span class="nav-option-index">05</span>
                 <strong>Trajets</strong>
-                <span class="nav-option-text">Parcours, couts carburant et suivi des missions.</span>
+                <span class="nav-option-text">Parcours, horaires et points de prise en charge.</span>
               </a>
 
               <a class="nav-option" href="factures.html">
@@ -94,244 +94,90 @@
       <main>
         <section class="hero-panel">
           <div class="hero-copy">
-            <p class="eyebrow">Exploitation trajet</p>
-            <h2>Suivre chaque parcours avec son cout carburant, sa marge et ses contraintes terrain.</h2>
+            <p class="eyebrow">Page d&eacute;di&eacute;e</p>
+            <h2>Pr&eacute;parer les transferts et les circuits du jour.</h2>
             <p class="hero-text">
-              La page trajets devient le centre de d&eacute;tail de chaque mission: d&eacute;part,
-              destination, passagers, bagages, affectation, estimation carburant selon le
-              v&eacute;hicule choisi, puis lecture directe de la marge et de l'&eacute;tat de facturation.
+              Cette page servira &agrave; organiser les parcours, les adresses de prise en charge,
+              les passagers, les bagages et les horaires d'arriv&eacute;e attendus.
             </p>
 
             <div class="hero-actions">
-              <a class="primary-action" href="calendrier.html">Revenir au calendrier</a>
-              <a class="secondary-action" href="finances.html">Voir les finances</a>
+              <a class="primary-action" href="index.html">Retour &agrave; l'accueil</a>
+              <a class="secondary-action" href="calendrier.html">Voir la page calendrier</a>
             </div>
           </div>
 
           <div class="hero-aside">
             <article class="route-card">
-              <span class="small-label">Vue exploitation</span>
-              <strong>Trajets, couts et facturation</strong>
-              <p>Une lecture directe pour arbitrer rapidement sur la journ&eacute;e.</p>
+              <span class="small-label">Parcours</span>
+              <strong>Transferts et circuits</strong>
+              <p>Une vue claire pour chaque mission du jour.</p>
             </article>
 
             <div class="summary-strip">
               <article class="summary-item">
-                <span>Kilometres semaine</span>
-                <strong id="trip-total-distance">0</strong>
+                <span>Trajets actifs</span>
+                <strong>7</strong>
               </article>
               <article class="summary-item">
-                <span>CA estim&eacute;</span>
-                <strong id="trip-total-revenue">0</strong>
+                <span>D&eacute;parts matin</span>
+                <strong>3</strong>
               </article>
               <article class="summary-item">
-                <span>Cout op&eacute;rationnel</span>
-                <strong id="trip-total-cost">0</strong>
+                <span>Retours soir</span>
+                <strong>2</strong>
               </article>
               <article class="summary-item">
-                <span>Marge moyenne</span>
-                <strong id="trip-average-margin">0</strong>
+                <span>Points pickup</span>
+                <strong>9</strong>
               </article>
             </div>
           </div>
         </section>
 
         <section class="workspace">
-          <article class="content-panel active route-ops-panel" aria-label="Trajets">
+          <article class="content-panel active" aria-label="Trajets">
             <div class="panel-header">
               <div>
                 <p class="panel-kicker">Trajets</p>
-                <h3>Le d&eacute;tail d'exploitation mission par mission</h3>
+                <h3>Une vue pr&ecirc;te pour les transferts et circuits</h3>
               </div>
-              <div class="panel-header-actions">
-                <span class="panel-status">Pret pour le suivi</span>
-                <button class="panel-action" id="open-mission-form" type="button">
-                  <span class="panel-action-icon" aria-hidden="true">+</span>
-                  Nouvelle mission
-                </button>
-              </div>
+              <span class="panel-status">En pr&eacute;paration</span>
             </div>
 
-            <form class="mission-form-card" id="mission-form-card" hidden>
-              <div class="vehicle-form-head">
-                <div>
-                  <p class="detail-kicker" id="mission-form-kicker">Nouvelle mission</p>
-                  <h4 id="mission-form-title">Ajouter une mission exploitable</h4>
-                </div>
-                <button class="form-close" id="cancel-mission-form" type="button" aria-label="Fermer le formulaire">
-                  &#10005;
-                </button>
-              </div>
-
-              <div class="mission-form-grid">
-                <label class="field-group">
-                  <span>Code mission</span>
-                  <input id="mission-code" name="missionCode" type="text" placeholder="RP-400" required />
-                </label>
-
-                <label class="field-group">
-                  <span>Type de service</span>
-                  <input id="mission-service-type" name="serviceType" type="text" placeholder="Transfert aeroport" required />
-                </label>
-
-                <label class="field-group">
-                  <span>Client</span>
-                  <input id="mission-client-name" name="clientName" type="text" placeholder="Nom du client ou de l'agence" required />
-                </label>
-
-                <label class="field-group">
-                  <span>Date</span>
-                  <input id="mission-service-date" name="serviceDate" type="date" required />
-                </label>
-
-                <label class="field-group">
-                  <span>Heure de depart</span>
-                  <input id="mission-departure-time" name="departureTime" type="time" required />
-                </label>
-
-                <label class="field-group">
-                  <span>Heure d'arrivee</span>
-                  <input id="mission-arrival-time" name="arrivalTime" type="time" required />
-                </label>
-
-                <label class="field-group field-group-wide">
-                  <span>Adresse de recuperation</span>
-                  <input id="mission-pickup-address" name="pickupAddress" type="text" placeholder="Adresse complete de recuperation" required />
-                </label>
-
-                <label class="field-group field-group-wide">
-                  <span>Point de rendez-vous</span>
-                  <input id="mission-meeting-point" name="meetingPoint" type="text" placeholder="Sortie, hall, borne, porte..." required />
-                </label>
-
-                <div class="field-group field-group-wide mission-stop-builder">
-                  <div class="mission-stop-builder-head">
-                    <div>
-                      <span>Etapes et activites</span>
-                      <p class="mission-stop-builder-copy">
-                        Ajoutez les arrets intermediaires de la mission et le budget alloue a chaque activite.
-                      </p>
-                    </div>
-                    <button class="secondary-action small-action" id="add-mission-stop" type="button">
-                      Ajouter une etape
-                    </button>
-                  </div>
-                  <div class="mission-stops-list" id="mission-stops-list"></div>
-                </div>
-
-                <label class="field-group field-group-wide">
-                  <span>Adresse de destination</span>
-                  <input id="mission-destination-address" name="destinationAddress" type="text" placeholder="Adresse complete de destination" required />
-                </label>
-
-                <label class="field-group">
-                  <span>Passagers</span>
-                  <input id="mission-passengers" name="passengers" type="number" min="1" step="1" placeholder="4" required />
-                </label>
-
-                <label class="field-group">
-                  <span>Bagages</span>
-                  <input id="mission-luggage" name="luggage" type="number" min="0" step="1" placeholder="4" required />
-                </label>
-
-                <label class="field-group">
-                  <span>Prix vendu (EUR)</span>
-                  <input id="mission-quoted-price" name="quotedPrice" type="number" min="0" step="0.01" placeholder="210" required />
-                </label>
-
-                <label class="field-group">
-                  <span>Marge cible (%)</span>
-                  <input id="mission-target-margin" name="targetMargin" type="number" min="5" max="90" step="1" placeholder="30" required />
-                </label>
-
-                <label class="field-group">
-                  <span>Peages (EUR)</span>
-                  <input id="mission-tolls" name="tolls" type="number" min="0" step="0.01" placeholder="6" required />
-                </label>
-
-                <label class="field-group">
-                  <span>Parking (EUR)</span>
-                  <input id="mission-parking" name="parking" type="number" min="0" step="0.01" placeholder="14" required />
-                </label>
-
-                <label class="field-group">
-                  <span>Priorite</span>
-                  <select id="mission-priority" name="priority">
-                    <option value="standard">Standard</option>
-                    <option value="high">Prioritaire</option>
-                    <option value="vip">VIP</option>
-                  </select>
-                </label>
-
-                <label class="field-group">
-                  <span>Statut facturation</span>
-                  <select id="mission-billing-status" name="billingStatus">
-                    <option value="quote_signed">Devis valide</option>
-                    <option value="to_invoice">A facturer</option>
-                    <option value="invoice_sent">Facture envoyee</option>
-                    <option value="paid">Reglee</option>
-                  </select>
-                </label>
-
-                <label class="field-group field-group-wide">
-                  <span>Notes mission</span>
-                  <input id="mission-notes" name="notes" type="text" placeholder="Infos client, timing, consignes, bagages..." required />
-                </label>
-              </div>
-
-              <article class="mission-pricing-preview">
-                <p class="detail-kicker">Simulation</p>
-                <div class="mission-pricing-preview-grid">
-                  <div>
-                    <span>Etapes activites</span>
-                    <strong id="mission-preview-stops">0</strong>
-                  </div>
-                  <div>
-                    <span>Budget activites</span>
-                    <strong id="mission-preview-activities">0 EUR</strong>
-                  </div>
-                  <div>
-                    <span>Prix conseille</span>
-                    <strong id="mission-preview-price">Calcule a l'ajout</strong>
-                  </div>
-                </div>
+            <div class="placeholder-grid">
+              <article class="detail-card emphasis-card">
+                <p class="detail-kicker">Parcours</p>
+                <h4>Organiser les d&eacute;parts et les itin&eacute;raires</h4>
+                <p>
+                  Cette page pourra ensuite afficher les points de prise en charge, les
+                  &eacute;tapes, les horaires et les informations clients.
+                </p>
               </article>
 
-              <p class="form-message" id="mission-form-message" hidden></p>
+              <article class="detail-card">
+                <p class="detail-kicker">A ajouter ensuite</p>
+                <ul class="feature-list">
+                  <li>Adresse de d&eacute;part et destination</li>
+                  <li>Nombre de passagers et bagages</li>
+                  <li>Notes sp&eacute;ciales pour chaque trajet</li>
+                </ul>
+              </article>
 
-              <div class="form-actions">
-                <button class="primary-action" id="submit-mission-form" type="submit">
-                  Ajouter la mission
-                </button>
-                <button class="secondary-action" id="reset-mission-form" type="button">
-                  Effacer
-                </button>
-              </div>
-            </form>
-
-            <div class="trip-dashboard">
-              <aside class="trip-list-shell">
-                <article class="detail-card trip-list-card">
-                  <p class="detail-kicker">Semaine</p>
-                  <h4>Choisir un trajet</h4>
-                  <p class="trip-list-copy">
-                    S&eacute;lectionnez une mission pour retrouver son parcours, ses ressources, son
-                    estimation carburant et son statut de facturation.
-                  </p>
-                  <div class="trip-list" id="trip-list" aria-live="polite"></div>
-                </article>
-              </aside>
-
-              <div class="trip-detail-shell" id="trip-detail" aria-live="polite"></div>
+              <article class="detail-card">
+                <p class="detail-kicker">Exemple de vue</p>
+                <p class="mini-note">
+                  Nice &rarr; Monaco<br />
+                  4 clients<br />
+                  Arriv&eacute;e demand&eacute;e 09:45
+                </p>
+              </article>
             </div>
           </article>
         </section>
       </main>
     </div>
 
-    <script src="script.js"></script>
-    <script src="maps-config.local.js"></script>
-    <script src="google-maps-loader.js"></script>
-    <script src="operations.js"></script>
+    <script src="script.js?v=20260328-factures-24"></script>
   </body>
 </html>

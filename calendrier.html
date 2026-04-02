@@ -3,10 +3,10 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Route Pilote | Planification des missions</title>
+    <title>Route Pilote | Mon Calendrier</title>
     <meta
       name="description"
-      content="Page calendrier pour affecter les collaborateurs, les vehicules et les missions de la semaine."
+      content="Page calendrier pour le planning chauffeur et les courses planifi&eacute;es."
     />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -14,17 +14,17 @@
       href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=Manrope:wght@400;500;600;700&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="styles.css" />
+    <link rel="stylesheet" href="styles.css?v=20260328-factures-24" />
   </head>
   <body>
     <div class="page-shell">
       <header class="topbar">
         <div class="brand-block">
           <span class="brand-kicker">Route Pilote</span>
-          <h1><a class="brand-home" href="index.html">Pilotage des missions</a></h1>
+          <h1><a class="brand-home" href="index.html">Tableau de bord chauffeur</a></h1>
           <p class="brand-text">
-            Page de planification pour affecter les chauffeurs, les accompagnateurs et les
-            v&eacute;hicules sur chaque d&eacute;part de la semaine.
+            Page d&eacute;di&eacute;e au calendrier chauffeur, avec une vue plus claire sur les
+            courses et les horaires.
           </p>
         </div>
 
@@ -54,7 +54,7 @@
               <a class="nav-option active" href="calendrier.html" aria-current="page">
                 <span class="nav-option-index">01</span>
                 <strong>Mon Calendrier</strong>
-                <span class="nav-option-text">Planifier les missions, l'&eacute;quipe et la flotte.</span>
+                <span class="nav-option-text">Vue compl&egrave;te du planning et des courses.</span>
               </a>
 
               <a class="nav-option" href="collaborateurs.html">
@@ -78,7 +78,7 @@
               <a class="nav-option" href="trajets.html">
                 <span class="nav-option-index">05</span>
                 <strong>Trajets</strong>
-                <span class="nav-option-text">Parcours, couts carburant et suivi des missions.</span>
+                <span class="nav-option-text">Parcours, horaires et points de prise en charge.</span>
               </a>
 
               <a class="nav-option" href="factures.html">
@@ -94,304 +94,89 @@
       <main>
         <section class="hero-panel">
           <div class="hero-copy">
-            <p class="eyebrow">Planning exploitation</p>
-            <h2>Affecter les bons collaborateurs et les bons v&eacute;hicules mission par mission.</h2>
+            <p class="eyebrow">Page d&eacute;di&eacute;e</p>
+            <h2>Le planning complet des courses chauffeur.</h2>
             <p class="hero-text">
-              Le calendrier devient une vraie vue op&eacute;rationnelle: vous placez les
-              chauffeurs, les renforts et les v&eacute;hicules au bon moment, puis vous rep&eacute;rez
-              tout de suite les trous de planning, les soucis de capacit&eacute; et les missions pr&ecirc;tes
-              &agrave; partir.
+              Cette page servira &agrave; afficher les vues jour, semaine et mission, avec les
+              clients, les v&eacute;hicules et les horaires de prise en charge.
             </p>
 
             <div class="hero-actions">
-              <a class="primary-action" href="trajets.html">Ouvrir les trajets</a>
-              <a class="secondary-action" href="vehicules.html">Verifier la flotte</a>
+              <a class="primary-action" href="index.html">Retour &agrave; l'accueil</a>
+              <a class="secondary-action" href="index.html#home-calendar">Voir le bloc calendrier</a>
             </div>
           </div>
 
           <div class="hero-aside">
             <article class="route-card">
-              <span class="small-label">Semaine active</span>
-              <strong id="planning-week-label">Semaine en cours</strong>
-              <p>Une seule vue pour les missions, les ressources et les arbitrages.</p>
+              <span class="small-label">Vue pr&eacute;vue</span>
+              <strong>Semaine chauffeur</strong>
+              <p>Jour, semaine, affectation client et v&eacute;hicule.</p>
             </article>
 
             <div class="summary-strip">
               <article class="summary-item">
-                <span>Missions semaine</span>
-                <strong id="planning-total-missions">0</strong>
+                <span>Prochains d&eacute;parts</span>
+                <strong>12</strong>
               </article>
               <article class="summary-item">
-                <span>Missions compl&egrave;tes</span>
-                <strong id="planning-covered-missions">0</strong>
+                <span>Retards &agrave; suivre</span>
+                <strong>1</strong>
               </article>
               <article class="summary-item">
-                <span>Passagers planifi&eacute;s</span>
-                <strong id="planning-total-passengers">0</strong>
+                <span>Clients pr&eacute;vus</span>
+                <strong>53</strong>
               </article>
               <article class="summary-item">
-                <span>CA estim&eacute;</span>
-                <strong id="planning-total-revenue">0</strong>
+                <span>V&eacute;hicules li&eacute;s</span>
+                <strong>5</strong>
               </article>
             </div>
           </div>
         </section>
 
         <section class="workspace">
-          <article class="content-panel active planner-panel" aria-label="Mon Calendrier">
+          <article class="content-panel active" aria-label="Mon Calendrier">
             <div class="panel-header">
               <div>
                 <p class="panel-kicker">Mon Calendrier</p>
-                <h3>Le planning hebdomadaire des missions et des affectations</h3>
+                <h3>Les 7 prochains jours de courses planifi&eacute;es</h3>
               </div>
-              <div class="panel-header-actions">
-                <span class="panel-status">Pret a exploiter</span>
-                <button class="panel-action" id="open-mission-form" type="button">
-                  <span class="panel-action-icon" aria-hidden="true">+</span>
-                  Nouvelle mission
-                </button>
-              </div>
+              <span class="panel-status">Page d&eacute;di&eacute;e</span>
             </div>
 
-            <div class="calendar-command-grid">
+            <div class="calendar-overview">
               <article class="detail-card emphasis-card">
-                <p class="detail-kicker">Pilotage</p>
-                <h4>Prioriser les missions et fermer les trous de planning</h4>
+                <p class="detail-kicker">R&eacute;sum&eacute;</p>
+                <h4>Vue glissante sur 7 jours</h4>
                 <p>
-                  Chaque mission affiche directement le chauffeur, le renfort, le v&eacute;hicule et
-                  les signaux d'alerte. L'objectif n'est plus seulement de voir un agenda, mais de
-                  valider l'ex&eacute;cution.
+                  Retrouvez ici tous les d&eacute;parts pr&eacute;vus sur les 7 jours courants,
+                  avec l'heure, le trajet, le nombre de clients et le v&eacute;hicule affect&eacute;.
                 </p>
               </article>
 
-              <article class="detail-card">
-                <p class="detail-kicker">Points ouverts</p>
-                <h4 id="planning-open-alerts">0 points a traiter</h4>
-                <p>
-                  Capacit&eacute; insuffisante, ressource indisponible, mission sans chauffeur ou
-                  v&eacute;hicule non encore affect&eacute;: tout remonte ici.
-                </p>
-              </article>
-
-              <article class="detail-card">
-                <p class="detail-kicker">Ressources</p>
-                <div class="mini-stat-stack">
-                  <div class="mini-stat-block">
-                    <strong id="planning-ready-vehicles">0</strong>
-                    <span>Vehicules exploitables</span>
-                  </div>
-                  <div class="mini-stat-block">
-                    <strong id="planning-available-collaborators">0</strong>
-                    <span>Collaborateurs mobilisables</span>
-                  </div>
-                </div>
-              </article>
+              <div class="calendar-stats">
+                <article class="calendar-stat">
+                  <span>Courses planifi&eacute;es</span>
+                  <strong id="calendar-total-rides">0</strong>
+                </article>
+                <article class="calendar-stat">
+                  <span>Clients pr&eacute;vus</span>
+                  <strong id="calendar-total-clients">0</strong>
+                </article>
+                <article class="calendar-stat">
+                  <span>V&eacute;hicules mobilis&eacute;s</span>
+                  <strong id="calendar-total-vehicles">0</strong>
+                </article>
+              </div>
             </div>
 
-            <form class="mission-form-card" id="mission-form-card" hidden>
-              <div class="vehicle-form-head">
-                <div>
-                  <p class="detail-kicker" id="mission-form-kicker">Nouvelle mission</p>
-                  <h4 id="mission-form-title">Ajouter une mission au planning</h4>
-                </div>
-                <button class="form-close" id="cancel-mission-form" type="button" aria-label="Fermer le formulaire">
-                  &#10005;
-                </button>
-              </div>
-
-              <div class="mission-form-grid">
-                <label class="field-group">
-                  <span>Code mission</span>
-                  <input id="mission-code" name="missionCode" type="text" placeholder="RP-400" required />
-                </label>
-
-                <label class="field-group">
-                  <span>Type de service</span>
-                  <input id="mission-service-type" name="serviceType" type="text" placeholder="Transfert aeroport" required />
-                </label>
-
-                <label class="field-group">
-                  <span>Client</span>
-                  <input id="mission-client-name" name="clientName" type="text" placeholder="Nom du client ou de l'agence" required />
-                </label>
-
-                <label class="field-group">
-                  <span>Date</span>
-                  <input id="mission-service-date" name="serviceDate" type="date" required />
-                </label>
-
-                <label class="field-group">
-                  <span>Heure de depart</span>
-                  <input id="mission-departure-time" name="departureTime" type="time" required />
-                </label>
-
-                <label class="field-group">
-                  <span>Heure d'arrivee</span>
-                  <input id="mission-arrival-time" name="arrivalTime" type="time" required />
-                </label>
-
-                <label class="field-group field-group-wide">
-                  <span>Adresse de recuperation</span>
-                  <input id="mission-pickup-address" name="pickupAddress" type="text" placeholder="Terminal 2E, Roissy" required />
-                </label>
-
-                <label class="field-group field-group-wide">
-                  <span>Point de rendez-vous</span>
-                  <input id="mission-meeting-point" name="meetingPoint" type="text" placeholder="Sortie porte 16 avec panneau" required />
-                </label>
-
-                <div class="field-group field-group-wide mission-stop-builder">
-                  <div class="mission-stop-builder-head">
-                    <div>
-                      <span>Etapes et activites</span>
-                      <p class="mission-stop-builder-copy">
-                        Ajoutez les arrets intermediaires de la mission et le budget alloue a chaque activite.
-                      </p>
-                    </div>
-                    <button class="secondary-action small-action" id="add-mission-stop" type="button">
-                      Ajouter une etape
-                    </button>
-                  </div>
-                  <div class="mission-stops-list" id="mission-stops-list"></div>
-                </div>
-
-                <label class="field-group field-group-wide">
-                  <span>Adresse de destination</span>
-                  <input id="mission-destination-address" name="destinationAddress" type="text" placeholder="Adresse complete de destination" required />
-                </label>
-
-                <label class="field-group">
-                  <span>Passagers</span>
-                  <input id="mission-passengers" name="passengers" type="number" min="1" step="1" placeholder="4" required />
-                </label>
-
-                <label class="field-group">
-                  <span>Bagages</span>
-                  <input id="mission-luggage" name="luggage" type="number" min="0" step="1" placeholder="4" required />
-                </label>
-
-                <label class="field-group">
-                  <span>Prix vendu (EUR)</span>
-                  <input id="mission-quoted-price" name="quotedPrice" type="number" min="0" step="0.01" placeholder="210" required />
-                </label>
-
-                <label class="field-group">
-                  <span>Marge cible (%)</span>
-                  <input id="mission-target-margin" name="targetMargin" type="number" min="5" max="90" step="1" placeholder="30" required />
-                </label>
-
-                <label class="field-group">
-                  <span>Peages (EUR)</span>
-                  <input id="mission-tolls" name="tolls" type="number" min="0" step="0.01" placeholder="6" required />
-                </label>
-
-                <label class="field-group">
-                  <span>Parking (EUR)</span>
-                  <input id="mission-parking" name="parking" type="number" min="0" step="0.01" placeholder="14" required />
-                </label>
-
-                <label class="field-group">
-                  <span>Priorite</span>
-                  <select id="mission-priority" name="priority">
-                    <option value="standard">Standard</option>
-                    <option value="high">Prioritaire</option>
-                    <option value="vip">VIP</option>
-                  </select>
-                </label>
-
-                <label class="field-group">
-                  <span>Statut facturation</span>
-                  <select id="mission-billing-status" name="billingStatus">
-                    <option value="quote_signed">Devis valide</option>
-                    <option value="to_invoice">A facturer</option>
-                    <option value="invoice_sent">Facture envoyee</option>
-                    <option value="paid">Reglee</option>
-                  </select>
-                </label>
-
-                <label class="field-group field-group-wide">
-                  <span>Notes mission</span>
-                  <input id="mission-notes" name="notes" type="text" placeholder="Infos client, logistique, bagages, consignes..." required />
-                </label>
-              </div>
-
-              <article class="mission-pricing-preview">
-                <p class="detail-kicker">Simulation</p>
-                <div class="mission-pricing-preview-grid">
-                  <div>
-                    <span>Etapes activites</span>
-                    <strong id="mission-preview-stops">0</strong>
-                  </div>
-                  <div>
-                    <span>Budget activites</span>
-                    <strong id="mission-preview-activities">0 EUR</strong>
-                  </div>
-                  <div>
-                    <span>Prix conseille</span>
-                    <strong id="mission-preview-price">Calcule a l'ajout</strong>
-                  </div>
-                </div>
-              </article>
-
-              <p class="form-message" id="mission-form-message" hidden></p>
-
-              <div class="form-actions">
-                <button class="primary-action" id="submit-mission-form" type="submit">
-                  Ajouter la mission
-                </button>
-                <button class="secondary-action" id="reset-mission-form" type="button">
-                  Effacer
-                </button>
-              </div>
-            </form>
-
-            <div class="planner-layout">
-              <div class="planner-board" id="planning-board" aria-live="polite"></div>
-
-              <aside class="planner-side">
-                <div class="planner-selection-card" id="planning-detail" aria-live="polite"></div>
-
-                <div class="planner-support-grid">
-                  <article class="detail-card side-card">
-                    <div class="side-card-header">
-                      <div>
-                        <p class="detail-kicker">Equipe</p>
-                        <h4>Collaborateurs disponibles</h4>
-                      </div>
-                    </div>
-                    <div class="resource-list" id="collaborator-pool" aria-live="polite"></div>
-                  </article>
-
-                  <article class="detail-card side-card">
-                    <div class="side-card-header">
-                      <div>
-                        <p class="detail-kicker">Flotte</p>
-                        <h4>Vehicules utilisables cette semaine</h4>
-                      </div>
-                    </div>
-                    <div class="resource-list" id="vehicle-pool" aria-live="polite"></div>
-                  </article>
-
-                  <article class="detail-card side-card">
-                    <div class="side-card-header">
-                      <div>
-                        <p class="detail-kicker">Alertes</p>
-                        <h4>Ce qui bloque encore</h4>
-                      </div>
-                    </div>
-                    <div class="alert-list" id="planning-alerts" aria-live="polite"></div>
-                  </article>
-                </div>
-              </aside>
-            </div>
+            <div class="calendar-week" id="calendar-week" aria-live="polite"></div>
           </article>
         </section>
       </main>
     </div>
 
-    <script src="script.js"></script>
-    <script src="maps-config.local.js"></script>
-    <script src="google-maps-loader.js"></script>
-    <script src="operations.js"></script>
+    <script src="script.js?v=20260328-factures-24"></script>
   </body>
 </html>
