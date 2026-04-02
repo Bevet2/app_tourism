@@ -256,6 +256,208 @@ const invoiceCurrencyFormatter = new Intl.NumberFormat("fr-FR", {
   minimumFractionDigits: 2,
   maximumFractionDigits: 2,
 });
+const serverBackedCollections = [
+  { storageKey: vehiclesStorageKey, collectionName: "vehicles" },
+  { storageKey: collaboratorsStorageKey, collectionName: "collaborators" },
+  { storageKey: invoicesStorageKey, collectionName: "invoices" },
+];
+const serverBackedCollectionByStorageKey = new Map(
+  serverBackedCollections.map(({ storageKey, collectionName }) => [storageKey, collectionName])
+);
+let routePiloteServerSyncQueue = Promise.resolve();
+
+function canUseServerDataApi() {
+  return typeof window.fetch === "function" && window.location.protocol !== "file:";
+}
+
+async function fetchServerJson(path, options = {}) {
+  const response = await window.fetch(path, {
+    headers: {
+      Accept: "application/json",
+      ...(options.body ? { "Content-Type": "application/json" } : {}),
+      ...(options.headers || {}),
+    },
+    cache: "no-store",
+    ...options,
+  });
+
+  let payload = {};
+  try {
+    payload = await response.json();
+  } catch (error) {
+    payload = {};
+  }
+
+  if (!response.ok) {
+    const message =
+      typeof payload?.error === "string" && payload.error.trim()
+        ? payload.error.trim()
+        : "Erreur de synchronisation serveur.";
+    throw new Error(message);
+  }
+
+  return payload;
+}
+
+function setStoredArrayWithoutServerSync(storageKey, items) {
+  window.localStorage.setItem(storageKey, JSON.stringify(items));
+}
+
+function getServerCollectionName(storageKey) {
+  return serverBackedCollectionByStorageKey.get(storageKey) || "";
+}
+
+async function syncServerCollection(collectionName, items) {
+  if (!collectionName || !canUseServerDataApi()) {
+    return;
+  }
+
+  await fetchServerJson(`/api/${collectionName}`, {
+    method: "PUT",
+    body: JSON.stringify({ items }),
+  });
+}
+
+function queueServerCollectionSync(storageKey, items) {
+  const collectionName = getServerCollectionName(storageKey);
+  if (!collectionName || !canUseServerDataApi()) {
+    return;
+  }
+
+  const snapshot = JSON.parse(JSON.stringify(items));
+  routePiloteServerSyncQueue = routePiloteServerSyncQueue
+    .catch(() => undefined)
+    .then(() => syncServerCollection(collectionName, snapshot))
+    .catch(() => undefined);
+}
+
+async function blobToBase64(blob) {
+  const arrayBuffer = await blob.arrayBuffer();
+  const bytes = new Uint8Array(arrayBuffer);
+  let binary = "";
+  const chunkSize = 32768;
+  for (let index = 0; index < bytes.length; index += chunkSize) {
+    const chunk = bytes.subarray(index, index + chunkSize);
+    binary += String.fromCharCode(...chunk);
+  }
+  return window.btoa(binary);
+}
+
+async function saveInvoiceAttachmentToServer(file, invoiceId, existingAttachmentId = "") {
+  if (!(file instanceof Blob) || !invoiceId || !canUseServerDataApi()) {
+    return null;
+  }
+
+  const attachmentPayload = {
+    invoiceId,
+    existingAttachmentId,
+    fileName: file instanceof File ? file.name : "facture",
+    contentType: file.type || "application/octet-stream",
+    bytesBase64: await blobToBase64(file),
+  };
+  const response = await fetchServerJson("/api/invoice-attachments", {
+    method: "POST",
+    body: JSON.stringify(attachmentPayload),
+  });
+
+  return normalizeInvoiceAttachment(response?.attachment);
+}
+
+async function deleteInvoiceAttachmentFromServer(invoiceId) {
+  if (!invoiceId || !canUseServerDataApi()) {
+    return;
+  }
+
+  await fetchServerJson(`/api/invoices/${encodeURIComponent(invoiceId)}/attachment`, {
+    method: "DELETE",
+  });
+}
+
+function getInvoiceAttachmentUrl(attachment, { download = false } = {}) {
+  const normalizedAttachment = normalizeInvoiceAttachment(attachment);
+  const baseUrl = cleanInputValue(normalizedAttachment?.url);
+  if (!baseUrl) {
+    return "";
+  }
+
+  return download ? `${baseUrl}?download=1` : baseUrl;
+}
+
+async function migrateLocalInvoiceAttachmentsToServer(invoices) {
+  const migratedInvoices = [];
+
+  for (const storedInvoice of invoices) {
+    const invoice = normalizeInvoice(storedInvoice);
+    const attachment = normalizeInvoiceAttachment(invoice.attachment);
+    if (!attachment) {
+      migratedInvoices.push(invoice);
+      continue;
+    }
+
+    try {
+      const localAttachment = await getStoredInvoiceAttachmentLocal(attachment.id);
+      if (!localAttachment?.blob) {
+        migratedInvoices.push({ ...invoice, attachment: null });
+        continue;
+      }
+
+      const uploadedAttachment = await saveInvoiceAttachmentToServer(
+        localAttachment.blob,
+        invoice.id,
+        attachment.id
+      );
+      migratedInvoices.push({
+        ...invoice,
+        attachment: uploadedAttachment,
+      });
+    } catch (error) {
+      migratedInvoices.push(invoice);
+    }
+  }
+
+  return migratedInvoices;
+}
+
+async function bootstrapServerBackedData() {
+  if (!canUseServerDataApi()) {
+    return;
+  }
+
+  const response = await fetchServerJson("/api/bootstrap");
+  const payload = response?.data && typeof response.data === "object" ? response.data : {};
+  const serverState = {
+    collaborators: Array.isArray(payload.collaborators) ? payload.collaborators : [],
+    vehicles: Array.isArray(payload.vehicles) ? payload.vehicles : [],
+    invoices: Array.isArray(payload.invoices) ? payload.invoices : [],
+  };
+  const localState = {
+    collaborators: readStoredArray(collaboratorsStorageKey),
+    vehicles: readStoredArray(vehiclesStorageKey),
+    invoices: readStoredArray(invoicesStorageKey),
+  };
+  const shouldSeedServer =
+    serverState.collaborators.length === 0 &&
+    serverState.vehicles.length === 0 &&
+    serverState.invoices.length === 0 &&
+    (localState.collaborators.length > 0 ||
+      localState.vehicles.length > 0 ||
+      localState.invoices.length > 0);
+
+  if (shouldSeedServer) {
+    const migratedInvoices = await migrateLocalInvoiceAttachmentsToServer(localState.invoices);
+    setStoredArrayWithoutServerSync(collaboratorsStorageKey, localState.collaborators);
+    setStoredArrayWithoutServerSync(vehiclesStorageKey, localState.vehicles);
+    setStoredArrayWithoutServerSync(invoicesStorageKey, migratedInvoices);
+    await syncServerCollection("collaborators", localState.collaborators);
+    await syncServerCollection("vehicles", localState.vehicles);
+    await syncServerCollection("invoices", migratedInvoices);
+    return;
+  }
+
+  setStoredArrayWithoutServerSync(collaboratorsStorageKey, serverState.collaborators);
+  setStoredArrayWithoutServerSync(vehiclesStorageKey, serverState.vehicles);
+  setStoredArrayWithoutServerSync(invoicesStorageKey, serverState.invoices);
+}
 
 const rideTemplates = [
   [
@@ -558,7 +760,8 @@ function readStoredArray(storageKey) {
 }
 
 function saveStoredArray(storageKey, items) {
-  window.localStorage.setItem(storageKey, JSON.stringify(items));
+  setStoredArrayWithoutServerSync(storageKey, items);
+  queueServerCollectionSync(storageKey, items);
 }
 
 function getVehiclePlateKey(plate) {
@@ -2756,6 +2959,7 @@ function normalizeInvoiceAttachment(attachment) {
     type: cleanInputValue(safeAttachment.type) || "application/octet-stream",
     size: Math.max(0, Number(safeAttachment.size) || 0),
     updatedAt: cleanInputValue(safeAttachment.updatedAt),
+    url: cleanInputValue(safeAttachment.url),
   };
 }
 
@@ -2798,7 +3002,7 @@ function openInvoiceAttachmentsDb() {
   });
 }
 
-function saveInvoiceAttachmentFile(file, existingAttachmentId = "") {
+function saveInvoiceAttachmentFileLocal(file, existingAttachmentId = "") {
   if (!(file instanceof File)) {
     return Promise.resolve(null);
   }
@@ -2841,7 +3045,7 @@ function saveInvoiceAttachmentFile(file, existingAttachmentId = "") {
   );
 }
 
-function getStoredInvoiceAttachment(attachmentId) {
+function getStoredInvoiceAttachmentLocal(attachmentId) {
   if (!attachmentId) {
     return Promise.resolve(null);
   }
@@ -2866,7 +3070,7 @@ function getStoredInvoiceAttachment(attachmentId) {
   );
 }
 
-function deleteStoredInvoiceAttachment(attachmentId) {
+function deleteStoredInvoiceAttachmentLocal(attachmentId) {
   if (!attachmentId) {
     return Promise.resolve();
   }
@@ -2890,6 +3094,62 @@ function deleteStoredInvoiceAttachment(attachmentId) {
         store.delete(attachmentId);
       })
   );
+}
+
+async function saveInvoiceAttachmentFile(file, invoiceId = "", existingAttachmentId = "") {
+  try {
+    const serverAttachment = await saveInvoiceAttachmentToServer(file, invoiceId, existingAttachmentId);
+    if (serverAttachment) {
+      return serverAttachment;
+    }
+  } catch (error) {
+    // Fallback local si le serveur n'est pas joignable.
+  }
+
+  return saveInvoiceAttachmentFileLocal(file, existingAttachmentId);
+}
+
+async function getStoredInvoiceAttachment(attachmentOrId) {
+  const attachment =
+    typeof attachmentOrId === "string"
+      ? { id: attachmentOrId }
+      : normalizeInvoiceAttachment(attachmentOrId);
+  const attachmentUrl = getInvoiceAttachmentUrl(attachment);
+  if (attachmentUrl && canUseServerDataApi()) {
+    try {
+      const response = await window.fetch(attachmentUrl, {
+        cache: "no-store",
+      });
+      if (!response.ok) {
+        throw new Error("Impossible de recuperer la piece jointe.");
+      }
+
+      return {
+        id: attachment?.id || "",
+        blob: await response.blob(),
+        name: attachment?.name || "fichier",
+        type: attachment?.type || response.headers.get("Content-Type") || "application/octet-stream",
+        size: attachment?.size || Number(response.headers.get("Content-Length") || 0),
+      };
+    } catch (error) {
+      // Fallback local si l'endpoint distant n'est pas disponible.
+    }
+  }
+
+  return getStoredInvoiceAttachmentLocal(attachment?.id || "");
+}
+
+async function deleteStoredInvoiceAttachment(invoiceId = "", attachmentId = "") {
+  if (invoiceId && canUseServerDataApi()) {
+    try {
+      await deleteInvoiceAttachmentFromServer(invoiceId);
+      return;
+    } catch (error) {
+      // Fallback local si le serveur n'est pas disponible.
+    }
+  }
+
+  await deleteStoredInvoiceAttachmentLocal(attachmentId);
 }
 
 function getInvoicePaymentMethodLabel(value) {
@@ -3558,7 +3818,7 @@ async function openInvoiceAttachment(invoiceId) {
   }
 
   try {
-    const storedAttachment = await getStoredInvoiceAttachment(attachment.id);
+    const storedAttachment = await getStoredInvoiceAttachment(attachment);
     if (!storedAttachment?.blob) {
       window.alert("Le fichier de cette facture n'a pas ete retrouve.");
       return;
@@ -3583,7 +3843,7 @@ async function downloadInvoiceAttachment(invoiceId) {
   }
 
   try {
-    const storedAttachment = await getStoredInvoiceAttachment(attachment.id);
+    const storedAttachment = await getStoredInvoiceAttachment(attachment);
     if (!storedAttachment?.blob) {
       window.alert("Le fichier de cette facture n'a pas ete retrouve.");
       return;
@@ -4230,6 +4490,7 @@ async function handleInvoiceSubmit(event) {
   const existingInvoice = editingInvoiceId
     ? invoices.find((invoice) => invoice.id === editingInvoiceId) || null
     : null;
+  const nextInvoiceId = existingInvoice?.id || `invoice-${Date.now()}-${number}`;
   let nextAttachment = existingInvoice?.attachment || null;
   const selectedAttachmentFile = invoiceAttachmentInput?.files?.[0] || null;
 
@@ -4237,10 +4498,11 @@ async function handleInvoiceSubmit(event) {
     if (isExternalInvoice && selectedAttachmentFile) {
       nextAttachment = await saveInvoiceAttachmentFile(
         selectedAttachmentFile,
+        nextInvoiceId,
         existingInvoice?.attachment?.id || ""
       );
     } else if (!isExternalInvoice && existingInvoice?.attachment?.id) {
-      await deleteStoredInvoiceAttachment(existingInvoice.attachment.id);
+      await deleteStoredInvoiceAttachment(existingInvoice.id, existingInvoice.attachment.id);
       nextAttachment = null;
     }
   } catch (error) {
@@ -4249,7 +4511,7 @@ async function handleInvoiceSubmit(event) {
   }
 
   const nextInvoice = normalizeInvoice({
-    id: existingInvoice?.id || `invoice-${Date.now()}-${number}`,
+    id: nextInvoiceId,
     number,
     issuedAt,
     invoiceType,
@@ -4959,18 +5221,28 @@ if (invoicePreview) {
   });
 }
 
-syncCurrentLabel();
-buildCurrentWeekCalendar();
-setVehicleFormMode();
-syncRentalEndFieldVisibility();
-syncVehicleCollaboratorFieldVisibility();
-syncVehicleStatusWithRentalEndDate();
-renderVehicles();
-setCollaboratorFormMode();
-syncCollaboratorVehicleVisibility();
-renderCollaboratorLanguagePreview();
-renderCollaborators();
-resetInvoiceForm();
-syncInvoiceTypeFields();
-renderInvoices();
+async function initializeRoutePiloteApp() {
+  try {
+    await bootstrapServerBackedData();
+  } catch (error) {
+    // L'application garde le fallback local si l'API n'est pas disponible.
+  }
+
+  syncCurrentLabel();
+  buildCurrentWeekCalendar();
+  setVehicleFormMode();
+  syncRentalEndFieldVisibility();
+  syncVehicleCollaboratorFieldVisibility();
+  syncVehicleStatusWithRentalEndDate();
+  renderVehicles();
+  setCollaboratorFormMode();
+  syncCollaboratorVehicleVisibility();
+  renderCollaboratorLanguagePreview();
+  renderCollaborators();
+  resetInvoiceForm();
+  syncInvoiceTypeFields();
+  renderInvoices();
+}
+
+window.routePiloteAppDataReady = initializeRoutePiloteApp();
 

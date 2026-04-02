@@ -1,1 +1,4 @@
 maps-config.local.js
+data/
+__pycache__/
+*.pyc

@@ -31,7 +31,9 @@ est vide.
 
 ## Notes
 
-- Le front actuel lit encore depuis le navigateur. Cette base prepare la persistance serveur.
+- Le front peut maintenant etre relie a un petit serveur Python local.
+- Sans `APP_DATABASE_URL`, ce serveur utilise un stockage JSON local persistant.
+- Avec `APP_DATABASE_URL` et `psycopg[binary]`, il peut lire et ecrire dans PostgreSQL.
 - Le schema reste compatible avec la refonte `calendrier / trajets`.
 - Les tables `collaborators`, `vehicles` et `invoices` ont ete etendues pour couvrir les champs
   utilises aujourd'hui dans l'application.

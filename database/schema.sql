@@ -87,6 +87,7 @@ CREATE TABLE IF NOT EXISTS customers (
 CREATE TABLE IF NOT EXISTS collaborators (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   company_id UUID NOT NULL REFERENCES companies(id) ON DELETE CASCADE,
+  external_key TEXT NOT NULL DEFAULT gen_random_uuid()::text,
   full_name TEXT NOT NULL DEFAULT '',
   first_name TEXT,
   last_name TEXT,
@@ -115,6 +116,7 @@ CREATE TABLE IF NOT EXISTS collaborator_languages (
 CREATE TABLE IF NOT EXISTS vehicles (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   company_id UUID NOT NULL REFERENCES companies(id) ON DELETE CASCADE,
+  external_key TEXT NOT NULL DEFAULT gen_random_uuid()::text,
   owner_collaborator_id UUID REFERENCES collaborators(id) ON DELETE SET NULL,
   ownership_type vehicle_ownership_type NOT NULL DEFAULT 'company',
   label TEXT NOT NULL DEFAULT '',
@@ -214,6 +216,7 @@ CREATE TABLE IF NOT EXISTS mission_cost_snapshots (
 CREATE TABLE IF NOT EXISTS invoices (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   company_id UUID NOT NULL REFERENCES companies(id) ON DELETE CASCADE,
+  external_key TEXT NOT NULL DEFAULT gen_random_uuid()::text,
   customer_id UUID REFERENCES customers(id) ON DELETE SET NULL,
   mission_id UUID UNIQUE REFERENCES missions(id) ON DELETE SET NULL,
   invoice_number TEXT NOT NULL,
@@ -272,9 +275,11 @@ CREATE TABLE IF NOT EXISTS invoice_attachments (
 
 ALTER TABLE IF EXISTS collaborators
   ALTER COLUMN full_name SET DEFAULT '',
-  ALTER COLUMN role_title SET DEFAULT '';
+  ALTER COLUMN role_title SET DEFAULT '',
+  ALTER COLUMN external_key SET DEFAULT gen_random_uuid()::text;
 
 ALTER TABLE IF EXISTS collaborators
+  ADD COLUMN IF NOT EXISTS external_key TEXT NOT NULL DEFAULT gen_random_uuid()::text,
   ADD COLUMN IF NOT EXISTS first_name TEXT,
   ADD COLUMN IF NOT EXISTS last_name TEXT,
   ADD COLUMN IF NOT EXISTS role collaborator_role NOT NULL DEFAULT 'guide',
@@ -285,6 +290,7 @@ ALTER TABLE IF EXISTS vehicles
   ALTER COLUMN label SET DEFAULT '',
   ALTER COLUMN seats SET DEFAULT 4,
   ALTER COLUMN luggage_capacity SET DEFAULT 0,
+  ALTER COLUMN external_key SET DEFAULT gen_random_uuid()::text,
   ALTER COLUMN ownership_type SET DEFAULT 'company',
   ALTER COLUMN energy_kind SET DEFAULT 'diesel',
   ALTER COLUMN avg_consumption SET DEFAULT 6.50,
@@ -292,12 +298,14 @@ ALTER TABLE IF EXISTS vehicles
   ALTER COLUMN status SET DEFAULT 'available';
 
 ALTER TABLE IF EXISTS vehicles
+  ADD COLUMN IF NOT EXISTS external_key TEXT NOT NULL DEFAULT gen_random_uuid()::text,
   ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW();
 
 ALTER TABLE IF EXISTS invoices
   ALTER COLUMN customer_id DROP NOT NULL;
 
 ALTER TABLE IF EXISTS invoices
+  ADD COLUMN IF NOT EXISTS external_key TEXT NOT NULL DEFAULT gen_random_uuid()::text,
   ADD COLUMN IF NOT EXISTS document_type invoice_document_type NOT NULL DEFAULT 'client',
   ADD COLUMN IF NOT EXISTS source_label TEXT,
   ADD COLUMN IF NOT EXISTS payment_status invoice_payment_status NOT NULL DEFAULT 'unpaid',
@@ -333,6 +341,10 @@ ALTER TABLE IF EXISTS invoices
 UPDATE collaborators
 SET first_name = COALESCE(NULLIF(first_name, ''), split_part(full_name, ' ', 1))
 WHERE COALESCE(full_name, '') <> '';
+
+UPDATE collaborators
+SET external_key = COALESCE(NULLIF(external_key, ''), gen_random_uuid()::text)
+WHERE COALESCE(external_key, '') = '';
 
 UPDATE collaborators
 SET last_name = COALESCE(
@@ -374,12 +386,20 @@ SET label = BTRIM(CONCAT_WS(' ', brand, model))
 WHERE COALESCE(label, '') = ''
   AND (COALESCE(brand, '') <> '' OR COALESCE(model, '') <> '');
 
+UPDATE vehicles
+SET external_key = COALESCE(NULLIF(external_key, ''), gen_random_uuid()::text)
+WHERE COALESCE(external_key, '') = '';
+
 UPDATE invoices
 SET payment_status = CASE
   WHEN paid_at IS NOT NULL OR status = 'paid' THEN 'paid'::invoice_payment_status
   ELSE 'unpaid'::invoice_payment_status
 END
 WHERE payment_status IS NOT NULL;
+
+UPDATE invoices
+SET external_key = COALESCE(NULLIF(external_key, ''), gen_random_uuid()::text)
+WHERE COALESCE(external_key, '') = '';
 
 UPDATE invoices
 SET settled_at = COALESCE(settled_at, paid_at)
@@ -408,6 +428,9 @@ ON CONFLICT DO NOTHING;
 CREATE INDEX IF NOT EXISTS idx_collaborators_company_status
   ON collaborators(company_id, status);
 
+CREATE UNIQUE INDEX IF NOT EXISTS idx_collaborators_company_external_key
+  ON collaborators(company_id, external_key);
+
 CREATE INDEX IF NOT EXISTS idx_collaborators_company_role_availability
   ON collaborators(company_id, role, availability_status);
 
@@ -416,6 +439,9 @@ CREATE INDEX IF NOT EXISTS idx_collaborator_languages_collaborator
 
 CREATE INDEX IF NOT EXISTS idx_vehicles_company_status
   ON vehicles(company_id, status);
+
+CREATE UNIQUE INDEX IF NOT EXISTS idx_vehicles_company_external_key
+  ON vehicles(company_id, external_key);
 
 CREATE INDEX IF NOT EXISTS idx_vehicles_company_ownership_status
   ON vehicles(company_id, ownership_type, status);
@@ -434,6 +460,9 @@ CREATE INDEX IF NOT EXISTS idx_fuel_price_reference_lookup
 
 CREATE INDEX IF NOT EXISTS idx_invoices_company_document_payment
   ON invoices(company_id, document_type, payment_status);
+
+CREATE UNIQUE INDEX IF NOT EXISTS idx_invoices_company_external_key
+  ON invoices(company_id, external_key);
 
 CREATE INDEX IF NOT EXISTS idx_invoices_service_date
   ON invoices(service_date);
