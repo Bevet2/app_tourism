@@ -2807,7 +2807,19 @@ if (planningBoard || tripList || tripDetail) {
     });
   }
 
-  resetMissionForm();
-  void setupMissionAddressAutocompletes();
-  renderOperations();
+  async function initializeOperations() {
+    try {
+      if (window.routePiloteAppDataReady && typeof window.routePiloteAppDataReady.then === "function") {
+        await window.routePiloteAppDataReady;
+      }
+    } catch (error) {
+      // Le fallback local reste utilisable si le chargement distant echoue.
+    }
+
+    resetMissionForm();
+    void setupMissionAddressAutocompletes();
+    renderOperations();
+  }
+
+  void initializeOperations();
 }
