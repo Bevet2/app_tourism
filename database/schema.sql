@@ -34,6 +34,10 @@ BEGIN
     CREATE TYPE mission_status AS ENUM ('draft', 'planned', 'assigned', 'in_progress', 'done', 'cancelled');
   END IF;
 
+  IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'mission_priority') THEN
+    CREATE TYPE mission_priority AS ENUM ('standard', 'high', 'vip');
+  END IF;
+
   IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'billing_status') THEN
     CREATE TYPE billing_status AS ENUM ('quote_signed', 'to_invoice', 'invoice_sent', 'paid');
   END IF;
@@ -65,6 +69,39 @@ BEGIN
   IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'invoice_payment_method') THEN
     CREATE TYPE invoice_payment_method AS ENUM ('wire', 'card', 'cash', 'cheque');
   END IF;
+
+  IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'route_provider') THEN
+    CREATE TYPE route_provider AS ENUM ('google_maps', 'manual');
+  END IF;
+
+  IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'mission_alert_severity') THEN
+    CREATE TYPE mission_alert_severity AS ENUM ('info', 'warning', 'critical');
+  END IF;
+
+  IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'invoice_line_item_kind') THEN
+    CREATE TYPE invoice_line_item_kind AS ENUM (
+      'transport',
+      'activity',
+      'toll',
+      'parking',
+      'waiting',
+      'adjustment',
+      'other'
+    );
+  END IF;
+END
+$$;
+
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1
+    FROM pg_enum
+    WHERE enumtypid = 'stop_kind'::regtype
+      AND enumlabel = 'activity'
+  ) THEN
+    ALTER TYPE stop_kind ADD VALUE 'activity';
+  END IF;
 END
 $$;
 
@@ -78,10 +115,16 @@ CREATE TABLE IF NOT EXISTS customers (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   company_id UUID NOT NULL REFERENCES companies(id) ON DELETE CASCADE,
   name TEXT NOT NULL,
+  contact_name TEXT,
   billing_email TEXT,
   phone TEXT,
   billing_address TEXT,
-  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+  service_address TEXT,
+  siret TEXT,
+  vat_number TEXT,
+  notes TEXT,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
 CREATE TABLE IF NOT EXISTS collaborators (
@@ -160,10 +203,13 @@ CREATE TABLE IF NOT EXISTS missions (
   target_margin_rate NUMERIC(5, 4) NOT NULL DEFAULT 0.3000,
   tolls_estimate NUMERIC(10, 2) NOT NULL DEFAULT 0,
   parking_estimate NUMERIC(10, 2) NOT NULL DEFAULT 0,
+  meeting_point TEXT,
+  priority mission_priority NOT NULL DEFAULT 'standard',
   status mission_status NOT NULL DEFAULT 'planned',
   billing_status billing_status NOT NULL DEFAULT 'to_invoice',
   notes TEXT,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   UNIQUE (company_id, code)
 );
 
@@ -179,9 +225,12 @@ CREATE TABLE IF NOT EXISTS mission_stops (
   country TEXT DEFAULT 'France',
   latitude NUMERIC(9, 6),
   longitude NUMERIC(9, 6),
+  maps_place_id TEXT,
   activity_budget NUMERIC(10, 2) NOT NULL DEFAULT 0,
   scheduled_time TIME,
   notes TEXT,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   UNIQUE (mission_id, stop_order)
 );
 
@@ -193,6 +242,19 @@ CREATE TABLE IF NOT EXISTS mission_assignments (
   role assignment_role NOT NULL,
   assigned_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   UNIQUE (mission_id, role)
+);
+
+CREATE TABLE IF NOT EXISTS mission_vehicle_allocations (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  mission_id UUID NOT NULL UNIQUE REFERENCES missions(id) ON DELETE CASCADE,
+  vehicle_id UUID NOT NULL REFERENCES vehicles(id) ON DELETE RESTRICT,
+  assigned_collaborator_id UUID REFERENCES collaborators(id) ON DELETE SET NULL,
+  assignment_source TEXT NOT NULL DEFAULT 'manual',
+  starts_at TIMESTAMPTZ,
+  ends_at TIMESTAMPTZ,
+  notes TEXT,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
 CREATE TABLE IF NOT EXISTS mission_cost_snapshots (
@@ -211,6 +273,34 @@ CREATE TABLE IF NOT EXISTS mission_cost_snapshots (
   calculated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
+CREATE TABLE IF NOT EXISTS mission_route_snapshots (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  mission_id UUID NOT NULL UNIQUE REFERENCES missions(id) ON DELETE CASCADE,
+  provider route_provider NOT NULL DEFAULT 'google_maps',
+  origin_stop_id UUID REFERENCES mission_stops(id) ON DELETE SET NULL,
+  destination_stop_id UUID REFERENCES mission_stops(id) ON DELETE SET NULL,
+  distance_km NUMERIC(8, 2) NOT NULL DEFAULT 0 CHECK (distance_km >= 0),
+  duration_minutes INTEGER NOT NULL DEFAULT 0 CHECK (duration_minutes >= 0),
+  encoded_polyline TEXT,
+  resolved_stop_coords JSONB,
+  provider_payload JSONB,
+  calculated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS mission_alerts (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  mission_id UUID NOT NULL REFERENCES missions(id) ON DELETE CASCADE,
+  severity mission_alert_severity NOT NULL DEFAULT 'warning',
+  alert_code TEXT NOT NULL,
+  message TEXT NOT NULL,
+  is_active BOOLEAN NOT NULL DEFAULT TRUE,
+  resolved_at TIMESTAMPTZ,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  UNIQUE (mission_id, alert_code)
+);
+
 CREATE TABLE IF NOT EXISTS invoices (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   company_id UUID NOT NULL REFERENCES companies(id) ON DELETE CASCADE,
@@ -226,6 +316,7 @@ CREATE TABLE IF NOT EXISTS invoices (
   issued_at DATE,
   due_at DATE,
   settled_at DATE,
+  currency_code TEXT NOT NULL DEFAULT 'EUR',
   subtotal_amount NUMERIC(10, 2) NOT NULL DEFAULT 0,
   vat_10_amount NUMERIC(10, 2) NOT NULL DEFAULT 0,
   vat_20_amount NUMERIC(10, 2) NOT NULL DEFAULT 0,
@@ -259,6 +350,32 @@ CREATE TABLE IF NOT EXISTS invoices (
   UNIQUE (company_id, invoice_number)
 );
 
+CREATE TABLE IF NOT EXISTS invoice_line_items (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  invoice_id UUID NOT NULL REFERENCES invoices(id) ON DELETE CASCADE,
+  mission_stop_id UUID REFERENCES mission_stops(id) ON DELETE SET NULL,
+  kind invoice_line_item_kind NOT NULL DEFAULT 'transport',
+  description TEXT NOT NULL,
+  quantity NUMERIC(10, 2) NOT NULL DEFAULT 1 CHECK (quantity >= 0),
+  unit_label TEXT NOT NULL DEFAULT 'u',
+  unit_price NUMERIC(10, 2) NOT NULL DEFAULT 0,
+  tax_rate NUMERIC(5, 2) NOT NULL DEFAULT 0 CHECK (tax_rate >= 0),
+  line_total NUMERIC(10, 2) NOT NULL DEFAULT 0,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS invoice_payments (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  invoice_id UUID NOT NULL REFERENCES invoices(id) ON DELETE CASCADE,
+  payment_method invoice_payment_method NOT NULL DEFAULT 'wire',
+  paid_amount NUMERIC(10, 2) NOT NULL CHECK (paid_amount >= 0),
+  paid_at DATE NOT NULL,
+  reference_label TEXT,
+  notes TEXT,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
 CREATE TABLE IF NOT EXISTS invoice_attachments (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   invoice_id UUID NOT NULL UNIQUE REFERENCES invoices(id) ON DELETE CASCADE,
@@ -281,6 +398,14 @@ ALTER TABLE IF EXISTS collaborators
   ADD COLUMN IF NOT EXISTS availability_status collaborator_availability_status NOT NULL DEFAULT 'available',
   ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW();
 
+ALTER TABLE IF EXISTS customers
+  ADD COLUMN IF NOT EXISTS contact_name TEXT,
+  ADD COLUMN IF NOT EXISTS service_address TEXT,
+  ADD COLUMN IF NOT EXISTS siret TEXT,
+  ADD COLUMN IF NOT EXISTS vat_number TEXT,
+  ADD COLUMN IF NOT EXISTS notes TEXT,
+  ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW();
+
 ALTER TABLE IF EXISTS vehicles
   ALTER COLUMN label SET DEFAULT '',
   ALTER COLUMN seats SET DEFAULT 4,
@@ -294,6 +419,16 @@ ALTER TABLE IF EXISTS vehicles
 ALTER TABLE IF EXISTS vehicles
   ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW();
 
+ALTER TABLE IF EXISTS missions
+  ADD COLUMN IF NOT EXISTS meeting_point TEXT,
+  ADD COLUMN IF NOT EXISTS priority mission_priority NOT NULL DEFAULT 'standard',
+  ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW();
+
+ALTER TABLE IF EXISTS mission_stops
+  ADD COLUMN IF NOT EXISTS maps_place_id TEXT,
+  ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW();
+
 ALTER TABLE IF EXISTS invoices
   ALTER COLUMN customer_id DROP NOT NULL;
 
@@ -304,6 +439,7 @@ ALTER TABLE IF EXISTS invoices
   ADD COLUMN IF NOT EXISTS external_flow invoice_external_flow NOT NULL DEFAULT 'payable',
   ADD COLUMN IF NOT EXISTS payment_method invoice_payment_method NOT NULL DEFAULT 'wire',
   ADD COLUMN IF NOT EXISTS settled_at DATE,
+  ADD COLUMN IF NOT EXISTS currency_code TEXT NOT NULL DEFAULT 'EUR',
   ADD COLUMN IF NOT EXISTS vat_10_amount NUMERIC(10, 2) NOT NULL DEFAULT 0,
   ADD COLUMN IF NOT EXISTS vat_20_amount NUMERIC(10, 2) NOT NULL DEFAULT 0,
   ADD COLUMN IF NOT EXISTS seller_name TEXT,
@@ -369,6 +505,11 @@ SET role_title = CASE
 END
 WHERE COALESCE(role_title, '') = '';
 
+UPDATE customers
+SET service_address = COALESCE(service_address, billing_address)
+WHERE service_address IS NULL
+  AND billing_address IS NOT NULL;
+
 UPDATE vehicles
 SET label = BTRIM(CONCAT_WS(' ', brand, model))
 WHERE COALESCE(label, '') = ''
@@ -408,6 +549,9 @@ ON CONFLICT DO NOTHING;
 CREATE INDEX IF NOT EXISTS idx_collaborators_company_status
   ON collaborators(company_id, status);
 
+CREATE INDEX IF NOT EXISTS idx_customers_company_name
+  ON customers(company_id, LOWER(name));
+
 CREATE INDEX IF NOT EXISTS idx_collaborators_company_role_availability
   ON collaborators(company_id, role, availability_status);
 
@@ -426,8 +570,23 @@ CREATE INDEX IF NOT EXISTS idx_vehicles_owner_collaborator
 CREATE INDEX IF NOT EXISTS idx_missions_company_date
   ON missions(company_id, service_date);
 
+CREATE INDEX IF NOT EXISTS idx_missions_company_priority_date
+  ON missions(company_id, priority, service_date);
+
+CREATE INDEX IF NOT EXISTS idx_mission_stops_mission_order
+  ON mission_stops(mission_id, stop_order);
+
 CREATE INDEX IF NOT EXISTS idx_mission_assignments_collaborator
   ON mission_assignments(collaborator_id);
+
+CREATE INDEX IF NOT EXISTS idx_mission_vehicle_allocations_vehicle
+  ON mission_vehicle_allocations(vehicle_id);
+
+CREATE INDEX IF NOT EXISTS idx_mission_route_snapshots_provider
+  ON mission_route_snapshots(provider, calculated_at);
+
+CREATE INDEX IF NOT EXISTS idx_mission_alerts_active
+  ON mission_alerts(mission_id, is_active, severity);
 
 CREATE INDEX IF NOT EXISTS idx_fuel_price_reference_lookup
   ON fuel_price_reference(company_id, energy_kind, valid_from);
@@ -437,3 +596,9 @@ CREATE INDEX IF NOT EXISTS idx_invoices_company_document_payment
 
 CREATE INDEX IF NOT EXISTS idx_invoices_service_date
   ON invoices(service_date);
+
+CREATE INDEX IF NOT EXISTS idx_invoice_line_items_invoice
+  ON invoice_line_items(invoice_id);
+
+CREATE INDEX IF NOT EXISTS idx_invoice_payments_invoice
+  ON invoice_payments(invoice_id, paid_at);

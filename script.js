@@ -93,6 +93,11 @@ const invoicePaymentSummary = document.querySelector("#invoice-payment-summary")
 const invoiceTypeInput = document.querySelector("#invoice-type");
 const invoiceNumberInput = document.querySelector("#invoice-number");
 const invoiceIssuedAtInput = document.querySelector("#invoice-issued-at");
+const invoiceMissionField = document.querySelector("#invoice-mission-field");
+const invoiceMissionInput = document.querySelector("#invoice-mission-source");
+const invoiceMissionHelp = document.querySelector("#invoice-mission-help");
+const invoiceMissionActions = document.querySelector("#invoice-mission-actions");
+const invoiceGenerateFromMissionButton = document.querySelector("#invoice-generate-from-mission");
 const invoicePaymentMethodInput = document.querySelector("#invoice-payment-method");
 const invoiceSettledAtInput = document.querySelector("#invoice-settled-at");
 const invoiceExternalFlowField = document.querySelector("#invoice-external-flow-field");
@@ -143,6 +148,10 @@ const invoiceTaxNoteInput = document.querySelector("#invoice-tax-note");
 const vehiclesStorageKey = "route-pilote-vehicles";
 const collaboratorsStorageKey = "route-pilote-collaborators";
 const invoicesStorageKey = "route-pilote-invoices";
+const selectedTripStorageKey = "route-pilote-selected-trip-v1";
+const customMissionsStorageKey = "route-pilote-custom-missions-v1";
+const missionOverridesStorageKey = "route-pilote-mission-overrides-v1";
+const missionAssignmentsStorageKey = "route-pilote-mission-assignments-v2";
 const invoiceAttachmentsDbName = "route-pilote-invoice-attachments";
 const invoiceAttachmentsStoreName = "attachments";
 const vehicleTypeLabels = {
@@ -165,6 +174,9 @@ let editingCollaboratorVehicleId = "";
 let selectedInvoiceId = "";
 let editingInvoiceId = "";
 let currentInvoiceAttachmentMeta = null;
+let remotePersistenceEnabled = false;
+
+const appDataApiEndpoint = "/api/app-data";
 
 const allVehicleTypeFilters = new Set(["all", "owner", "collaborator", "rental"]);
 const allVehicleStatusFilters = new Set(["all", "available", "in_use", "repair", "rental_ended"]);
@@ -192,6 +204,12 @@ const invoiceTypeLabels = {
 const invoicePaymentStatusLabels = {
   paid: "Reglee",
   unpaid: "Non reglee",
+};
+const missionBillingStatusLabels = {
+  quote_signed: "Devis valide",
+  to_invoice: "A facturer",
+  invoice_sent: "Facture envoyee",
+  paid: "Reglee",
 };
 const invoiceExternalFlowLabels = {
   payable: "A payer",
@@ -362,6 +380,8 @@ const defaultInvoiceRecord = {
   number: "0027",
   issuedAt: "2025-12-16",
   invoiceType: "client",
+  missionId: "",
+  missionCode: "",
   sourceLabel: "Facture client",
   paymentStatus: "unpaid",
   settledAt: "",
@@ -404,6 +424,528 @@ const defaultInvoiceRecord = {
   attachment: null,
 };
 
+const defaultCollaboratorRecords = [
+  {
+    id: "collab-jade",
+    firstName: "Jade",
+    lastName: "Bouvier",
+    role: "driver",
+    availabilityStatus: "available",
+    languages: [
+      { language: "Francais", level: "fluent" },
+      { language: "Anglais", level: "conversational" },
+    ],
+  },
+  {
+    id: "collab-noa",
+    firstName: "Noa",
+    lastName: "Marchand",
+    role: "driver",
+    availabilityStatus: "available",
+    languages: [
+      { language: "Francais", level: "fluent" },
+      { language: "Anglais", level: "fluent" },
+      { language: "Italien", level: "intermediate" },
+    ],
+  },
+  {
+    id: "collab-lucas",
+    firstName: "Lucas",
+    lastName: "Perrin",
+    role: "driver",
+    availabilityStatus: "on_mission",
+    languages: [
+      { language: "Francais", level: "fluent" },
+      { language: "Anglais", level: "intermediate" },
+    ],
+  },
+  {
+    id: "collab-salma",
+    firstName: "Salma",
+    lastName: "Riviere",
+    role: "guide",
+    availabilityStatus: "available",
+    languages: [
+      { language: "Francais", level: "fluent" },
+      { language: "Anglais", level: "conversational" },
+      { language: "Arabe", level: "fluent" },
+    ],
+  },
+  {
+    id: "collab-ines",
+    firstName: "Ines",
+    lastName: "Carrel",
+    role: "guide",
+    availabilityStatus: "available",
+    languages: [
+      { language: "Francais", level: "fluent" },
+      { language: "Anglais", level: "conversational" },
+      { language: "Espagnol", level: "intermediate" },
+    ],
+  },
+  {
+    id: "collab-hugo",
+    firstName: "Hugo",
+    lastName: "Bernard",
+    role: "driver",
+    availabilityStatus: "unavailable",
+    languages: [
+      { language: "Francais", level: "fluent" },
+      { language: "Anglais", level: "intermediate" },
+    ],
+  },
+];
+
+const defaultVehicleRecords = [
+  {
+    id: "veh-mercedes-v",
+    brand: "Mercedes",
+    model: "Classe V",
+    color: "Noir obsidienne",
+    plate: "GA-402-LT",
+    vehicleType: "owner",
+    vehicleStatus: "available",
+    rentalEndDate: "",
+    consumption: "8.6",
+    consumptionUnit: "L/100 km",
+    linkedCollaboratorId: "",
+    linkedCollaboratorName: "",
+  },
+  {
+    id: "veh-vito-tourer",
+    brand: "Mercedes",
+    model: "Vito Tourer",
+    color: "Gris graphite",
+    plate: "FT-118-MR",
+    vehicleType: "owner",
+    vehicleStatus: "available",
+    rentalEndDate: "",
+    consumption: "8.9",
+    consumptionUnit: "L/100 km",
+    linkedCollaboratorId: "",
+    linkedCollaboratorName: "",
+  },
+  {
+    id: "veh-peugeot-508",
+    brand: "Peugeot",
+    model: "508 SW",
+    color: "Bleu nuit",
+    plate: "CG-771-NE",
+    vehicleType: "collaborator",
+    vehicleStatus: "available",
+    rentalEndDate: "",
+    consumption: "6.1",
+    consumptionUnit: "L/100 km",
+    linkedCollaboratorId: "collab-jade",
+    linkedCollaboratorName: "Jade Bouvier",
+  },
+  {
+    id: "veh-tesla-y",
+    brand: "Tesla",
+    model: "Model Y",
+    color: "Blanc nacre",
+    plate: "ET-604-HL",
+    vehicleType: "collaborator",
+    vehicleStatus: "available",
+    rentalEndDate: "",
+    consumption: "18.4",
+    consumptionUnit: "kWh/100 km",
+    linkedCollaboratorId: "collab-lucas",
+    linkedCollaboratorName: "Lucas Perrin",
+  },
+  {
+    id: "veh-kodiaq",
+    brand: "Skoda",
+    model: "Kodiaq",
+    color: "Argent",
+    plate: "GM-235-AV",
+    vehicleType: "rental",
+    vehicleStatus: "in_use",
+    rentalEndDate: "",
+    consumption: "7.4",
+    consumptionUnit: "L/100 km",
+    linkedCollaboratorId: "",
+    linkedCollaboratorName: "",
+  },
+];
+
+const invoiceMissionSeeds = [
+  {
+    id: "mission-cdg-paris",
+    code: "RP-301",
+    dayOffset: 0,
+    serviceType: "Transfert aeroport",
+    routeLabel: "CDG Terminal 2 -> Hotels rive droite",
+    departureTime: "08:10",
+    arrivalTime: "09:05",
+    distanceKm: 32,
+    durationMinutes: 55,
+    passengers: 4,
+    luggage: 6,
+    quotedPrice: 210,
+    recommendedPrice: 210,
+    clientName: "Maison Azur Travel",
+    pickupAddress: "Aeroport Charles-de-Gaulle, Terminal 2E, Roissy",
+    destinationAddress: "Hotels rive droite, Paris 1er et 8e",
+    meetingPoint: "Sortie porte 16 avec panneau nominatif",
+    notes: "Couple americain et deux enfants, siege rehausseur a prevoir.",
+    billingStatus: "to_invoice",
+    priority: "high",
+    stops: [],
+  },
+  {
+    id: "mission-giverny",
+    code: "RP-302",
+    dayOffset: 0,
+    serviceType: "Circuit demi-journee",
+    routeLabel: "Paris centre -> Giverny",
+    departureTime: "14:20",
+    arrivalTime: "15:55",
+    distanceKm: 82,
+    durationMinutes: 95,
+    passengers: 6,
+    luggage: 4,
+    quotedPrice: 420,
+    recommendedPrice: 420,
+    clientName: "Ateliers Seine Voyages",
+    pickupAddress: "Hotel Regina Louvre, Paris",
+    destinationAddress: "Fondation Claude Monet, Giverny",
+    meetingPoint: "Lobby principal, cote concierge",
+    notes: "Groupe japonais, accueil bilingue recommande.",
+    billingStatus: "quote_signed",
+    priority: "standard",
+    stops: [],
+  },
+  {
+    id: "mission-reims",
+    code: "RP-303",
+    dayOffset: 1,
+    serviceType: "Transfert vignoble",
+    routeLabel: "Paris -> Reims",
+    departureTime: "07:45",
+    arrivalTime: "09:35",
+    distanceKm: 147,
+    durationMinutes: 110,
+    passengers: 3,
+    luggage: 3,
+    quotedPrice: 390,
+    recommendedPrice: 390,
+    clientName: "Signature Cellars",
+    pickupAddress: "Gare de l'Est, Paris",
+    destinationAddress: "Domaine partner, Reims",
+    meetingPoint: "Sortie voie 17, parvis central",
+    notes: "Transport degustation premium, bouteilles a charger au retour.",
+    billingStatus: "invoice_sent",
+    priority: "vip",
+    stops: [],
+  },
+  {
+    id: "mission-monaco",
+    code: "RP-304",
+    dayOffset: 2,
+    serviceType: "Transfert evenement",
+    routeLabel: "Nice -> Monaco",
+    departureTime: "09:45",
+    arrivalTime: "10:25",
+    distanceKm: 25,
+    durationMinutes: 40,
+    passengers: 4,
+    luggage: 2,
+    quotedPrice: 310,
+    recommendedPrice: 310,
+    clientName: "Riviera Event Desk",
+    pickupAddress: "Promenade des Anglais, Nice",
+    destinationAddress: "Hotel de Paris, Monaco",
+    meetingPoint: "Devant l'entree principale, voie bus",
+    notes: "Timing serre avant conference, chauffeur en tenue sombre.",
+    billingStatus: "quote_signed",
+    priority: "high",
+    stops: [],
+  },
+  {
+    id: "mission-annecy",
+    code: "RP-305",
+    dayOffset: 3,
+    serviceType: "Seminaire entreprise",
+    routeLabel: "Lyon -> Annecy",
+    departureTime: "08:30",
+    arrivalTime: "10:35",
+    distanceKm: 144,
+    durationMinutes: 125,
+    passengers: 7,
+    luggage: 7,
+    quotedPrice: 540,
+    recommendedPrice: 540,
+    clientName: "Nova Executive Mobility",
+    pickupAddress: "Part-Dieu, Lyon",
+    destinationAddress: "Imperial Palace, Annecy",
+    meetingPoint: "Hall affaires, sortie Villette",
+    notes: "Groupe corporate avec bagages cabine, besoin d'un vehicule 7+ places.",
+    billingStatus: "to_invoice",
+    priority: "high",
+    stops: [],
+  },
+  {
+    id: "mission-cassis",
+    code: "RP-306",
+    dayOffset: 4,
+    serviceType: "Circuit mer",
+    routeLabel: "Marseille -> Cassis",
+    departureTime: "11:00",
+    arrivalTime: "11:48",
+    distanceKm: 30,
+    durationMinutes: 48,
+    passengers: 6,
+    luggage: 5,
+    quotedPrice: 460,
+    recommendedPrice: 460,
+    clientName: "Calanques Leisure",
+    pickupAddress: "Vieux-Port, Marseille",
+    destinationAddress: "Port de Cassis",
+    meetingPoint: "Face au ponton tourisme",
+    notes: "Famille nombreuse, poussette pliable et glaciere souple.",
+    billingStatus: "paid",
+    priority: "standard",
+    stops: [],
+  },
+  {
+    id: "mission-saint-emilion",
+    code: "RP-307",
+    dayOffset: 5,
+    serviceType: "Circuit journee",
+    routeLabel: "Bordeaux -> Saint-Emilion",
+    departureTime: "06:50",
+    arrivalTime: "07:48",
+    distanceKm: 46,
+    durationMinutes: 58,
+    passengers: 8,
+    luggage: 8,
+    quotedPrice: 490,
+    recommendedPrice: 490,
+    clientName: "Bordeaux Heritage Tours",
+    pickupAddress: "Hotel Intercontinental, Bordeaux",
+    destinationAddress: "Chateau partenaire, Saint-Emilion",
+    meetingPoint: "Porte cocheres, allee laterale",
+    notes: "Circuit vignobles, renfort utile pour la logistique bagages.",
+    billingStatus: "quote_signed",
+    priority: "vip",
+    stops: [],
+  },
+];
+
+const defaultMissionAssignments = {
+  "mission-cdg-paris": { leadCollaboratorId: "collab-noa", supportCollaboratorId: "", vehicleId: "veh-mercedes-v" },
+  "mission-giverny": { leadCollaboratorId: "collab-jade", supportCollaboratorId: "collab-salma", vehicleId: "veh-vito-tourer" },
+  "mission-reims": { leadCollaboratorId: "collab-jade", supportCollaboratorId: "", vehicleId: "veh-peugeot-508" },
+  "mission-monaco": { leadCollaboratorId: "collab-lucas", supportCollaboratorId: "", vehicleId: "veh-tesla-y" },
+  "mission-annecy": { leadCollaboratorId: "collab-noa", supportCollaboratorId: "", vehicleId: "" },
+  "mission-cassis": { leadCollaboratorId: "", supportCollaboratorId: "collab-salma", vehicleId: "veh-mercedes-v" },
+  "mission-saint-emilion": {
+    leadCollaboratorId: "collab-noa",
+    supportCollaboratorId: "collab-ines",
+    vehicleId: "veh-vito-tourer",
+  },
+};
+
+function hasPersistenceManagedView() {
+  return Boolean(vehicleForm || collaboratorForm || invoiceForm);
+}
+
+function createEntityId(prefix = "item") {
+  if (window.crypto?.randomUUID) {
+    return window.crypto.randomUUID();
+  }
+
+  return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+}
+
+async function apiRequest(url, options = {}) {
+  const response = await window.fetch(url, {
+    cache: "no-store",
+    headers: {
+      "Content-Type": "application/json",
+      ...(options.headers || {}),
+    },
+    ...options,
+  });
+
+  let payload = {};
+
+  try {
+    payload = await response.json();
+  } catch (error) {
+    payload = {};
+  }
+
+  if (!response.ok || payload?.ok === false) {
+    throw new Error(payload?.error || "Impossible de joindre l'API PostgreSQL.");
+  }
+
+  return payload;
+}
+
+function hasMeaningfulRemoteData(snapshot) {
+  return Boolean(
+    Array.isArray(snapshot?.collaborators) && snapshot.collaborators.length > 0 ||
+    Array.isArray(snapshot?.vehicles) && snapshot.vehicles.length > 0 ||
+    Array.isArray(snapshot?.invoices) && snapshot.invoices.length > 0
+  );
+}
+
+function hasMeaningfulLocalData() {
+  return (
+    readStoredArray(collaboratorsStorageKey).length > 0 ||
+    readStoredArray(vehiclesStorageKey).length > 0 ||
+    readStoredArray(invoicesStorageKey).length > 0
+  );
+}
+
+function applyRemoteAppData(snapshot) {
+  if (!snapshot || typeof snapshot !== "object") {
+    return;
+  }
+
+  window.localStorage.setItem(
+    collaboratorsStorageKey,
+    JSON.stringify(Array.isArray(snapshot.collaborators) ? snapshot.collaborators : [])
+  );
+  window.localStorage.setItem(
+    vehiclesStorageKey,
+    JSON.stringify(Array.isArray(snapshot.vehicles) ? snapshot.vehicles : [])
+  );
+  window.localStorage.setItem(
+    invoicesStorageKey,
+    JSON.stringify(Array.isArray(snapshot.invoices) ? snapshot.invoices : [])
+  );
+}
+
+function getLocalAppSnapshot() {
+  return {
+    collaborators: readStoredArray(collaboratorsStorageKey).map((storedCollaborator) =>
+      normalizeCollaborator(storedCollaborator)
+    ),
+    vehicles: readStoredArray(vehiclesStorageKey).map((storedVehicle) =>
+      normalizeVehicle(storedVehicle)
+    ),
+    invoices: readStoredArray(invoicesStorageKey).map((storedInvoice) => {
+      const normalizedInvoice = normalizeInvoice(storedInvoice);
+
+      if (storedInvoice?.attachment?.payloadBase64 && normalizedInvoice.attachment) {
+        normalizedInvoice.attachment = {
+          ...normalizedInvoice.attachment,
+          payloadBase64: storedInvoice.attachment.payloadBase64,
+        };
+      }
+
+      return normalizedInvoice;
+    }),
+  };
+}
+
+async function ensureRemotePersistenceReady() {
+  if (remotePersistenceEnabled) {
+    return true;
+  }
+
+  if (!hasPersistenceManagedView()) {
+    return false;
+  }
+
+  try {
+    await apiRequest("/api/health", { method: "GET" });
+    remotePersistenceEnabled = true;
+    return true;
+  } catch (error) {
+    remotePersistenceEnabled = false;
+    return false;
+  }
+}
+
+async function syncAppDataToServer() {
+  const canSync = await ensureRemotePersistenceReady();
+  if (!canSync) {
+    return null;
+  }
+
+  const result = await apiRequest(appDataApiEndpoint, {
+    method: "PUT",
+    body: JSON.stringify(getLocalAppSnapshot()),
+  });
+
+  applyRemoteAppData(result.data);
+  return result.data;
+}
+
+async function bootstrapAppPersistence() {
+  if (!hasPersistenceManagedView()) {
+    return;
+  }
+
+  const canSync = await ensureRemotePersistenceReady();
+  if (!canSync) {
+    return;
+  }
+
+  try {
+    const result = await apiRequest(appDataApiEndpoint, { method: "GET" });
+    const remoteSnapshot = result.data || {};
+
+    if (!hasMeaningfulRemoteData(remoteSnapshot) && hasMeaningfulLocalData()) {
+      await syncAppDataToServer();
+      return;
+    }
+
+    applyRemoteAppData(remoteSnapshot);
+  } catch (error) {
+    remotePersistenceEnabled = false;
+  }
+}
+
+function arrayBufferToBase64(arrayBuffer) {
+  const bytes = new Uint8Array(arrayBuffer);
+  const chunkSize = 0x8000;
+  let binary = "";
+
+  for (let index = 0; index < bytes.length; index += chunkSize) {
+    const chunk = bytes.subarray(index, index + chunkSize);
+    binary += String.fromCharCode(...chunk);
+  }
+
+  return window.btoa(binary);
+}
+
+async function buildInvoiceAttachmentPayload(file, existingAttachmentId = "") {
+  if (!(file instanceof File)) {
+    return null;
+  }
+
+  const payloadBase64 = arrayBufferToBase64(await file.arrayBuffer());
+
+  return {
+    id: existingAttachmentId || createEntityId("invoice-attachment"),
+    name: file.name,
+    payloadBase64,
+    size: file.size,
+    type: file.type || "application/octet-stream",
+    updatedAt: new Date().toISOString(),
+  };
+}
+
+async function fetchRemoteInvoiceAttachment(invoiceId) {
+  const response = await window.fetch(
+    `/api/invoices/${encodeURIComponent(invoiceId)}/attachment`,
+    {
+      cache: "no-store",
+    }
+  );
+
+  if (!response.ok) {
+    throw new Error("Impossible de recuperer la piece jointe.");
+  }
+
+  return response.blob();
+}
+
 function capitalizeLabel(label) {
   return label.charAt(0).toUpperCase() + label.slice(1);
 }
@@ -440,6 +982,445 @@ function getDateInputValue(date = new Date()) {
   const day = String(date.getDate()).padStart(2, "0");
 
   return `${year}-${month}-${day}`;
+}
+
+function getInvoiceMissionWeekStart(date = new Date()) {
+  const value = new Date(date);
+  value.setHours(0, 0, 0, 0);
+  const day = value.getDay();
+  value.setDate(value.getDate() + (day === 0 ? -6 : 1 - day));
+  return value;
+}
+
+function buildInvoiceMissionRouteLabel(stops) {
+  if (!Array.isArray(stops) || stops.length === 0) {
+    return "";
+  }
+
+  return stops
+    .map((stop) => cleanInputValue(stop?.label) || cleanInputValue(stop?.address) || "Etape")
+    .join(" -> ");
+}
+
+function buildInvoiceMissionStops({
+  pickupAddress = "",
+  meetingPoint = "",
+  destinationAddress = "",
+  activityStops = [],
+}) {
+  return [
+    {
+      kind: "pickup",
+      label: "Recuperation",
+      address: pickupAddress,
+      meetingPoint,
+      activityBudget: 0,
+      placeId: "",
+      coords: null,
+    },
+    ...activityStops.map((stop, index) => ({
+      kind: "activity",
+      label: cleanInputValue(stop?.label) || `Etape ${index + 1}`,
+      address: cleanInputValue(stop?.address),
+      meetingPoint: "",
+      activityBudget: Number(stop?.activityBudget || 0),
+      placeId: cleanInputValue(stop?.placeId),
+      coords: Array.isArray(stop?.coords) ? stop.coords.map(Number) : null,
+    })),
+    {
+      kind: "dropoff",
+      label: "Destination",
+      address: destinationAddress,
+      meetingPoint: "",
+      activityBudget: 0,
+      placeId: "",
+      coords: null,
+    },
+  ].filter((stop) => cleanInputValue(stop.address) || cleanInputValue(stop.label));
+}
+
+function hydrateInvoiceMissionRecord(mission) {
+  const safeMission = mission && typeof mission === "object" ? mission : {};
+  const activityStops = Array.isArray(safeMission.stops)
+    ? safeMission.stops.filter((stop) => stop?.kind === "activity")
+    : [];
+  const stops =
+    Array.isArray(safeMission.stops) && safeMission.stops.length >= 2
+      ? safeMission.stops.map((stop) => ({
+          ...stop,
+          kind: cleanInputValue(stop?.kind) || "waypoint",
+          label: cleanInputValue(stop?.label),
+          address: cleanInputValue(stop?.address),
+          meetingPoint: cleanInputValue(stop?.meetingPoint),
+          activityBudget: Number(stop?.activityBudget || 0),
+          placeId: cleanInputValue(stop?.placeId),
+          coords: Array.isArray(stop?.coords) ? stop.coords.map(Number) : null,
+        }))
+      : buildInvoiceMissionStops({
+          pickupAddress: cleanInputValue(safeMission.pickupAddress),
+          meetingPoint: cleanInputValue(safeMission.meetingPoint),
+          destinationAddress: cleanInputValue(safeMission.destinationAddress),
+          activityStops,
+        });
+
+  return {
+    id: cleanInputValue(safeMission.id),
+    code: cleanInputValue(safeMission.code),
+    serviceType: cleanInputValue(safeMission.serviceType),
+    routeLabel: cleanInputValue(safeMission.routeLabel) || buildInvoiceMissionRouteLabel(stops),
+    departureTime: cleanInputValue(safeMission.departureTime),
+    arrivalTime: cleanInputValue(safeMission.arrivalTime),
+    serviceDate: normalizeRentalEndDate(safeMission.serviceDate),
+    clientName: cleanInputValue(safeMission.clientName),
+    pickupAddress: cleanInputValue(safeMission.pickupAddress) || cleanInputValue(stops[0]?.address),
+    destinationAddress:
+      cleanInputValue(safeMission.destinationAddress) ||
+      cleanInputValue(stops[stops.length - 1]?.address),
+    meetingPoint: cleanInputValue(safeMission.meetingPoint),
+    notes: cleanInputValue(safeMission.notes),
+    billingStatus: cleanInputValue(safeMission.billingStatus),
+    priority: cleanInputValue(safeMission.priority) || "standard",
+    distanceKm: Math.max(0, Number(safeMission.distanceKm) || 0),
+    durationMinutes: Math.max(0, Number(safeMission.durationMinutes) || 0),
+    passengers: Math.max(0, Number(safeMission.passengers) || 0),
+    luggage: Math.max(0, Number(safeMission.luggage) || 0),
+    quotedPrice: Math.max(0, Number(safeMission.quotedPrice) || 0),
+    recommendedPrice: Math.max(
+      0,
+      Number(
+        typeof safeMission.recommendedPrice !== "undefined"
+          ? safeMission.recommendedPrice
+          : safeMission.quotedPrice
+      ) || 0
+    ),
+    targetMarginRate: Math.max(0, Number(safeMission.targetMarginRate) || 0),
+    tolls: Math.max(0, Number(safeMission.tolls) || 0),
+    parking: Math.max(0, Number(safeMission.parking) || 0),
+    stops,
+  };
+}
+
+function getSeededInvoiceMissionCatalog() {
+  const weekStart = getInvoiceMissionWeekStart();
+
+  return invoiceMissionSeeds.map((seedMission) => {
+    const serviceDate = new Date(weekStart);
+    serviceDate.setDate(serviceDate.getDate() + Number(seedMission.dayOffset || 0));
+
+    return hydrateInvoiceMissionRecord({
+      ...seedMission,
+      serviceDate: getDateInputValue(serviceDate),
+      stops: Array.isArray(seedMission.stops) ? seedMission.stops : [],
+    });
+  });
+}
+
+function getStoredInvoiceMissionOverrides() {
+  try {
+    const rawValue = window.localStorage.getItem(missionOverridesStorageKey);
+    const parsedValue = rawValue ? JSON.parse(rawValue) : {};
+    return parsedValue && typeof parsedValue === "object" ? parsedValue : {};
+  } catch (error) {
+    return {};
+  }
+}
+
+function getStoredInvoiceCustomMissions() {
+  try {
+    const rawValue = window.localStorage.getItem(customMissionsStorageKey);
+    const parsedValue = rawValue ? JSON.parse(rawValue) : [];
+    return Array.isArray(parsedValue)
+      ? parsedValue.map((mission) => hydrateInvoiceMissionRecord(mission))
+      : [];
+  } catch (error) {
+    return [];
+  }
+}
+
+function getInvoiceMissionCatalog() {
+  const overrides = getStoredInvoiceMissionOverrides();
+  const seededMissions = getSeededInvoiceMissionCatalog().map((mission) =>
+    overrides[mission.id] ? hydrateInvoiceMissionRecord({ ...mission, ...overrides[mission.id] }) : mission
+  );
+
+  return [...seededMissions, ...getStoredInvoiceCustomMissions()].sort((leftMission, rightMission) =>
+    `${leftMission.serviceDate}-${leftMission.departureTime}`.localeCompare(
+      `${rightMission.serviceDate}-${rightMission.departureTime}`
+    )
+  );
+}
+
+function getInvoiceMissionById(missionId) {
+  if (!missionId) {
+    return null;
+  }
+
+  return getInvoiceMissionCatalog().find((mission) => mission.id === missionId) || null;
+}
+
+function getSelectedTripId() {
+  return cleanInputValue(window.localStorage.getItem(selectedTripStorageKey));
+}
+
+function saveSelectedTripId(missionId) {
+  const normalizedMissionId = cleanInputValue(missionId);
+  if (!normalizedMissionId) {
+    return;
+  }
+
+  window.localStorage.setItem(selectedTripStorageKey, normalizedMissionId);
+}
+
+function getMissionBillingStatusLabel(status) {
+  return missionBillingStatusLabels[cleanInputValue(status)] || "A suivre";
+}
+
+function getStoredMissionAssignments() {
+  let storedAssignments = {};
+
+  try {
+    const rawValue = window.localStorage.getItem(missionAssignmentsStorageKey);
+    const parsedValue = rawValue ? JSON.parse(rawValue) : {};
+    storedAssignments = parsedValue && typeof parsedValue === "object" ? parsedValue : {};
+  } catch (error) {
+    storedAssignments = {};
+  }
+
+  return getInvoiceMissionCatalog().reduce((assignments, mission) => {
+    const fallbackAssignment =
+      defaultMissionAssignments[mission.id] || {
+        leadCollaboratorId: "",
+        supportCollaboratorId: "",
+        vehicleId: "",
+      };
+    const storedAssignment =
+      storedAssignments[mission.id] && typeof storedAssignments[mission.id] === "object"
+        ? storedAssignments[mission.id]
+        : {};
+
+    assignments[mission.id] = {
+      leadCollaboratorId:
+        cleanInputValue(storedAssignment.leadCollaboratorId) ||
+        cleanInputValue(fallbackAssignment.leadCollaboratorId),
+      supportCollaboratorId:
+        cleanInputValue(storedAssignment.supportCollaboratorId) ||
+        cleanInputValue(fallbackAssignment.supportCollaboratorId),
+      vehicleId:
+        cleanInputValue(storedAssignment.vehicleId) ||
+        cleanInputValue(fallbackAssignment.vehicleId),
+    };
+
+    return assignments;
+  }, {});
+}
+
+function buildMissionRelationsSnapshot() {
+  const missions = getInvoiceMissionCatalog();
+  const assignments = getStoredMissionAssignments();
+  const selectedTripId = getSelectedTripId();
+  const collaboratorNamesById = new Map(
+    getStoredCollaborators().map((storedCollaborator) => {
+      const collaborator = normalizeCollaborator(storedCollaborator);
+      return [collaborator.id, getCollaboratorDisplayName(collaborator)];
+    })
+  );
+  const invoicesByMissionId = new Map();
+
+  getStoredInvoices()
+    .map((storedInvoice) => normalizeInvoice(storedInvoice))
+    .filter((invoice) => normalizeInvoiceType(invoice.invoiceType) === "client")
+    .forEach((invoice) => {
+      if (!invoice.missionId || invoicesByMissionId.has(invoice.missionId)) {
+        return;
+      }
+
+      invoicesByMissionId.set(invoice.missionId, invoice);
+    });
+
+  const collaboratorMissionMap = new Map();
+  const vehicleMissionMap = new Map();
+
+  missions.forEach((mission) => {
+    const assignment = assignments[mission.id] || {
+      leadCollaboratorId: "",
+      supportCollaboratorId: "",
+      vehicleId: "",
+    };
+    const linkedInvoice = invoicesByMissionId.get(mission.id) || null;
+    const relation = {
+      missionId: mission.id,
+      missionCode: mission.code,
+      routeLabel: mission.routeLabel,
+      clientName: mission.clientName,
+      sortKey: `${normalizeRentalEndDate(mission.serviceDate)}-${cleanInputValue(mission.departureTime) || "00:00"}`,
+      serviceDateLabel: mission.serviceDate ? formatInvoiceDate(mission.serviceDate) : "Date a definir",
+      departureTime: mission.departureTime || "",
+      billingLabel: getMissionBillingStatusLabel(mission.billingStatus),
+      invoiceId: linkedInvoice?.id || "",
+      invoiceNumber: linkedInvoice?.number || "",
+      invoiceStatusLabel: linkedInvoice
+        ? getInvoicePaymentStatusLabel(linkedInvoice.paymentStatus)
+        : getMissionBillingStatusLabel(mission.billingStatus),
+      isSelected: mission.id === selectedTripId,
+      leadCollaboratorId: assignment.leadCollaboratorId,
+      leadCollaboratorName: collaboratorNamesById.get(assignment.leadCollaboratorId) || "Chauffeur a affecter",
+    };
+
+    if (assignment.leadCollaboratorId) {
+      const currentRelations = collaboratorMissionMap.get(assignment.leadCollaboratorId) || [];
+      currentRelations.push({
+        ...relation,
+        roleLabel: "Chauffeur principal",
+      });
+      collaboratorMissionMap.set(assignment.leadCollaboratorId, currentRelations);
+    }
+
+    if (assignment.supportCollaboratorId) {
+      const currentRelations = collaboratorMissionMap.get(assignment.supportCollaboratorId) || [];
+      currentRelations.push({
+        ...relation,
+        roleLabel: "Renfort mission",
+      });
+      collaboratorMissionMap.set(assignment.supportCollaboratorId, currentRelations);
+    }
+
+    if (assignment.vehicleId) {
+      const currentRelations = vehicleMissionMap.get(assignment.vehicleId) || [];
+      currentRelations.push({
+        ...relation,
+        roleLabel: "Vehicule affecte",
+      });
+      vehicleMissionMap.set(assignment.vehicleId, currentRelations);
+    }
+  });
+
+  const sortRelations = (leftRelation, rightRelation) => {
+    if (leftRelation.isSelected !== rightRelation.isSelected) {
+      return leftRelation.isSelected ? -1 : 1;
+    }
+
+    return leftRelation.sortKey.localeCompare(rightRelation.sortKey);
+  };
+
+  collaboratorMissionMap.forEach((relations, collaboratorId) => {
+    collaboratorMissionMap.set(collaboratorId, relations.sort(sortRelations));
+  });
+  vehicleMissionMap.forEach((relations, vehicleId) => {
+    vehicleMissionMap.set(vehicleId, relations.sort(sortRelations));
+  });
+
+  return {
+    collaboratorMissionMap,
+    vehicleMissionMap,
+  };
+}
+
+function buildMissionConnectionMarkup(relations, options = {}) {
+  const safeRelations = Array.isArray(relations) ? relations : [];
+  const primaryRelation = safeRelations[0] || null;
+  const emptyLabel = options.emptyLabel || "Aucune mission liee pour le moment.";
+
+  if (!primaryRelation) {
+    return `
+      <div class="entity-connection-card entity-connection-card-empty">
+        <strong>Mission liee</strong>
+        <p>${escapeHtml(emptyLabel)}</p>
+      </div>
+    `;
+  }
+
+  const missionCountLabel =
+    safeRelations.length > 1 ? `${safeRelations.length} missions reliees` : "1 mission reliee";
+  const invoiceActionLabel = primaryRelation.invoiceNumber ? "Voir la facture" : "Preparer la facture";
+
+  return `
+    <div class="entity-connection-card">
+      <div class="entity-connection-head">
+        <strong>${escapeHtml(primaryRelation.missionCode)} · ${escapeHtml(primaryRelation.routeLabel)}</strong>
+        <span>${escapeHtml(primaryRelation.roleLabel)}</span>
+      </div>
+      <p class="entity-connection-copy">
+        ${escapeHtml(primaryRelation.serviceDateLabel)}
+        ${primaryRelation.departureTime ? ` · ${escapeHtml(primaryRelation.departureTime)}` : ""}
+        · ${escapeHtml(primaryRelation.clientName || "Client non renseigne")}
+      </p>
+      <div class="entity-connection-meta">
+        <span>${escapeHtml(missionCountLabel)}</span>
+        <span>${escapeHtml(primaryRelation.billingLabel)}</span>
+        <span>${
+          primaryRelation.invoiceNumber
+            ? escapeHtml(`Facture ${primaryRelation.invoiceNumber} · ${primaryRelation.invoiceStatusLabel}`)
+            : escapeHtml(primaryRelation.invoiceStatusLabel)
+        }</span>
+      </div>
+      <div class="entity-connection-actions">
+        <a
+          class="secondary-action small-action"
+          href="trajets.html"
+          data-open-mission-id="${escapeHtml(primaryRelation.missionId)}"
+          data-open-mission-target="trajets.html"
+        >
+          Voir la mission
+        </a>
+        <a
+          class="secondary-action small-action"
+          href="factures.html"
+          data-open-mission-id="${escapeHtml(primaryRelation.missionId)}"
+          data-open-mission-target="factures.html"
+        >
+          ${escapeHtml(invoiceActionLabel)}
+        </a>
+      </div>
+    </div>
+  `;
+}
+
+function saveStoredInvoiceMissionOverrides(overrides) {
+  window.localStorage.setItem(missionOverridesStorageKey, JSON.stringify(overrides));
+}
+
+function saveStoredInvoiceCustomMissions(missions) {
+  window.localStorage.setItem(customMissionsStorageKey, JSON.stringify(missions));
+}
+
+function isSeedInvoiceMissionId(missionId) {
+  return getSeededInvoiceMissionCatalog().some((mission) => mission.id === missionId);
+}
+
+function syncMissionFromInvoiceRecord(invoice) {
+  const missionId = cleanInputValue(invoice?.missionId);
+  if (!missionId || normalizeInvoiceType(invoice?.invoiceType) !== "client") {
+    return;
+  }
+
+  const nextBillingStatus =
+    normalizeInvoicePaymentStatus(invoice.paymentStatus) === "paid" ? "paid" : "invoice_sent";
+  const nextQuotedPrice = normalizeInvoiceAmount(invoice?.totals?.ht);
+
+  if (isSeedInvoiceMissionId(missionId)) {
+    const overrides = getStoredInvoiceMissionOverrides();
+    const currentOverride =
+      overrides[missionId] && typeof overrides[missionId] === "object" ? overrides[missionId] : {};
+    overrides[missionId] = {
+      ...currentOverride,
+      billingStatus: nextBillingStatus,
+      quotedPrice: nextQuotedPrice > 0 ? nextQuotedPrice : currentOverride.quotedPrice,
+    };
+    saveStoredInvoiceMissionOverrides(overrides);
+    return;
+  }
+
+  const customMissions = getStoredInvoiceCustomMissions();
+  const nextMissions = customMissions.map((mission) =>
+    mission.id === missionId
+      ? {
+          ...mission,
+          billingStatus: nextBillingStatus,
+          quotedPrice: nextQuotedPrice > 0 ? nextQuotedPrice : mission.quotedPrice,
+        }
+      : mission
+  );
+  saveStoredInvoiceCustomMissions(nextMissions);
 }
 
 function setNavMenuOpen(isOpen) {
@@ -559,6 +1540,16 @@ function readStoredArray(storageKey) {
 
 function saveStoredArray(storageKey, items) {
   window.localStorage.setItem(storageKey, JSON.stringify(items));
+}
+
+function bootstrapLocalReferenceData() {
+  if (readStoredArray(collaboratorsStorageKey).length === 0) {
+    saveStoredCollaborators(defaultCollaboratorRecords);
+  }
+
+  if (readStoredArray(vehiclesStorageKey).length === 0) {
+    saveStoredVehicles(defaultVehicleRecords);
+  }
 }
 
 function getVehiclePlateKey(plate) {
@@ -1116,7 +2107,7 @@ function startVehicleEdit(vehicleIndex) {
   setVehicleFormOpen(true);
 }
 
-function excludeVehicle() {
+async function excludeVehicle() {
   if (editingVehicleIndex < 0) {
     return;
   }
@@ -1139,6 +2130,16 @@ function excludeVehicle() {
   );
 
   saveStoredVehicles(vehicles);
+
+  try {
+    await syncAppDataToServer();
+  } catch (error) {
+    showVehicleFormMessage(
+      "Vehicule retire localement, mais la suppression n'a pas pu etre synchronisee en base.",
+      "error"
+    );
+  }
+
   renderVehicles();
   resetVehicleForm();
   setVehicleFormOpen(false);
@@ -1213,6 +2214,7 @@ function renderVehicles() {
     return;
   }
 
+  const missionRelations = buildMissionRelationsSnapshot();
   const vehicles = getStoredVehicles().map((storedVehicle, storedIndex) => ({
     storedVehicle,
     storedIndex,
@@ -1258,6 +2260,10 @@ function renderVehicles() {
       const vehicleIndex = String(storedIndex);
       const vehicleTypeClass = getVehicleTypeClass(vehicle.vehicleType);
       const vehicleStatusClass = getVehicleStatusClass(vehicle.vehicleStatus);
+      const relatedMissions = missionRelations.vehicleMissionMap.get(vehicle.id) || [];
+      const missionConnectionMarkup = buildMissionConnectionMarkup(relatedMissions, {
+        emptyLabel: "Ce vehicule n'est affecte a aucune mission du planning.",
+      });
 
       return `
         <article
@@ -1327,7 +2333,19 @@ function renderVehicles() {
                 <span class="vehicle-meta-label">Consommation</span>
                 <span class="vehicle-meta-value">${vehicle.consumption} ${vehicle.consumptionUnit}</span>
               </div>
+              ${
+                relatedMissions[0]
+                  ? `
+              <div class="vehicle-meta-row">
+                <span class="vehicle-meta-label">Chauffeur mission</span>
+                <span class="vehicle-meta-value">${escapeHtml(relatedMissions[0].leadCollaboratorName)}</span>
+              </div>
+              `
+                  : ""
+              }
             </div>
+
+            ${missionConnectionMarkup}
 
             <div class="vehicle-card-tools">
               <button
@@ -1347,7 +2365,7 @@ function renderVehicles() {
     .join("");
 }
 
-function handleVehicleSubmit(event) {
+async function handleVehicleSubmit(event) {
   event.preventDefault();
 
   if (
@@ -1439,7 +2457,7 @@ function handleVehicleSubmit(event) {
       typeof currentStoredVehicle.id === "string" &&
       currentStoredVehicle.id.trim()
         ? currentStoredVehicle.id.trim()
-        : `${Date.now()}-${plateKey}`,
+        : createEntityId("vehicle"),
     brand,
     model,
     color,
@@ -1463,6 +2481,15 @@ function handleVehicleSubmit(event) {
   } else {
     vehicles.push(nextVehicle);
     saveStoredVehicles(vehicles);
+  }
+
+  try {
+    await syncAppDataToServer();
+  } catch (error) {
+    showVehicleFormMessage(
+      "Vehicule enregistre localement, mais la synchronisation PostgreSQL a echoue.",
+      "error"
+    );
   }
 
   renderVehicles();
@@ -2384,6 +3411,7 @@ function renderCollaborators() {
     return;
   }
 
+  const missionRelations = buildMissionRelationsSnapshot();
   const collaborators = getStoredCollaborators().map((storedCollaborator) =>
     normalizeCollaborator(storedCollaborator)
   );
@@ -2410,10 +3438,14 @@ function renderCollaborators() {
     .reverse()
     .map(({ collaborator, collaboratorIndex }) => {
       const linkedVehicles = linkedVehiclesByCollaboratorId.get(collaborator.id) || [];
+      const relatedMissions = missionRelations.collaboratorMissionMap.get(collaborator.id) || [];
       const primaryLinkedVehicle = linkedVehicles[0]?.vehicle || null;
       const availabilityClass = getCollaboratorAvailabilityClass(
         collaborator.availabilityStatus
       );
+      const missionConnectionMarkup = buildMissionConnectionMarkup(relatedMissions, {
+        emptyLabel: "Ce collaborateur n'est pas encore affecte a une mission du planning.",
+      });
       const languagesMarkup = collaborator.languages
         .map(
           (languageEntry) => `
@@ -2492,6 +3524,16 @@ function renderCollaborators() {
                   ${escapeHtml(getCollaboratorAvailabilityLabel(collaborator.availabilityStatus))}
                 </span>
               </div>
+              ${
+                relatedMissions[0]
+                  ? `
+              <div class="vehicle-meta-row">
+                <span class="vehicle-meta-label">Mission en cours</span>
+                <span class="vehicle-meta-value">${escapeHtml(relatedMissions[0].missionCode)} · ${escapeHtml(relatedMissions[0].roleLabel)}</span>
+              </div>
+              `
+                  : ""
+              }
               ${linkedVehicleDetailsMarkup}
               <div class="vehicle-meta-row">
                 <span class="vehicle-meta-label">Langues</span>
@@ -2500,6 +3542,8 @@ function renderCollaborators() {
                 </div>
               </div>
             </div>
+
+            ${missionConnectionMarkup}
 
             <div class="vehicle-card-tools">
               <button
@@ -2519,7 +3563,7 @@ function renderCollaborators() {
     .join("");
 }
 
-function handleCollaboratorSubmit(event) {
+async function handleCollaboratorSubmit(event) {
   event.preventDefault();
 
   if (
@@ -2557,7 +3601,7 @@ function handleCollaboratorSubmit(event) {
     typeof currentStoredCollaborator.id === "string" &&
     currentStoredCollaborator.id.trim()
       ? currentStoredCollaborator.id.trim()
-      : `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+      : createEntityId("collaborator");
   const nextCollaborator = {
     id: collaboratorId,
     firstName,
@@ -2591,6 +3635,16 @@ function handleCollaboratorSubmit(event) {
     clearWhenHidden: false,
     selectedCollaboratorId: vehicleCollaboratorInput?.value || "",
   });
+
+  try {
+    await syncAppDataToServer();
+  } catch (error) {
+    showCollaboratorFormMessage(
+      "Collaborateur enregistre localement, mais la synchronisation PostgreSQL a echoue.",
+      "error"
+    );
+  }
+
   renderVehicles();
   renderCollaborators();
   resetCollaboratorForm();
@@ -2992,6 +4046,8 @@ function normalizeInvoice(invoice) {
     number: cleanInputValue(safeInvoice.number) || "Sans numero",
     issuedAt: normalizeRentalEndDate(safeInvoice.issuedAt),
     invoiceType,
+    missionId: cleanInputValue(safeInvoice.missionId),
+    missionCode: cleanInputValue(safeInvoice.missionCode),
     sourceLabel: cleanInputValue(safeInvoice.sourceLabel) || getInvoiceTypeLabel(invoiceType),
     paymentStatus: normalizeInvoicePaymentStatus(safeInvoice.paymentStatus),
     settledAt: normalizeRentalEndDate(safeInvoice.settledAt),
@@ -3033,6 +4089,267 @@ function normalizeInvoice(invoice) {
     insurance: cleanInputValue(safeInvoice.insurance),
     attachment: normalizeInvoiceAttachment(safeInvoice.attachment),
   };
+}
+
+function getInvoiceMissionActivityStops(mission) {
+  return Array.isArray(mission?.stops)
+    ? mission.stops.filter((stop) => cleanInputValue(stop?.kind) === "activity")
+    : [];
+}
+
+function getInvoiceMissionActivityBudgetTotal(mission) {
+  return getInvoiceMissionActivityStops(mission).reduce(
+    (sum, stop) => sum + (Number(stop?.activityBudget) || 0),
+    0
+  );
+}
+
+function findRecentClientInvoice(clientName, excludedInvoiceId = "") {
+  const normalizedClientName = normalizeTextValue(clientName);
+  if (!normalizedClientName) {
+    return null;
+  }
+
+  return getStoredInvoices()
+    .map((storedInvoice) => normalizeInvoice(storedInvoice))
+    .filter(
+      (invoice) =>
+        invoice.id !== excludedInvoiceId &&
+        normalizeInvoiceType(invoice.invoiceType) === "client" &&
+        normalizeTextValue(invoice.client?.name) === normalizedClientName
+    )
+    .sort((leftInvoice, rightInvoice) => (rightInvoice.issuedAt || "").localeCompare(leftInvoice.issuedAt || ""))[0] || null;
+}
+
+function findRecentSellerInvoice(excludedInvoiceId = "") {
+  return getStoredInvoices()
+    .map((storedInvoice) => normalizeInvoice(storedInvoice))
+    .filter(
+      (invoice) =>
+        invoice.id !== excludedInvoiceId &&
+        normalizeInvoiceType(invoice.invoiceType) === "client" &&
+        cleanInputValue(invoice.seller?.name)
+    )
+    .sort((leftInvoice, rightInvoice) => (rightInvoice.issuedAt || "").localeCompare(leftInvoice.issuedAt || ""))[0] || defaultInvoiceRecord;
+}
+
+function getInvoiceMissionOptionLabel(mission) {
+  const missionDate = mission?.serviceDate ? formatInvoiceDate(mission.serviceDate) : "Date a definir";
+  return [mission?.code, missionDate, mission?.clientName, mission?.routeLabel]
+    .filter(Boolean)
+    .join(" · ");
+}
+
+function refreshInvoiceMissionOptions(selectedMissionId = "") {
+  if (!invoiceMissionInput) {
+    return;
+  }
+
+  const missions = getInvoiceMissionCatalog();
+  const currentSelection = selectedMissionId || cleanInputValue(invoiceMissionInput.value);
+  const hasSelectedMission = missions.some((mission) => mission.id === currentSelection);
+
+  invoiceMissionInput.innerHTML = [
+    '<option value="">Choisir une mission du planning</option>',
+    ...missions.map(
+      (mission) =>
+        `<option value="${escapeHtml(mission.id)}"${
+          mission.id === currentSelection ? " selected" : ""
+        }>${escapeHtml(getInvoiceMissionOptionLabel(mission))}</option>`
+    ),
+  ].join("");
+
+  invoiceMissionInput.value = hasSelectedMission ? currentSelection : "";
+}
+
+function updateInvoiceMissionHelpText() {
+  if (!invoiceMissionHelp) {
+    return;
+  }
+
+  const missions = getInvoiceMissionCatalog();
+  const selectedMission = getInvoiceMissionById(cleanInputValue(invoiceMissionInput?.value));
+  if (missions.length === 0) {
+    invoiceMissionHelp.textContent =
+      "Aucune mission n'est encore disponible. Creez ou modifiez un trajet puis revenez ici.";
+    return;
+  }
+
+  if (!selectedMission) {
+    invoiceMissionHelp.textContent =
+      "Selectionnez une mission pour reprendre automatiquement le client, le trajet et le montant facture.";
+    return;
+  }
+
+  const missionAmount = Math.max(
+    Number(selectedMission.quotedPrice || 0),
+    Number(selectedMission.recommendedPrice || 0)
+  );
+  const activityStops = getInvoiceMissionActivityStops(selectedMission);
+  const activityBudgetTotal = getInvoiceMissionActivityBudgetTotal(selectedMission);
+  const activityLabel = activityStops.length
+    ? ` · ${activityStops.length} etape(s) activite (${formatInvoiceAmount(activityBudgetTotal)})`
+    : "";
+
+  invoiceMissionHelp.textContent =
+    `${selectedMission.code} · ${selectedMission.clientName} · ${selectedMission.routeLabel} · ${formatInvoiceAmount(missionAmount)} HT${activityLabel}`;
+}
+
+function syncInvoiceMissionButtonState() {
+  if (!invoiceGenerateFromMissionButton || !invoiceTypeInput) {
+    return;
+  }
+
+  const isExternalInvoice = normalizeInvoiceType(invoiceTypeInput.value) === "external";
+  invoiceGenerateFromMissionButton.disabled =
+    isExternalInvoice || !getInvoiceMissionById(cleanInputValue(invoiceMissionInput?.value));
+}
+
+function fillInvoiceFormFromMission(missionId, options = {}) {
+  const { showFeedback = true } = options;
+  const mission = getInvoiceMissionById(missionId);
+
+  if (!mission) {
+    if (showFeedback) {
+      showInvoiceFormMessage("Selectionnez une mission valide pour generer la facture.", "error");
+    }
+    return false;
+  }
+
+  const existingInvoice = editingInvoiceId ? getInvoiceById(editingInvoiceId) : null;
+  const clientReference =
+    existingInvoice &&
+    normalizeTextValue(existingInvoice.client?.name) === normalizeTextValue(mission.clientName)
+      ? existingInvoice
+      : findRecentClientInvoice(mission.clientName, editingInvoiceId);
+  const sellerReference = existingInvoice || findRecentSellerInvoice(editingInvoiceId);
+  const missionAmount = Math.max(
+    Number(mission.quotedPrice || 0),
+    Number(mission.recommendedPrice || 0)
+  );
+  const activityStops = getInvoiceMissionActivityStops(mission);
+  const serviceDescriptionParts = [mission.serviceType || "Mission chauffeur", mission.code, mission.routeLabel];
+  if (activityStops.length > 0) {
+    serviceDescriptionParts.push(`${activityStops.length} etape(s) activite`);
+  }
+
+  if (invoiceMissionInput) {
+    invoiceMissionInput.value = mission.id;
+  }
+  if (invoiceSellerNameInput) {
+    invoiceSellerNameInput.value = cleanInputValue(sellerReference?.seller?.name) || defaultInvoiceRecord.seller.name;
+  }
+  if (invoiceSellerAddressInput) {
+    invoiceSellerAddressInput.value =
+      cleanInputValue(sellerReference?.seller?.address) || defaultInvoiceRecord.seller.address;
+  }
+  if (invoiceSellerLocationInput) {
+    invoiceSellerLocationInput.value =
+      cleanInputValue(sellerReference?.seller?.location) || defaultInvoiceRecord.seller.location;
+  }
+  if (invoiceSellerPhoneInput) {
+    invoiceSellerPhoneInput.value =
+      cleanInputValue(sellerReference?.seller?.phone) || defaultInvoiceRecord.seller.phone;
+  }
+  if (invoiceSellerEvtcInput) {
+    invoiceSellerEvtcInput.value =
+      cleanInputValue(sellerReference?.seller?.evtc) || defaultInvoiceRecord.seller.evtc;
+  }
+  if (invoiceSellerSiretInput) {
+    invoiceSellerSiretInput.value =
+      cleanInputValue(sellerReference?.seller?.siret) || defaultInvoiceRecord.seller.siret;
+  }
+  if (invoiceClientNameInput) {
+    invoiceClientNameInput.value = mission.clientName || "";
+  }
+  if (invoiceClientAddressInput) {
+    invoiceClientAddressInput.value = cleanInputValue(clientReference?.client?.address);
+  }
+  if (invoiceClientLocationInput) {
+    invoiceClientLocationInput.value = cleanInputValue(clientReference?.client?.location);
+  }
+  if (invoiceClientSiretInput) {
+    invoiceClientSiretInput.value = cleanInputValue(clientReference?.client?.siret);
+  }
+  if (invoiceClientVatInput) {
+    invoiceClientVatInput.value = cleanInputValue(clientReference?.client?.vat);
+  }
+  if (invoiceClientContactInput) {
+    invoiceClientContactInput.value = cleanInputValue(clientReference?.client?.contact);
+  }
+  if (invoiceClientEmailInput) {
+    invoiceClientEmailInput.value = cleanInputValue(clientReference?.client?.email);
+  }
+  if (invoiceClientPhoneInput) {
+    invoiceClientPhoneInput.value = cleanInputValue(clientReference?.client?.phone);
+  }
+  if (invoiceServiceDescriptionInput) {
+    invoiceServiceDescriptionInput.value = serviceDescriptionParts.filter(Boolean).join(" · ");
+  }
+  if (invoiceServiceDateInput) {
+    invoiceServiceDateInput.value = mission.serviceDate || getDateInputValue();
+  }
+  if (invoiceServicePickupInput) {
+    invoiceServicePickupInput.value = mission.pickupAddress || "";
+  }
+  if (invoiceServiceDestinationInput) {
+    invoiceServiceDestinationInput.value = mission.destinationAddress || "";
+  }
+  if (invoiceServicePassengersInput) {
+    invoiceServicePassengersInput.value = mission.passengers > 0 ? String(mission.passengers) : "";
+  }
+  if (invoiceServiceDistanceInput) {
+    invoiceServiceDistanceInput.value = mission.distanceKm > 0 ? String(mission.distanceKm) : "";
+  }
+  if (invoiceTotalHtInput) {
+    invoiceTotalHtInput.value = missionAmount > 0 ? String(missionAmount) : "";
+  }
+  if (invoiceVat10Input && cleanInputValue(invoiceVat10Input.value) === "") {
+    invoiceVat10Input.value = "0";
+  }
+  if (invoiceVat20Input && cleanInputValue(invoiceVat20Input.value) === "") {
+    invoiceVat20Input.value = "0";
+  }
+  if (invoiceInsuranceInput && !cleanInputValue(invoiceInsuranceInput.value)) {
+    invoiceInsuranceInput.value =
+      cleanInputValue(existingInvoice?.insurance) ||
+      cleanInputValue(clientReference?.insurance) ||
+      defaultInvoiceRecord.insurance;
+  }
+  if (invoiceTaxNoteInput && !cleanInputValue(invoiceTaxNoteInput.value)) {
+    invoiceTaxNoteInput.value =
+      cleanInputValue(existingInvoice?.taxNote) ||
+      cleanInputValue(clientReference?.taxNote) ||
+      defaultInvoiceRecord.taxNote;
+  }
+
+  updateInvoiceMissionHelpText();
+  syncInvoiceMissionButtonState();
+
+  if (showFeedback) {
+    showInvoiceFormMessage(`Facture pre-remplie depuis la mission ${mission.code}.`, "success");
+  }
+
+  return true;
+}
+
+function syncInvoiceMissionSelection(preferredMissionId = "") {
+  if (!invoiceMissionInput) {
+    return;
+  }
+
+  refreshInvoiceMissionOptions(preferredMissionId);
+  updateInvoiceMissionHelpText();
+  syncInvoiceMissionButtonState();
+}
+
+function prefillInvoiceFromSelectedMission() {
+  const selectedMissionId = getSelectedTripId();
+  syncInvoiceMissionSelection(selectedMissionId);
+
+  if (selectedMissionId) {
+    fillInvoiceFormFromMission(selectedMissionId, { showFeedback: false });
+  }
 }
 
 function getNextInvoiceNumber(invoices = getStoredInvoices()) {
@@ -3134,6 +4451,8 @@ function updateInvoiceAttachmentHelp() {
 function syncInvoiceTypeFields() {
   if (
     !invoiceTypeInput ||
+    !invoiceMissionField ||
+    !invoiceMissionActions ||
     !invoiceExternalFlowField ||
     !invoiceExternalFlowInput ||
     !invoiceAttachmentField ||
@@ -3161,6 +4480,8 @@ function syncInvoiceTypeFields() {
 
   const isExternalInvoice = normalizeInvoiceType(invoiceTypeInput.value) === "external";
 
+  invoiceMissionField.hidden = isExternalInvoice;
+  invoiceMissionActions.hidden = isExternalInvoice;
   invoiceExternalFlowField.hidden = !isExternalInvoice;
   invoiceAttachmentField.hidden = !isExternalInvoice;
   invoiceClientSection.hidden = isExternalInvoice;
@@ -3188,6 +4509,8 @@ function syncInvoiceTypeFields() {
     invoiceServiceSectionText.textContent =
       "Resumez la depense ou le service facture par ce document externe.";
     invoiceServiceDescriptionLabel.textContent = "Designation / objet";
+    updateInvoiceMissionHelpText();
+    syncInvoiceMissionButtonState();
     updateInvoiceAttachmentHelp();
     return;
   }
@@ -3206,6 +4529,8 @@ function syncInvoiceTypeFields() {
   if (invoiceExternalFlowInput && !isExternalInvoice) {
     invoiceExternalFlowInput.value = "payable";
   }
+  updateInvoiceMissionHelpText();
+  syncInvoiceMissionButtonState();
   updateInvoiceAttachmentHelp();
 }
 
@@ -3228,6 +4553,9 @@ function resetInvoiceForm() {
   }
   if (invoiceIssuedAtInput) {
     invoiceIssuedAtInput.value = getDateInputValue();
+  }
+  if (invoiceMissionInput) {
+    invoiceMissionInput.value = "";
   }
   if (invoicePaymentMethodInput) {
     invoicePaymentMethodInput.value = "wire";
@@ -3290,6 +4618,7 @@ function resetInvoiceForm() {
     invoiceTaxNoteInput.value = "";
   }
 
+  syncInvoiceMissionSelection(getSelectedTripId());
   syncInvoiceTypeFields();
   clearInvoiceFormMessage();
 }
@@ -3309,6 +4638,9 @@ function fillInvoiceForm(invoice) {
   }
   if (invoiceIssuedAtInput) {
     invoiceIssuedAtInput.value = invoice.issuedAt || getDateInputValue();
+  }
+  if (invoiceMissionInput) {
+    invoiceMissionInput.value = invoice.missionId || "";
   }
   if (invoicePaymentMethodInput) {
     invoicePaymentMethodInput.value = normalizeInvoicePaymentMethod(invoice.paymentMethod);
@@ -3405,6 +4737,7 @@ function fillInvoiceForm(invoice) {
     invoiceAttachmentInput.value = "";
   }
 
+  syncInvoiceMissionSelection(invoice.missionId || "");
   syncInvoiceTypeFields();
 }
 
@@ -3493,7 +4826,7 @@ function getInvoiceById(invoiceId) {
   return invoices.find((invoice) => invoice.id === invoiceId) || null;
 }
 
-function toggleInvoicePaymentStatus(invoiceId) {
+async function toggleInvoicePaymentStatus(invoiceId) {
   if (!invoiceId) {
     return;
   }
@@ -3511,17 +4844,28 @@ function toggleInvoicePaymentStatus(invoiceId) {
       ? normalizeRentalEndDate(targetInvoice.settledAt) || getDateInputValue()
       : "";
 
-  saveStoredInvoices(
-    invoices.map((invoice) =>
-      invoice.id === invoiceId
-        ? {
-            ...invoice,
-            paymentStatus: nextPaymentStatus,
-            settledAt: nextSettledAt,
-          }
-        : invoice
-    )
+  const nextInvoices = invoices.map((invoice) =>
+    invoice.id === invoiceId
+      ? {
+          ...invoice,
+          paymentStatus: nextPaymentStatus,
+          settledAt: nextSettledAt,
+        }
+      : invoice
   );
+  const updatedInvoice = nextInvoices.find((invoice) => invoice.id === invoiceId) || null;
+
+  saveStoredInvoices(nextInvoices);
+
+  if (updatedInvoice) {
+    syncMissionFromInvoiceRecord(updatedInvoice);
+  }
+
+  try {
+    await syncAppDataToServer();
+  } catch (error) {
+    window.alert("Statut mis a jour localement, mais la synchronisation PostgreSQL a echoue.");
+  }
 
   renderInvoices();
 }
@@ -3558,6 +4902,18 @@ async function openInvoiceAttachment(invoiceId) {
   }
 
   try {
+    const canUseRemotePersistence = await ensureRemotePersistenceReady();
+
+    if (canUseRemotePersistence) {
+      const remoteBlob = await fetchRemoteInvoiceAttachment(invoiceId);
+      const remoteUrl = window.URL.createObjectURL(remoteBlob);
+      window.open(remoteUrl, "_blank", "noopener");
+      window.setTimeout(() => {
+        window.URL.revokeObjectURL(remoteUrl);
+      }, 60000);
+      return;
+    }
+
     const storedAttachment = await getStoredInvoiceAttachment(attachment.id);
     if (!storedAttachment?.blob) {
       window.alert("Le fichier de cette facture n'a pas ete retrouve.");
@@ -3583,6 +4939,23 @@ async function downloadInvoiceAttachment(invoiceId) {
   }
 
   try {
+    const canUseRemotePersistence = await ensureRemotePersistenceReady();
+
+    if (canUseRemotePersistence) {
+      const remoteBlob = await fetchRemoteInvoiceAttachment(invoiceId);
+      const remoteUrl = window.URL.createObjectURL(remoteBlob);
+      const remoteDownloadLink = document.createElement("a");
+      remoteDownloadLink.href = remoteUrl;
+      remoteDownloadLink.download = attachment.name || getInvoicePdfDocumentTitle(invoice);
+      document.body.append(remoteDownloadLink);
+      remoteDownloadLink.click();
+      remoteDownloadLink.remove();
+      window.setTimeout(() => {
+        window.URL.revokeObjectURL(remoteUrl);
+      }, 5000);
+      return;
+    }
+
     const storedAttachment = await getStoredInvoiceAttachment(attachment.id);
     if (!storedAttachment?.blob) {
       window.alert("Le fichier de cette facture n'a pas ete retrouve.");
@@ -3809,6 +5182,16 @@ function renderInvoiceFullSheet(invoice, options = {}) {
         </div>
       `
     : `
+        ${
+          invoice.missionCode
+            ? `
+              <div class="invoice-service-row">
+                <span>Mission source</span>
+                <strong>${escapeHtml(invoice.missionCode)}</strong>
+              </div>
+            `
+            : ""
+        }
         <div class="invoice-service-row">
           <span>Designation / objet</span>
           <strong>${escapeHtml(invoice.service.description || "Non renseignee")}</strong>
@@ -3852,6 +5235,20 @@ function renderInvoiceFullSheet(invoice, options = {}) {
             showActions
               ? `
                 <div class="invoice-sheet-action-buttons">
+                  ${
+                    !isExternalInvoice && invoice.missionId
+                      ? `
+                        <button
+                          class="invoice-edit-button"
+                          type="button"
+                          data-open-mission-id="${escapeHtml(invoice.missionId)}"
+                          data-open-mission-target="trajets.html"
+                        >
+                          Voir la mission
+                        </button>
+                      `
+                      : ""
+                  }
                   <button
                     class="invoice-edit-button"
                     type="button"
@@ -4045,6 +5442,18 @@ function renderInvoices() {
       });
     });
 
+  if (!selectedInvoiceId) {
+    const selectedMissionId = getSelectedTripId();
+    const linkedMissionInvoice = invoices.find(
+      (invoice) =>
+        normalizeInvoiceType(invoice.invoiceType) === "client" && invoice.missionId === selectedMissionId
+    );
+
+    if (linkedMissionInvoice) {
+      selectedInvoiceId = linkedMissionInvoice.id;
+    }
+  }
+
   const filteredInvoices = invoices.filter((invoice) => matchesInvoiceFilters(invoice));
   updateInvoiceFilterSummary(filteredInvoices.length, invoices.length);
 
@@ -4184,6 +5593,9 @@ async function handleInvoiceSubmit(event) {
   const paymentMethod = normalizeInvoicePaymentMethod(invoicePaymentMethodInput.value);
   const settledAt = normalizeRentalEndDate(invoiceSettledAtInput?.value);
   const externalFlow = normalizeInvoiceExternalFlow(invoiceExternalFlowInput?.value || "payable");
+  const linkedMission = !isExternalInvoice
+    ? getInvoiceMissionById(cleanInputValue(invoiceMissionInput?.value))
+    : null;
   const totalHt = normalizeInvoiceAmount(invoiceTotalHtInput.value);
   const vat10 = normalizeInvoiceAmount(invoiceVat10Input?.value || 0);
   const vat20 = normalizeInvoiceAmount(invoiceVat20Input?.value || 0);
@@ -4230,17 +5642,22 @@ async function handleInvoiceSubmit(event) {
   const existingInvoice = editingInvoiceId
     ? invoices.find((invoice) => invoice.id === editingInvoiceId) || null
     : null;
+  const canUseRemotePersistence = await ensureRemotePersistenceReady();
   let nextAttachment = existingInvoice?.attachment || null;
   const selectedAttachmentFile = invoiceAttachmentInput?.files?.[0] || null;
 
   try {
     if (isExternalInvoice && selectedAttachmentFile) {
-      nextAttachment = await saveInvoiceAttachmentFile(
-        selectedAttachmentFile,
-        existingInvoice?.attachment?.id || ""
-      );
+      nextAttachment = canUseRemotePersistence
+        ? await buildInvoiceAttachmentPayload(
+            selectedAttachmentFile,
+            existingInvoice?.attachment?.id || ""
+          )
+        : await saveInvoiceAttachmentFile(selectedAttachmentFile, existingInvoice?.attachment?.id || "");
     } else if (!isExternalInvoice && existingInvoice?.attachment?.id) {
-      await deleteStoredInvoiceAttachment(existingInvoice.attachment.id);
+      if (!canUseRemotePersistence) {
+        await deleteStoredInvoiceAttachment(existingInvoice.attachment.id);
+      }
       nextAttachment = null;
     }
   } catch (error) {
@@ -4249,10 +5666,12 @@ async function handleInvoiceSubmit(event) {
   }
 
   const nextInvoice = normalizeInvoice({
-    id: existingInvoice?.id || `invoice-${Date.now()}-${number}`,
+    id: existingInvoice?.id || createEntityId("invoice"),
     number,
     issuedAt,
     invoiceType,
+    missionId: isExternalInvoice ? "" : cleanInputValue(linkedMission?.id),
+    missionCode: isExternalInvoice ? "" : cleanInputValue(linkedMission?.code),
     sourceLabel: getInvoiceTypeLabel(invoiceType),
     paymentStatus: settledAt ? "paid" : "unpaid",
     settledAt,
@@ -4295,6 +5714,13 @@ async function handleInvoiceSubmit(event) {
     attachment: isExternalInvoice ? nextAttachment : null,
   });
 
+  if (nextAttachment?.payloadBase64 && nextInvoice.attachment) {
+    nextInvoice.attachment = {
+      ...nextInvoice.attachment,
+      payloadBase64: nextAttachment.payloadBase64,
+    };
+  }
+
   if (existingInvoice) {
     saveStoredInvoices(
       invoices.map((invoice) => (invoice.id === existingInvoice.id ? nextInvoice : invoice))
@@ -4304,6 +5730,17 @@ async function handleInvoiceSubmit(event) {
     invoices.push(nextInvoice);
     saveStoredInvoices(invoices);
     selectedInvoiceId = "";
+  }
+
+  syncMissionFromInvoiceRecord(nextInvoice);
+
+  try {
+    await syncAppDataToServer();
+  } catch (error) {
+    showInvoiceFormMessage(
+      "Facture enregistree localement, mais la synchronisation PostgreSQL a echoue.",
+      "error"
+    );
   }
 
   renderInvoices();
@@ -4367,6 +5804,31 @@ document.addEventListener("keydown", (event) => {
   if (navTrigger) {
     navTrigger.focus();
   }
+});
+
+document.addEventListener("click", (event) => {
+  if (!(event.target instanceof Element)) {
+    return;
+  }
+
+  const missionLink = event.target.closest("[data-open-mission-id]");
+  if (!missionLink) {
+    return;
+  }
+
+  const missionId = cleanInputValue(missionLink.getAttribute("data-open-mission-id"));
+  const targetPage =
+    cleanInputValue(missionLink.getAttribute("data-open-mission-target")) ||
+    cleanInputValue(missionLink.getAttribute("href")) ||
+    "trajets.html";
+
+  if (!missionId) {
+    return;
+  }
+
+  event.preventDefault();
+  saveSelectedTripId(missionId);
+  window.location.href = targetPage;
 });
 
 if (vehicleForm) {
@@ -4480,7 +5942,7 @@ if (vehicleList) {
       return;
     }
 
-    if (event.target.closest(".vehicle-edit-button")) {
+    if (event.target.closest(".vehicle-edit-button, [data-open-mission-id]")) {
       return;
     }
 
@@ -4497,7 +5959,7 @@ if (vehicleList) {
       return;
     }
 
-    if (event.target.closest(".vehicle-edit-button")) {
+    if (event.target.closest(".vehicle-edit-button, [data-open-mission-id]")) {
       return;
     }
 
@@ -4695,7 +6157,7 @@ if (collaboratorList) {
       return;
     }
 
-    if (event.target.closest(".collaborator-edit-button")) {
+    if (event.target.closest(".collaborator-edit-button, [data-open-mission-id]")) {
       return;
     }
 
@@ -4712,7 +6174,7 @@ if (collaboratorList) {
       return;
     }
 
-    if (event.target.closest(".collaborator-edit-button")) {
+    if (event.target.closest(".collaborator-edit-button, [data-open-mission-id]")) {
       return;
     }
 
@@ -4777,6 +6239,7 @@ if (invoiceForm) {
 if (addInvoiceButton) {
   addInvoiceButton.addEventListener("click", () => {
     resetInvoiceForm();
+    prefillInvoiceFromSelectedMission();
     setInvoiceFormOpen(true);
   });
 }
@@ -4784,6 +6247,24 @@ if (addInvoiceButton) {
 if (invoiceTypeInput) {
   invoiceTypeInput.addEventListener("change", () => {
     syncInvoiceTypeFields();
+  });
+}
+
+if (invoiceMissionInput) {
+  invoiceMissionInput.addEventListener("change", () => {
+    updateInvoiceMissionHelpText();
+    syncInvoiceMissionButtonState();
+
+    const missionId = cleanInputValue(invoiceMissionInput.value);
+    if (missionId && normalizeInvoiceType(invoiceTypeInput?.value) === "client") {
+      fillInvoiceFormFromMission(missionId, { showFeedback: false });
+    }
+  });
+}
+
+if (invoiceGenerateFromMissionButton) {
+  invoiceGenerateFromMissionButton.addEventListener("click", () => {
+    fillInvoiceFormFromMission(cleanInputValue(invoiceMissionInput?.value));
   });
 }
 
@@ -4959,18 +6440,24 @@ if (invoicePreview) {
   });
 }
 
-syncCurrentLabel();
-buildCurrentWeekCalendar();
-setVehicleFormMode();
-syncRentalEndFieldVisibility();
-syncVehicleCollaboratorFieldVisibility();
-syncVehicleStatusWithRentalEndDate();
-renderVehicles();
-setCollaboratorFormMode();
-syncCollaboratorVehicleVisibility();
-renderCollaboratorLanguagePreview();
-renderCollaborators();
-resetInvoiceForm();
-syncInvoiceTypeFields();
-renderInvoices();
+async function initializeApp() {
+  syncCurrentLabel();
+  buildCurrentWeekCalendar();
+  bootstrapLocalReferenceData();
+  await bootstrapAppPersistence();
+  setVehicleFormMode();
+  syncRentalEndFieldVisibility();
+  syncVehicleCollaboratorFieldVisibility();
+  syncVehicleStatusWithRentalEndDate();
+  renderVehicles();
+  setCollaboratorFormMode();
+  syncCollaboratorVehicleVisibility();
+  renderCollaboratorLanguagePreview();
+  renderCollaborators();
+  resetInvoiceForm();
+  syncInvoiceTypeFields();
+  renderInvoices();
+}
+
+void initializeApp();
 

@@ -14,7 +14,7 @@
       href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=Manrope:wght@400;500;600;700&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="styles.css?v=20260328-factures-24" />
+    <link rel="stylesheet" href="styles.css?v=20260412-invoice-summary-1" />
   </head>
   <body>
     <div class="page-shell">
@@ -114,7 +114,7 @@
               <p>Une base neutre pour ensuite g&eacute;n&eacute;rer vos propres documents.</p>
             </article>
 
-            <div class="summary-strip">
+            <div class="summary-strip invoice-summary-strip">
               <article class="summary-item">
                 <span>Factures creees</span>
                 <strong id="invoice-count-summary">1</strong>
@@ -227,6 +227,22 @@
                       <span>Date d'emission</span>
                       <input id="invoice-issued-at" name="issuedAt" type="date" required />
                     </label>
+
+                    <label class="field-group field-group-wide" id="invoice-mission-field">
+                      <span>Mission source</span>
+                      <select id="invoice-mission-source" name="invoiceMissionSource">
+                        <option value="">Choisir une mission du planning</option>
+                      </select>
+                      <small class="field-help" id="invoice-mission-help">
+                        Selectionnez une mission pour reprendre automatiquement le client, le trajet et le montant facture.
+                      </small>
+                    </label>
+
+                    <div class="invoice-mission-actions" id="invoice-mission-actions">
+                      <button class="secondary-action" id="invoice-generate-from-mission" type="button">
+                        Pre-remplir depuis la mission
+                      </button>
+                    </div>
 
                     <label class="field-group field-group-wide">
                       <span>Mode de paiement</span>

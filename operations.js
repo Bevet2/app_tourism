@@ -13,6 +13,14 @@ const planningAvailableCollaboratorsNode = document.querySelector(
   "#planning-available-collaborators"
 );
 const planningDetail = document.querySelector("#planning-detail");
+const openGlobalCalendarButton = document.querySelector("#open-global-calendar");
+const planningGlobalCalendar = document.querySelector("#planning-global-calendar");
+const closeGlobalCalendarButton = document.querySelector("#close-global-calendar");
+const planningGlobalMonthLabel = document.querySelector("#planning-global-month-label");
+const planningGlobalCalendarGrid = document.querySelector("#planning-global-calendar-grid");
+const planningGlobalPrevMonthButton = document.querySelector("#planning-global-prev-month");
+const planningGlobalNextMonthButton = document.querySelector("#planning-global-next-month");
+const planningResetWeekButton = document.querySelector("#planning-reset-week");
 const tripList = document.querySelector("#trip-list");
 const tripDetail = document.querySelector("#trip-detail");
 const tripTotalDistanceNode = document.querySelector("#trip-total-distance");
@@ -52,11 +60,25 @@ const missionFormTitle = document.querySelector("#mission-form-title");
 const missionFormSubmitButton = document.querySelector("#submit-mission-form");
 
 if (planningBoard || tripList || tripDetail) {
+  const collaboratorsStorageKey = "route-pilote-collaborators";
   const vehiclesStorageKey = "route-pilote-vehicles";
+  const invoicesStorageKey = "route-pilote-invoices";
   const missionAssignmentsStorageKey = "route-pilote-mission-assignments-v2";
   const selectedTripStorageKey = "route-pilote-selected-trip-v1";
   const customMissionsStorageKey = "route-pilote-custom-missions-v1";
   const missionOverridesStorageKey = "route-pilote-mission-overrides-v1";
+  const defaultMissionInvoiceTemplate = {
+    seller: {
+      name: "Activite VTC Exemple",
+      address: "12, avenue du Centre",
+      location: "75000 Paris",
+      phone: "0612345678",
+      evtc: "EVTC000000000",
+      siret: "12345678900010",
+    },
+    taxNote: "TVA non applicable conformement a l'article 293 B du CGI.",
+    insurance: "Assurance VTC exemple",
+  };
 
   const collaboratorLabels = {
     available: "Disponible",
@@ -229,6 +251,8 @@ if (planningBoard || tripList || tripDetail) {
   let editingMissionId = null;
   let placesLibraryPromise = null;
   let geocodingLibraryPromise = null;
+  let activePlanningDate = new Date();
+  let planningCalendarMonthCursor = new Date();
 
   function getStartOfWeek(date = new Date()) {
     const value = new Date(date);
@@ -236,6 +260,27 @@ if (planningBoard || tripList || tripDetail) {
     const day = value.getDay();
     value.setDate(value.getDate() + (day === 0 ? -6 : 1 - day));
     return value;
+  }
+
+  function normalizeCalendarDate(value = new Date()) {
+    const normalizedValue = value instanceof Date ? new Date(value) : new Date(value);
+    if (Number.isNaN(normalizedValue.getTime())) {
+      const fallbackValue = new Date();
+      fallbackValue.setHours(0, 0, 0, 0);
+      return fallbackValue;
+    }
+
+    normalizedValue.setHours(0, 0, 0, 0);
+    return normalizedValue;
+  }
+
+  function setActivePlanningDate(value) {
+    activePlanningDate = normalizeCalendarDate(value);
+  }
+
+  function setPlanningCalendarMonthCursor(value) {
+    planningCalendarMonthCursor = normalizeCalendarDate(value);
+    planningCalendarMonthCursor.setDate(1);
   }
 
   function toISODate(date) {
@@ -273,12 +318,66 @@ if (planningBoard || tripList || tripDetail) {
     }).format(new Date(`${dateKey}T00:00:00`));
   }
 
-  function weekLabel() {
-    const start = getStartOfWeek();
+  function weekLabel(date = activePlanningDate) {
+    const start = getStartOfWeek(date);
     const end = new Date(start);
     end.setDate(start.getDate() + 6);
     const formatter = new Intl.DateTimeFormat("fr-FR", { day: "numeric", month: "long" });
     return `Semaine du ${formatter.format(start)} au ${formatter.format(end)}`;
+  }
+
+  function monthLabel(date = planningCalendarMonthCursor) {
+    return new Intl.DateTimeFormat("fr-FR", {
+      month: "long",
+      year: "numeric",
+    }).format(normalizeCalendarDate(date));
+  }
+
+  function sameMonth(dateA, dateB) {
+    return (
+      dateA.getFullYear() === dateB.getFullYear() &&
+      dateA.getMonth() === dateB.getMonth()
+    );
+  }
+
+  function isDateWithinVisibleWeek(dateKey, anchor = activePlanningDate) {
+    if (!dateKey) {
+      return false;
+    }
+
+    const start = getStartOfWeek(anchor);
+    const end = new Date(start);
+    end.setDate(start.getDate() + 6);
+    const target = new Date(`${dateKey}T00:00:00`);
+    target.setHours(0, 0, 0, 0);
+    return target >= start && target <= end;
+  }
+
+  function openPlanningGlobalCalendar() {
+    if (!planningGlobalCalendar) {
+      return;
+    }
+
+    setPlanningCalendarMonthCursor(activePlanningDate);
+    planningGlobalCalendar.hidden = false;
+    document.body.classList.add("planning-global-calendar-open");
+  }
+
+  function closePlanningGlobalCalendar() {
+    if (!planningGlobalCalendar) {
+      return;
+    }
+
+    planningGlobalCalendar.hidden = true;
+    document.body.classList.remove("planning-global-calendar-open");
+  }
+
+  function mountPlanningGlobalCalendarToBody() {
+    if (!planningGlobalCalendar || planningGlobalCalendar.parentElement === document.body) {
+      return;
+    }
+
+    document.body.appendChild(planningGlobalCalendar);
   }
 
   async function ensureGoogleMapsLibraries() {
@@ -1036,6 +1135,244 @@ if (planningBoard || tripList || tripDetail) {
     window.localStorage.setItem(customMissionsStorageKey, JSON.stringify(customMissions));
   }
 
+  function cleanStoredText(value) {
+    if (typeof value !== "string") {
+      return "";
+    }
+
+    return value.trim().replace(/\s+/g, " ");
+  }
+
+  function normalizeStoredTextValue(value) {
+    if (typeof value !== "string") {
+      return "";
+    }
+
+    return value
+      .trim()
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "");
+  }
+
+  function normalizeStoredInvoiceAmount(value) {
+    if (typeof value === "number") {
+      return Number.isFinite(value) && value >= 0 ? value : 0;
+    }
+
+    if (typeof value !== "string") {
+      return 0;
+    }
+
+    const normalizedValue = value
+      .replace(/\s+/g, "")
+      .replace(/\u20AC/g, "")
+      .replace(",", ".");
+    const parsedValue = Number(normalizedValue);
+
+    return Number.isFinite(parsedValue) && parsedValue >= 0 ? parsedValue : 0;
+  }
+
+  function readStoredInvoices() {
+    try {
+      const raw = window.localStorage.getItem(invoicesStorageKey);
+      const parsed = raw ? JSON.parse(raw) : [];
+      return Array.isArray(parsed) ? parsed : [];
+    } catch (error) {
+      return [];
+    }
+  }
+
+  function saveStoredInvoices(invoices) {
+    window.localStorage.setItem(invoicesStorageKey, JSON.stringify(invoices));
+  }
+
+  function isClientInvoice(invoice) {
+    return normalizeStoredTextValue(invoice?.invoiceType) !== "external";
+  }
+
+  function getNextMissionInvoiceNumber(invoices = readStoredInvoices()) {
+    const maxInvoiceNumber = invoices.reduce((highest, invoice) => {
+      const matches = String(invoice?.number || "").match(/\d+/g);
+      if (!matches || matches.length === 0) {
+        return highest;
+      }
+
+      const currentValue = Number(matches[matches.length - 1]);
+      return Number.isFinite(currentValue) && currentValue > highest ? currentValue : highest;
+    }, 0);
+
+    return String(maxInvoiceNumber + 1).padStart(4, "0");
+  }
+
+  function findRecentClientInvoiceSnapshot(clientName, invoices, excludedInvoiceId = "") {
+    const normalizedClientName = normalizeStoredTextValue(clientName);
+    if (!normalizedClientName) {
+      return null;
+    }
+
+    return (
+      invoices
+        .filter(
+          (invoice) =>
+            cleanStoredText(invoice?.id) !== excludedInvoiceId &&
+            isClientInvoice(invoice) &&
+            normalizeStoredTextValue(invoice?.client?.name) === normalizedClientName
+        )
+        .sort((leftInvoice, rightInvoice) =>
+          String(rightInvoice?.issuedAt || "").localeCompare(String(leftInvoice?.issuedAt || ""))
+        )[0] || null
+    );
+  }
+
+  function findRecentSellerInvoiceSnapshot(invoices, excludedInvoiceId = "") {
+    return (
+      invoices
+        .filter(
+          (invoice) =>
+            cleanStoredText(invoice?.id) !== excludedInvoiceId &&
+            isClientInvoice(invoice) &&
+            cleanStoredText(invoice?.seller?.name)
+        )
+        .sort((leftInvoice, rightInvoice) =>
+          String(rightInvoice?.issuedAt || "").localeCompare(String(leftInvoice?.issuedAt || ""))
+        )[0] || null
+    );
+  }
+
+  function missionActivityStops(mission) {
+    return Array.isArray(mission?.stops)
+      ? mission.stops.filter((stop) => cleanStoredText(stop?.kind) === "activity")
+      : [];
+  }
+
+  function buildMissionInvoiceDescription(mission) {
+    const serviceDescriptionParts = [
+      mission?.serviceType || "Mission chauffeur",
+      mission?.code,
+      mission?.routeLabel,
+    ];
+    const activityStops = missionActivityStops(mission);
+
+    if (activityStops.length > 0) {
+      serviceDescriptionParts.push(`${activityStops.length} etape(s) activite`);
+    }
+
+    return serviceDescriptionParts.filter(Boolean).join(" - ");
+  }
+
+  function buildMissionLinkedInvoice(missionRecord, existingInvoice, invoices) {
+    const existingInvoiceId = cleanStoredText(existingInvoice?.id);
+    const sellerReference =
+      existingInvoice && cleanStoredText(existingInvoice?.seller?.name)
+        ? existingInvoice
+        : findRecentSellerInvoiceSnapshot(invoices, existingInvoiceId);
+    const clientReference =
+      existingInvoice &&
+      normalizeStoredTextValue(existingInvoice?.client?.name) ===
+        normalizeStoredTextValue(missionRecord.clientName)
+        ? existingInvoice
+        : findRecentClientInvoiceSnapshot(missionRecord.clientName, invoices, existingInvoiceId);
+    const totalHt = Math.max(
+      Number(missionRecord?.quotedPrice || 0),
+      Number(missionRecord?.recommendedPrice || 0)
+    );
+    const vat10 = normalizeStoredInvoiceAmount(existingInvoice?.totals?.vat10);
+    const vat20 = normalizeStoredInvoiceAmount(existingInvoice?.totals?.vat20);
+    const paymentStatus = missionRecord?.billingStatus === "paid" ? "paid" : "unpaid";
+
+    return {
+      id: existingInvoiceId || `invoice-${missionRecord.id}`,
+      number: cleanStoredText(existingInvoice?.number) || getNextMissionInvoiceNumber(invoices),
+      issuedAt:
+        cleanStoredText(existingInvoice?.issuedAt) || missionRecord.serviceDate || toISODate(new Date()),
+      invoiceType: "client",
+      missionId: missionRecord.id,
+      missionCode: cleanStoredText(missionRecord.code),
+      sourceLabel: "Facture client",
+      paymentStatus,
+      settledAt:
+        paymentStatus === "paid"
+          ? cleanStoredText(existingInvoice?.settledAt) ||
+            missionRecord.serviceDate ||
+            toISODate(new Date())
+          : "",
+      externalFlow: "payable",
+      paymentMethod: cleanStoredText(existingInvoice?.paymentMethod) || "wire",
+      seller: {
+        name:
+          cleanStoredText(sellerReference?.seller?.name) ||
+          defaultMissionInvoiceTemplate.seller.name,
+        address:
+          cleanStoredText(sellerReference?.seller?.address) ||
+          defaultMissionInvoiceTemplate.seller.address,
+        location:
+          cleanStoredText(sellerReference?.seller?.location) ||
+          defaultMissionInvoiceTemplate.seller.location,
+        phone:
+          cleanStoredText(sellerReference?.seller?.phone) ||
+          defaultMissionInvoiceTemplate.seller.phone,
+        evtc:
+          cleanStoredText(sellerReference?.seller?.evtc) ||
+          defaultMissionInvoiceTemplate.seller.evtc,
+        siret:
+          cleanStoredText(sellerReference?.seller?.siret) ||
+          defaultMissionInvoiceTemplate.seller.siret,
+      },
+      client: {
+        name: cleanStoredText(missionRecord.clientName),
+        address: cleanStoredText(clientReference?.client?.address),
+        location: cleanStoredText(clientReference?.client?.location),
+        siret: cleanStoredText(clientReference?.client?.siret),
+        vat: cleanStoredText(clientReference?.client?.vat),
+        contact: cleanStoredText(clientReference?.client?.contact),
+        email: cleanStoredText(clientReference?.client?.email),
+        phone: cleanStoredText(clientReference?.client?.phone),
+      },
+      service: {
+        description: buildMissionInvoiceDescription(missionRecord),
+        date: missionRecord.serviceDate || "",
+        pickup: cleanStoredText(missionRecord.pickupAddress),
+        destination: cleanStoredText(missionRecord.destinationAddress),
+        passengers: Math.max(0, Number(missionRecord.passengers || 0)),
+        distanceKm: Math.max(0, Number(missionRecord.distanceKm || 0)),
+      },
+      totals: {
+        ht: totalHt,
+        vat10,
+        vat20,
+        ttc: totalHt + vat10 + vat20,
+      },
+      taxNote:
+        cleanStoredText(existingInvoice?.taxNote) || defaultMissionInvoiceTemplate.taxNote,
+      insurance:
+        cleanStoredText(existingInvoice?.insurance) || defaultMissionInvoiceTemplate.insurance,
+      attachment: existingInvoice?.attachment || null,
+    };
+  }
+
+  function syncMissionInvoiceRecord(missionRecord) {
+    if (!missionRecord || !cleanStoredText(missionRecord.id)) {
+      return;
+    }
+
+    const invoices = readStoredInvoices();
+    const existingInvoiceIndex = invoices.findIndex(
+      (invoice) =>
+        isClientInvoice(invoice) && cleanStoredText(invoice?.missionId) === missionRecord.id
+    );
+    const existingInvoice = existingInvoiceIndex >= 0 ? invoices[existingInvoiceIndex] : null;
+    const nextInvoice = buildMissionLinkedInvoice(missionRecord, existingInvoice, invoices);
+
+    if (existingInvoiceIndex >= 0) {
+      invoices[existingInvoiceIndex] = nextInvoice;
+    } else {
+      invoices.push(nextInvoice);
+    }
+
+    saveStoredInvoices(invoices);
+  }
+
   function missionCatalog() {
     const overrides = getMissionOverrides();
     const seededMissions = missions.map((mission) =>
@@ -1327,6 +1664,21 @@ if (planningBoard || tripList || tripDetail) {
     }
   }
 
+  function openMissionFormForDate(dateKey) {
+    setActivePlanningDate(dateKey);
+    setPlanningCalendarMonthCursor(dateKey);
+    closePlanningGlobalCalendar();
+    resetMissionForm();
+
+    if (missionServiceDateInput) {
+      missionServiceDateInput.value = dateKey;
+    }
+
+    setMissionFormOpen(true);
+    showMissionFormMessage(`Nouvelle mission pre-remplie pour le ${formatDay(dateKey)}.`, "success");
+    renderOperations();
+  }
+
   function buildStopDraftsFromMission(mission) {
     const activityStops = getMissionActivityStops(mission);
     return activityStops.length
@@ -1465,6 +1817,7 @@ if (planningBoard || tripList || tripDetail) {
       const overrides = getMissionOverrides();
       overrides[missionRecord.id] = missionRecord;
       saveMissionOverrides(overrides);
+      syncMissionInvoiceRecord(missionRecord);
       return;
     }
 
@@ -1478,6 +1831,7 @@ if (planningBoard || tripList || tripDetail) {
     }
 
     saveCustomMissions(customMissions);
+    syncMissionInvoiceRecord(missionRecord);
   }
 
   async function handleMissionSubmit(event) {
@@ -1786,13 +2140,17 @@ if (planningBoard || tripList || tripDetail) {
       vehicleType === "collaborator" ? "collaborator" : vehicleType === "rental" ? "rental" : "company";
     const label = [vehicle.brand, vehicle.model].filter(Boolean).join(" ") || "Vehicule ajoute";
     const seats = /vito|minibus/i.test(label) ? 8 : /classe v|van/i.test(label) ? 7 : 4;
+    const ownerCollaboratorId =
+      ownershipType === "collaborator" && typeof vehicle.linkedCollaboratorId === "string"
+        ? vehicle.linkedCollaboratorId.trim()
+        : "";
 
     return {
       id: vehicle.id || `stored-vehicle-${index}`,
       label,
       plate: vehicle.plate || "",
       ownershipType,
-      ownerCollaboratorId: "",
+      ownerCollaboratorId,
       seats,
       luggageCapacity: seats >= 7 ? seats : Math.max(3, seats),
       consumption: Number(vehicle.consumption || 7.5),
@@ -1804,8 +2162,6 @@ if (planningBoard || tripList || tripDetail) {
   }
 
   function vehicleCatalog() {
-    const catalog = [...baseVehicles];
-    const ids = new Set(catalog.map((vehicle) => vehicle.id));
     let stored = [];
 
     try {
@@ -1814,18 +2170,66 @@ if (planningBoard || tripList || tripDetail) {
       stored = [];
     }
 
-    stored.map(normalizeStoredVehicle).forEach((vehicle) => {
-      if (!ids.has(vehicle.id)) {
-        ids.add(vehicle.id);
-        catalog.push(vehicle);
-      }
-    });
+    if (Array.isArray(stored) && stored.length > 0) {
+      return stored.map(normalizeStoredVehicle);
+    }
 
-    return catalog;
+    return [...baseVehicles];
   }
 
-  function collaboratorById(id) {
-    return collaborators.find((collaborator) => collaborator.id === id) || null;
+  function normalizeStoredCollaborator(collaborator, index, catalog) {
+    const firstName = typeof collaborator?.firstName === "string" ? collaborator.firstName.trim() : "";
+    const lastName = typeof collaborator?.lastName === "string" ? collaborator.lastName.trim() : "";
+    const name = [firstName, lastName].filter(Boolean).join(" ") || `Collaborateur ${index + 1}`;
+    const role = String(collaborator?.role || "guide").toLowerCase() === "driver" ? "Chauffeur" : "Guide";
+    const availabilityStatus = String(collaborator?.availabilityStatus || "available").toLowerCase();
+    const availability =
+      availabilityStatus === "on_mission"
+        ? "limited"
+        : availabilityStatus === "unavailable"
+          ? "off"
+          : "available";
+    const languages = Array.isArray(collaborator?.languages)
+      ? collaborator.languages
+          .map((entry) => (typeof entry === "string" ? entry : entry?.language))
+          .filter(Boolean)
+      : [];
+    const canDrive = String(collaborator?.role || "").toLowerCase() === "driver";
+    const personalVehicleId =
+      catalog.find(
+        (vehicle) => vehicle.ownershipType === "collaborator" && vehicle.ownerCollaboratorId === collaborator.id
+      )?.id || "";
+
+    return {
+      id: collaborator.id || `stored-collaborator-${index}`,
+      name,
+      role,
+      languages,
+      availability,
+      hourlyRate: canDrive ? 30 : 24,
+      canDrive,
+      personalVehicleId,
+    };
+  }
+
+  function collaboratorCatalog(catalog = vehicleCatalog()) {
+    let stored = [];
+
+    try {
+      stored = JSON.parse(window.localStorage.getItem(collaboratorsStorageKey) || "[]");
+    } catch (error) {
+      stored = [];
+    }
+
+    if (Array.isArray(stored) && stored.length > 0) {
+      return stored.map((collaborator, index) => normalizeStoredCollaborator(collaborator, index, catalog));
+    }
+
+    return [...collaborators];
+  }
+
+  function collaboratorById(id, collaboratorsList = collaboratorCatalog()) {
+    return collaboratorsList.find((collaborator) => collaborator.id === id) || null;
   }
 
   function vehicleById(catalog, id) {
@@ -1872,7 +2276,16 @@ if (planningBoard || tripList || tripDetail) {
   function selectedTripId() {
     const stored = window.localStorage.getItem(selectedTripStorageKey);
     const missionsList = missionCatalog();
-    return missionsList.some((mission) => mission.id === stored) ? stored : missionsList[0].id;
+    if (missionsList.some((mission) => mission.id === stored)) {
+      return stored;
+    }
+
+    const fallbackId = missionsList[0]?.id || "";
+    if (fallbackId) {
+      saveSelectedTrip(fallbackId);
+    }
+
+    return fallbackId;
   }
 
   function saveSelectedTrip(id) {
@@ -1919,9 +2332,9 @@ if (planningBoard || tripList || tripDetail) {
     );
   }
 
-  function diagnostics(mission, assignment, catalog) {
-    const lead = collaboratorById(assignment.leadCollaboratorId);
-    const support = collaboratorById(assignment.supportCollaboratorId);
+  function diagnostics(mission, assignment, catalog, collaboratorsList = collaboratorCatalog(catalog)) {
+    const lead = collaboratorById(assignment.leadCollaboratorId, collaboratorsList);
+    const support = collaboratorById(assignment.supportCollaboratorId, collaboratorsList);
     const vehicle = vehicleById(catalog, assignment.vehicleId);
     const suggestion = recommendedVehicle(mission, assignment, catalog);
     const blockers = [];
@@ -1939,7 +2352,7 @@ if (planningBoard || tripList || tripDetail) {
       blockers.push("Vehicule non affecte.");
     } else {
       if (!canLeadUseVehicle(vehicle, assignment.leadCollaboratorId)) {
-        const owner = collaboratorById(vehicle.ownerCollaboratorId);
+        const owner = collaboratorById(vehicle.ownerCollaboratorId, collaboratorsList);
         blockers.push(
           `${vehicle.label} appartient a ${owner ? owner.name : "un collaborateur"} et ne peut pas etre utilise par un autre chauffeur.`
         );
@@ -1990,8 +2403,8 @@ if (planningBoard || tripList || tripDetail) {
     );
   }
 
-  function financials(mission, assignment, catalog) {
-    const state = diagnostics(mission, assignment, catalog);
+  function financials(mission, assignment, catalog, collaboratorsList = collaboratorCatalog(catalog)) {
+    const state = diagnostics(mission, assignment, catalog, collaboratorsList);
     const activeVehicle = state.vehicle || state.suggestion;
     const leadCost = state.lead ? state.lead.hourlyRate * (mission.durationMinutes / 60) : 0;
     const supportCost = state.support ? state.support.hourlyRate * (mission.durationMinutes / 60) : 0;
@@ -2027,12 +2440,13 @@ if (planningBoard || tripList || tripDetail) {
   function pricingSnapshotForMission(missionDraft) {
     const currentAssignments = assignments();
     const catalog = vehicleCatalog();
+    const collaboratorsList = collaboratorCatalog(catalog);
     const assignment = currentAssignments[missionDraft.id] || {
       leadCollaboratorId: "",
       supportCollaboratorId: "",
       vehicleId: "",
     };
-    const snapshot = financials(missionDraft, assignment, catalog);
+    const snapshot = financials(missionDraft, assignment, catalog, collaboratorsList);
 
     return {
       recommendedPrice: snapshot.recommendedPrice,
@@ -2045,7 +2459,7 @@ if (planningBoard || tripList || tripDetail) {
   }
 
   function collaboratorOptions(selected, driversOnly = false) {
-    const options = collaborators
+    const options = collaboratorCatalog()
       .filter((collaborator) => (driversOnly ? collaborator.canDrive : true))
       .map(
         (collaborator) =>
@@ -2072,11 +2486,21 @@ if (planningBoard || tripList || tripDetail) {
   }
 
   function assignmentState() {
-    return { currentAssignments: assignments(), catalog: vehicleCatalog(), missionsList: missionCatalog() };
+    const catalog = vehicleCatalog();
+    return {
+      currentAssignments: assignments(),
+      catalog,
+      collaboratorsList: collaboratorCatalog(catalog),
+      missionsList: missionCatalog(),
+    };
   }
 
-  function getPersonalVehicleForCollaborator(leadCollaboratorId, catalog) {
-    const collaborator = collaboratorById(leadCollaboratorId);
+  function getPersonalVehicleForCollaborator(
+    leadCollaboratorId,
+    catalog,
+    collaboratorsList = collaboratorCatalog(catalog)
+  ) {
+    const collaborator = collaboratorById(leadCollaboratorId, collaboratorsList);
     if (!collaborator || !collaborator.personalVehicleId) {
       return null;
     }
@@ -2088,10 +2512,11 @@ if (planningBoard || tripList || tripDetail) {
   function updateAssignment(missionId, field, value) {
     const next = assignments();
     const catalog = vehicleCatalog();
+    const collaboratorsList = collaboratorCatalog(catalog);
     next[missionId] = { ...next[missionId], [field]: value };
 
     if (field === "leadCollaboratorId") {
-      const personalVehicle = getPersonalVehicleForCollaborator(value, catalog);
+      const personalVehicle = getPersonalVehicleForCollaborator(value, catalog, collaboratorsList);
 
       if (personalVehicle) {
         next[missionId].vehicleId = personalVehicle.id;
@@ -2184,7 +2609,8 @@ if (planningBoard || tripList || tripDetail) {
             <button class="primary-action small-action" type="button" data-action="edit-mission" data-mission-id="${mission.id}">
               Modifier la mission
             </button>
-            <a class="secondary-action small-action" href="trajets.html">Voir la fiche trajet</a>
+            <a class="secondary-action small-action" href="trajets.html" data-open-mission-id="${mission.id}" data-open-mission-target="trajets.html">Voir la fiche trajet</a>
+            <a class="secondary-action small-action" href="factures.html" data-open-mission-id="${mission.id}" data-open-mission-target="factures.html">Ouvrir la facture</a>
           </div>
         </article>
 
@@ -2279,11 +2705,114 @@ if (planningBoard || tripList || tripDetail) {
       .join("");
   }
 
+  function renderPlanningGlobalCalendar(missionsList, currentAssignments, catalog) {
+    if (!planningGlobalCalendarGrid || !planningGlobalMonthLabel) {
+      return;
+    }
+
+    const monthCursor = normalizeCalendarDate(planningCalendarMonthCursor);
+    monthCursor.setDate(1);
+    planningGlobalMonthLabel.textContent = monthLabel(monthCursor);
+
+    const firstMonthDay = new Date(monthCursor);
+    const monthGridStart = getStartOfWeek(firstMonthDay);
+    const byDay = missionsList.reduce((map, mission) => {
+      if (!map.has(mission.serviceDate)) {
+        map.set(mission.serviceDate, []);
+      }
+      map.get(mission.serviceDate).push(mission);
+      return map;
+    }, new Map());
+
+    planningGlobalCalendarGrid.innerHTML = Array.from({ length: 42 }, (_, index) => {
+      const dayDate = new Date(monthGridStart);
+      dayDate.setDate(monthGridStart.getDate() + index);
+      const dayKey = toISODate(dayDate);
+      const dayMissions = (byDay.get(dayKey) || []).slice().sort((leftMission, rightMission) =>
+        `${leftMission.departureTime}-${leftMission.code}`.localeCompare(
+          `${rightMission.departureTime}-${rightMission.code}`
+        )
+      );
+      const currentMonth = sameMonth(dayDate, monthCursor);
+      const isToday = dayKey === toISODate(new Date());
+      const isVisibleWeek = isDateWithinVisibleWeek(dayKey, activePlanningDate);
+      const readyCount = dayMissions.filter((mission) =>
+        diagnostics(mission, currentAssignments[mission.id], catalog).ready
+      ).length;
+
+      return `
+        <article class="planning-global-day ${
+          currentMonth ? "current-month" : "outside-month"
+        } ${isToday ? "today" : ""} ${isVisibleWeek ? "active-week" : ""}">
+          <button
+            class="planning-global-day-trigger"
+            type="button"
+            data-calendar-day="${dayKey}"
+            aria-label="Ouvrir la semaine du ${formatDay(dayKey)}"
+          >
+            <span>${new Intl.DateTimeFormat("fr-FR", { weekday: "short" }).format(dayDate)}</span>
+            <strong>${dayDate.getDate()}</strong>
+          </button>
+
+          <div class="planning-global-day-stack">
+            ${
+              dayMissions.length
+                ? `
+                  <span class="planning-global-day-summary">${readyCount}/${dayMissions.length} pretes</span>
+                  ${dayMissions
+                    .slice(0, 3)
+                    .map(
+                      (mission) => `
+                        <button
+                          class="planning-global-mission ${mission.id === selectedTripId() ? "active" : ""}"
+                          type="button"
+                          data-calendar-trip-id="${mission.id}"
+                        >
+                          <strong>${mission.departureTime} · ${mission.code}</strong>
+                          <span>${mission.routeLabel}</span>
+                        </button>
+                      `
+                    )
+                    .join("")}
+                  ${
+                    dayMissions.length > 3
+                      ? `
+                        <button
+                          class="planning-global-more"
+                          type="button"
+                          data-calendar-day="${dayKey}"
+                        >
+                          +${dayMissions.length - 3} autres missions
+                        </button>
+                      `
+                      : ""
+                  }
+                `
+                : `<p class="planning-global-day-empty">${
+                    currentMonth ? "Aucune mission · cliquer pour en ajouter une" : ""
+                  }</p>`
+            }
+          </div>
+        </article>
+      `;
+    }).join("");
+  }
+
   function renderOperations() {
-    const { currentAssignments, catalog, missionsList } = assignmentState();
+    const { currentAssignments, catalog, collaboratorsList, missionsList } = assignmentState();
+
+    const weekStart = getStartOfWeek(activePlanningDate);
+    const weekDays = Array.from({ length: 7 }, (_, index) => {
+      const value = new Date(weekStart);
+      value.setDate(weekStart.getDate() + index);
+      return toISODate(value);
+    });
+    const visiblePlanningMissions = missionsList.filter((mission) =>
+      weekDays.includes(mission.serviceDate)
+    );
 
     if (planningWeekLabel) {
-      planningWeekLabel.textContent = weekLabel();
+      planningWeekLabel.textContent = weekLabel(activePlanningDate);
     }
 
     if (planningBoard || planningDetail || collaboratorPool || vehiclePool || planningAlerts) {
@@ -2296,13 +2825,6 @@ if (planningBoard || tripList || tripDetail) {
       }, new Map());
 
       if (planningBoard) {
-        const start = getStartOfWeek();
-        const weekDays = Array.from({ length: 7 }, (_, index) => {
-          const value = new Date(start);
-          value.setDate(value.getDate() + index);
-          return toISODate(value);
-        });
-
         planningBoard.innerHTML = `
           <div class="calendar-week">
             ${weekDays
@@ -2349,25 +2871,27 @@ if (planningBoard || tripList || tripDetail) {
         `;
       }
 
-      const states = missionsList.map((mission) =>
+      renderPlanningGlobalCalendar(missionsList, currentAssignments, catalog);
+
+      const states = visiblePlanningMissions.map((mission) =>
         diagnostics(mission, currentAssignments[mission.id], catalog)
       );
       const blockerCount = states.reduce((sum, state) => sum + state.blockers.length, 0);
 
       if (planningTotalMissionsNode) {
-        planningTotalMissionsNode.textContent = String(missionsList.length);
+        planningTotalMissionsNode.textContent = String(visiblePlanningMissions.length);
       }
       if (planningCoveredMissionsNode) {
         planningCoveredMissionsNode.textContent = String(states.filter((state) => state.ready).length);
       }
       if (planningTotalPassengersNode) {
         planningTotalPassengersNode.textContent = String(
-          missionsList.reduce((sum, mission) => sum + mission.passengers, 0)
+          visiblePlanningMissions.reduce((sum, mission) => sum + mission.passengers, 0)
         );
       }
       if (planningTotalRevenueNode) {
         planningTotalRevenueNode.textContent = formatCurrency(
-          missionsList.reduce((sum, mission) => sum + mission.quotedPrice, 0)
+          visiblePlanningMissions.reduce((sum, mission) => sum + mission.quotedPrice, 0)
         );
       }
       if (planningOpenAlertsNode) {
@@ -2382,12 +2906,14 @@ if (planningBoard || tripList || tripDetail) {
       }
       if (planningAvailableCollaboratorsNode) {
         planningAvailableCollaboratorsNode.textContent = String(
-          collaborators.filter((collaborator) => collaborator.availability !== "off").length
+          collaboratorsList.filter((collaborator) => collaborator.availability !== "off").length
         );
       }
       if (planningDetail) {
         const mission =
-          missionsList.find((item) => item.id === selectedTripId()) || missionsList[0] || null;
+          visiblePlanningMissions.find((item) => item.id === selectedTripId()) ||
+          visiblePlanningMissions[0] ||
+          null;
 
         planningDetail.innerHTML = mission
           ? planningSelectionMarkup(mission, currentAssignments[mission.id], catalog)
@@ -2400,7 +2926,7 @@ if (planningBoard || tripList || tripDetail) {
             `;
       }
       if (collaboratorPool) {
-        collaboratorPool.innerHTML = collaborators
+        collaboratorPool.innerHTML = collaboratorsList
           .map((collaborator) => {
             const personalVehicle = collaborator.personalVehicleId
               ? vehicleById(catalog, collaborator.personalVehicleId)
@@ -2454,7 +2980,7 @@ if (planningBoard || tripList || tripDetail) {
           .join("");
       }
       if (planningAlerts) {
-        const alerts = missionsList.flatMap((mission) => {
+        const alerts = visiblePlanningMissions.flatMap((mission) => {
           const state = diagnostics(mission, currentAssignments[mission.id], catalog);
           return [
             ...state.blockers.map((message) => ({
@@ -2559,6 +3085,7 @@ if (planningBoard || tripList || tripDetail) {
                 <button class="primary-action small-action" type="button" data-action="edit-mission" data-mission-id="${mission.id}">
                   Modifier la mission
                 </button>
+                <a class="secondary-action small-action" href="factures.html" data-open-mission-id="${mission.id}" data-open-mission-target="factures.html">Ouvrir la facture</a>
               </div>
             </article>
             <article class="detail-card trip-assignment-card">
@@ -2676,9 +3203,60 @@ if (planningBoard || tripList || tripDetail) {
       return;
     }
 
+    const closeGlobalCalendar = event.target.closest("[data-close-global-calendar]");
+    if (closeGlobalCalendar) {
+      closePlanningGlobalCalendar();
+      return;
+    }
+
+    const globalMissionButton = event.target.closest("[data-calendar-trip-id]");
+    if (globalMissionButton) {
+      const missionId = globalMissionButton.getAttribute("data-calendar-trip-id");
+      const mission = missionCatalog().find((item) => item.id === missionId);
+      if (!mission) {
+        return;
+      }
+
+      setActivePlanningDate(mission.serviceDate);
+      setPlanningCalendarMonthCursor(mission.serviceDate);
+      saveSelectedTrip(mission.id);
+      closePlanningGlobalCalendar();
+      renderOperations();
+      return;
+    }
+
+    const globalDayButton = event.target.closest("[data-calendar-day]");
+    if (globalDayButton) {
+      const dayKey = globalDayButton.getAttribute("data-calendar-day");
+      const dayMissions = missionCatalog()
+        .filter((mission) => mission.serviceDate === dayKey)
+        .sort((leftMission, rightMission) =>
+          `${leftMission.departureTime}-${leftMission.code}`.localeCompare(
+            `${rightMission.departureTime}-${rightMission.code}`
+          )
+        );
+
+      if (!dayMissions.length) {
+        openMissionFormForDate(dayKey);
+        return;
+      }
+
+      setActivePlanningDate(dayKey);
+      setPlanningCalendarMonthCursor(dayKey);
+      saveSelectedTrip(dayMissions[0].id);
+      closePlanningGlobalCalendar();
+      renderOperations();
+      return;
+    }
+
     const tripButton = event.target.closest("[data-trip-id]");
     if (tripButton) {
-      saveSelectedTrip(tripButton.getAttribute("data-trip-id"));
+      const missionId = tripButton.getAttribute("data-trip-id");
+      const mission = missionCatalog().find((item) => item.id === missionId);
+      if (mission) {
+        setActivePlanningDate(mission.serviceDate);
+      }
+      saveSelectedTrip(missionId);
       renderOperations();
       return;
     }
@@ -2700,6 +3278,12 @@ if (planningBoard || tripList || tripDetail) {
     const recommendationButton = event.target.closest("[data-action='apply-suggestion']");
     if (recommendationButton) {
       applyRecommendation(recommendationButton.getAttribute("data-mission-id"));
+    }
+  });
+
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape" && planningGlobalCalendar && !planningGlobalCalendar.hidden) {
+      closePlanningGlobalCalendar();
     }
   });
 
@@ -2794,6 +3378,46 @@ if (planningBoard || tripList || tripDetail) {
     });
   }
 
+  if (openGlobalCalendarButton) {
+    openGlobalCalendarButton.addEventListener("click", () => {
+      openPlanningGlobalCalendar();
+      renderOperations();
+    });
+  }
+
+  if (closeGlobalCalendarButton) {
+    closeGlobalCalendarButton.addEventListener("click", () => {
+      closePlanningGlobalCalendar();
+    });
+  }
+
+  if (planningGlobalPrevMonthButton) {
+    planningGlobalPrevMonthButton.addEventListener("click", () => {
+      const previousMonth = new Date(planningCalendarMonthCursor);
+      previousMonth.setMonth(previousMonth.getMonth() - 1);
+      setPlanningCalendarMonthCursor(previousMonth);
+      renderOperations();
+    });
+  }
+
+  if (planningGlobalNextMonthButton) {
+    planningGlobalNextMonthButton.addEventListener("click", () => {
+      const nextMonth = new Date(planningCalendarMonthCursor);
+      nextMonth.setMonth(nextMonth.getMonth() + 1);
+      setPlanningCalendarMonthCursor(nextMonth);
+      renderOperations();
+    });
+  }
+
+  if (planningResetWeekButton) {
+    planningResetWeekButton.addEventListener("click", () => {
+      setActivePlanningDate(new Date());
+      setPlanningCalendarMonthCursor(new Date());
+      closePlanningGlobalCalendar();
+      renderOperations();
+    });
+  }
+
   if (cancelMissionFormButton) {
     cancelMissionFormButton.addEventListener("click", () => {
       resetMissionForm();
@@ -2808,6 +3432,9 @@ if (planningBoard || tripList || tripDetail) {
   }
 
   resetMissionForm();
+  setActivePlanningDate(new Date());
+  setPlanningCalendarMonthCursor(new Date());
+  mountPlanningGlobalCalendarToBody();
   void setupMissionAddressAutocompletes();
   renderOperations();
 }

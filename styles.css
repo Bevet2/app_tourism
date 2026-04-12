@@ -424,6 +424,19 @@ button {
   font-size: clamp(1.8rem, 4vw, 2.4rem);
 }
 
+.invoice-summary-strip .summary-item {
+  min-height: 148px;
+}
+
+.invoice-summary-strip .summary-item strong {
+  font-family: "Manrope", "Segoe UI", sans-serif;
+  font-size: clamp(1.05rem, 1.9vw, 1.55rem);
+  line-height: 1.22;
+  font-weight: 700;
+  letter-spacing: 0;
+  word-break: break-word;
+}
+
 .module-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -503,6 +516,14 @@ button {
   justify-content: space-between;
   gap: 16px;
   margin-bottom: 22px;
+}
+
+.panel-header-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 12px;
 }
 
 .panel-header h3 {
@@ -817,6 +838,18 @@ button {
   line-height: 1.6;
 }
 
+.invoice-mission-actions {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+}
+
+.invoice-mission-actions[hidden] {
+  display: none;
+}
+
 .field-group input,
 .field-group select,
 .field-group textarea {
@@ -1127,6 +1160,74 @@ button {
   align-items: center;
   flex-wrap: wrap;
   justify-content: flex-end;
+  gap: 10px;
+}
+
+.entity-connection-card {
+  display: grid;
+  gap: 12px;
+  padding: 16px;
+  border: 1px solid rgba(29, 78, 99, 0.1);
+  border-radius: 18px;
+  background: rgba(29, 78, 99, 0.05);
+}
+
+.entity-connection-card strong {
+  font-size: 0.95rem;
+}
+
+.entity-connection-card p {
+  margin: 0;
+}
+
+.entity-connection-card-empty {
+  background: rgba(255, 255, 255, 0.72);
+}
+
+.entity-connection-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 12px;
+}
+
+.entity-connection-head span {
+  display: inline-flex;
+  align-items: center;
+  padding: 8px 10px;
+  border-radius: 999px;
+  background: rgba(216, 153, 74, 0.14);
+  color: #8d5d1e;
+  font-size: 0.76rem;
+  font-weight: 800;
+}
+
+.entity-connection-copy {
+  color: var(--text-soft);
+  line-height: 1.6;
+}
+
+.entity-connection-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.entity-connection-meta span {
+  display: inline-flex;
+  align-items: center;
+  padding: 8px 10px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.74);
+  color: var(--navy);
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.entity-connection-actions {
+  display: flex;
+  flex-wrap: wrap;
   gap: 10px;
 }
 
@@ -2582,6 +2683,230 @@ button {
   margin-bottom: 18px;
 }
 
+.planning-global-calendar-open {
+  overflow: hidden;
+}
+
+.planning-global-calendar-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+}
+
+.planning-global-calendar-modal[hidden] {
+  display: none;
+}
+
+.planning-global-calendar-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(18, 31, 38, 0.58);
+  backdrop-filter: blur(10px);
+}
+
+.planning-global-calendar-shell {
+  position: relative;
+  z-index: 1;
+  width: min(1180px, 100%);
+  max-height: min(90vh, 960px);
+  overflow: auto;
+  border: 1px solid rgba(28, 41, 49, 0.08);
+  border-radius: 28px;
+  background:
+    linear-gradient(180deg, rgba(255, 252, 247, 0.98), rgba(244, 239, 231, 0.98));
+  box-shadow: 0 34px 70px rgba(18, 31, 38, 0.28);
+  padding: 24px;
+  display: grid;
+  gap: 18px;
+}
+
+.planning-global-calendar-head {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.planning-global-calendar-head h4 {
+  margin: 10px 0 8px;
+  font-size: clamp(1.4rem, 3vw, 2rem);
+}
+
+.planning-global-calendar-head p:last-child {
+  margin: 0;
+  color: var(--text-soft);
+  line-height: 1.7;
+  max-width: 70ch;
+}
+
+.planning-global-calendar-toolbar {
+  display: grid;
+  grid-template-columns: auto 1fr auto auto;
+  align-items: center;
+  gap: 12px;
+}
+
+.planning-global-calendar-toolbar strong {
+  font-family: "Space Grotesk", "Segoe UI", sans-serif;
+  font-size: 1.3rem;
+  text-transform: capitalize;
+  text-align: center;
+}
+
+.planning-global-calendar-weekdays {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.planning-global-calendar-weekdays span {
+  padding: 0 6px;
+  color: var(--text-soft);
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.planning-global-calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.planning-global-day {
+  min-height: 180px;
+  border: 1px solid rgba(28, 41, 49, 0.08);
+  border-radius: 22px;
+  background: rgba(255, 255, 255, 0.88);
+  padding: 14px;
+  display: grid;
+  grid-template-rows: auto 1fr;
+  gap: 12px;
+  box-shadow: 0 10px 20px rgba(24, 36, 44, 0.05);
+}
+
+.planning-global-day.outside-month {
+  background: rgba(242, 236, 227, 0.68);
+  opacity: 0.76;
+}
+
+.planning-global-day.today {
+  border-color: rgba(216, 153, 74, 0.34);
+  box-shadow: 0 12px 24px rgba(216, 153, 74, 0.12);
+}
+
+.planning-global-day.active-week {
+  border-color: rgba(29, 78, 99, 0.3);
+  box-shadow: 0 0 0 2px rgba(29, 78, 99, 0.08), 0 12px 24px rgba(29, 78, 99, 0.08);
+}
+
+.planning-global-day-trigger {
+  appearance: none;
+  -webkit-appearance: none;
+  border: none;
+  background: transparent;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  cursor: pointer;
+  text-align: left;
+}
+
+.planning-global-day-trigger span {
+  color: var(--text-soft);
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: capitalize;
+}
+
+.planning-global-day-trigger strong {
+  font-family: "Space Grotesk", "Segoe UI", sans-serif;
+  font-size: 1.35rem;
+  color: var(--text-main);
+}
+
+.planning-global-day-stack {
+  display: grid;
+  align-content: start;
+  gap: 8px;
+}
+
+.planning-global-day-summary {
+  display: inline-flex;
+  width: fit-content;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: rgba(29, 78, 99, 0.08);
+  color: var(--navy);
+  font-size: 0.76rem;
+  font-weight: 800;
+}
+
+.planning-global-mission,
+.planning-global-more {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 100%;
+  border: 1px solid rgba(29, 78, 99, 0.08);
+  border-radius: 16px;
+  background: rgba(248, 243, 234, 0.96);
+  padding: 10px 11px;
+  text-align: left;
+  cursor: pointer;
+  display: grid;
+  gap: 4px;
+  transition:
+    transform 0.2s ease,
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    background 0.2s ease;
+}
+
+.planning-global-mission strong,
+.planning-global-more {
+  font-size: 0.82rem;
+  font-weight: 800;
+  color: var(--text-main);
+}
+
+.planning-global-mission span {
+  color: var(--text-soft);
+  font-size: 0.78rem;
+  line-height: 1.45;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+}
+
+.planning-global-mission.active {
+  border-color: rgba(29, 78, 99, 0.24);
+  background: rgba(232, 241, 245, 0.98);
+}
+
+.planning-global-mission:hover,
+.planning-global-mission:focus-visible,
+.planning-global-more:hover,
+.planning-global-more:focus-visible,
+.planning-global-day-trigger:hover,
+.planning-global-day-trigger:focus-visible {
+  outline: none;
+  transform: translateY(-1px);
+}
+
+.planning-global-day-empty {
+  margin: 0;
+  color: var(--text-soft);
+  font-size: 0.84rem;
+  line-height: 1.6;
+}
+
 .mini-stat-stack {
   display: grid;
   gap: 12px;
@@ -3122,6 +3447,23 @@ button {
   .trip-detail-grid {
     grid-template-columns: 1fr;
   }
+
+  .planning-global-calendar-toolbar {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .planning-global-calendar-toolbar strong {
+    grid-column: 1 / -1;
+    order: -1;
+  }
+
+  .planning-global-calendar-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .planning-global-calendar-weekdays {
+    display: none;
+  }
 }
 
 @media (max-width: 680px) {
@@ -3139,9 +3481,31 @@ button {
   .planning-day-header,
   .resource-card-head,
   .mission-stop-builder-head,
-  .mission-stop-row-head {
+  .mission-stop-row-head,
+  .planning-global-calendar-head {
     flex-direction: column;
     align-items: flex-start;
+  }
+
+  .planning-global-calendar-modal {
+    padding: 12px;
+  }
+
+  .planning-global-calendar-shell {
+    padding: 18px;
+  }
+
+  .planning-global-calendar-toolbar,
+  .planning-global-calendar-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .planning-global-calendar-weekdays {
+    display: none;
+  }
+
+  .planning-global-day {
+    min-height: auto;
   }
 }
 

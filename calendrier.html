@@ -14,7 +14,7 @@
       href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=Manrope:wght@400;500;600;700&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="styles.css?v=20260402-restore-ops-1" />
+    <link rel="stylesheet" href="styles.css?v=20260412-global-calendar-1" />
   </head>
   <body>
     <div class="page-shell">
@@ -146,12 +146,70 @@
               </div>
               <div class="panel-header-actions">
                 <span class="panel-status">Pret a exploiter</span>
+                <button class="panel-action" id="open-global-calendar" type="button">
+                  <span class="panel-action-icon" aria-hidden="true">&#128197;</span>
+                  Calendrier global
+                </button>
                 <button class="panel-action" id="open-mission-form" type="button">
                   <span class="panel-action-icon" aria-hidden="true">+</span>
                   Nouvelle mission
                 </button>
               </div>
             </div>
+
+            <section
+              class="planning-global-calendar-modal"
+              id="planning-global-calendar"
+              hidden
+              aria-labelledby="planning-global-calendar-title"
+            >
+              <div class="planning-global-calendar-backdrop" data-close-global-calendar="true"></div>
+              <div class="planning-global-calendar-shell" role="dialog" aria-modal="true">
+                <div class="planning-global-calendar-head">
+                  <div>
+                    <p class="detail-kicker">Calendrier global</p>
+                    <h4 id="planning-global-calendar-title">Toutes les missions par mois</h4>
+                    <p>
+                      Naviguez dans l'annee, reperez les jours charges, puis cliquez sur une date ou
+                      une mission pour recharger la vue semaine sur la bonne periode.
+                    </p>
+                  </div>
+                  <button
+                    class="form-close"
+                    id="close-global-calendar"
+                    type="button"
+                    aria-label="Fermer le calendrier global"
+                  >
+                    &#10005;
+                  </button>
+                </div>
+
+                <div class="planning-global-calendar-toolbar">
+                  <button class="secondary-action small-action" id="planning-global-prev-month" type="button">
+                    Mois precedent
+                  </button>
+                  <strong id="planning-global-month-label">Mois actif</strong>
+                  <button class="secondary-action small-action" id="planning-global-next-month" type="button">
+                    Mois suivant
+                  </button>
+                  <button class="secondary-action small-action" id="planning-reset-week" type="button">
+                    Revenir a cette semaine
+                  </button>
+                </div>
+
+                <div class="planning-global-calendar-weekdays" aria-hidden="true">
+                  <span>Lun</span>
+                  <span>Mar</span>
+                  <span>Mer</span>
+                  <span>Jeu</span>
+                  <span>Ven</span>
+                  <span>Sam</span>
+                  <span>Dim</span>
+                </div>
+
+                <div class="planning-global-calendar-grid" id="planning-global-calendar-grid"></div>
+              </div>
+            </section>
 
             <div class="calendar-command-grid">
               <article class="detail-card emphasis-card">
@@ -483,6 +541,6 @@
     <script src="script.js?v=20260402-restore-ops-2"></script>
     <script src="maps-config.local.js?v=20260402-restore-ops-2"></script>
     <script src="google-maps-loader.js?v=20260402-restore-ops-2"></script>
-    <script src="operations.js?v=20260402-restore-ops-2"></script>
+    <script src="operations.js?v=20260412-global-calendar-1"></script>
   </body>
 </html>

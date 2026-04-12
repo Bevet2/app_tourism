@@ -1,1 +1,4 @@
 maps-config.local.js
+db-config.local.json
+node_modules/
+npm-debug.log*
