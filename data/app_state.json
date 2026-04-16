@@ -1,0 +1,1752 @@
+{
+  "collaborators": [
+    {
+      "id": "collab-jade",
+      "firstName": "Jade",
+      "lastName": "Bouvier",
+      "role": "driver",
+      "availabilityStatus": "available",
+      "languages": [
+        {
+          "language": "Francais",
+          "level": "fluent"
+        },
+        {
+          "language": "Anglais",
+          "level": "fluent"
+        },
+        {
+          "language": "Espagnol",
+          "level": "conversational"
+        }
+      ]
+    },
+    {
+      "id": "collab-noa",
+      "firstName": "Noa",
+      "lastName": "Marchand",
+      "role": "driver",
+      "availabilityStatus": "available",
+      "languages": [
+        {
+          "language": "Francais",
+          "level": "fluent"
+        },
+        {
+          "language": "Anglais",
+          "level": "fluent"
+        },
+        {
+          "language": "Italien",
+          "level": "intermediate"
+        }
+      ]
+    },
+    {
+      "id": "collab-lucas",
+      "firstName": "Lucas",
+      "lastName": "Perrin",
+      "role": "driver",
+      "availabilityStatus": "on_mission",
+      "languages": [
+        {
+          "language": "Francais",
+          "level": "fluent"
+        },
+        {
+          "language": "Anglais",
+          "level": "conversational"
+        }
+      ]
+    },
+    {
+      "id": "collab-ines",
+      "firstName": "Ines",
+      "lastName": "Moreau",
+      "role": "guide",
+      "availabilityStatus": "available",
+      "languages": [
+        {
+          "language": "Francais",
+          "level": "fluent"
+        },
+        {
+          "language": "Portugais",
+          "level": "fluent"
+        },
+        {
+          "language": "Anglais",
+          "level": "conversational"
+        }
+      ]
+    },
+    {
+      "id": "collab-salma",
+      "firstName": "Salma",
+      "lastName": "Riviere",
+      "role": "guide",
+      "availabilityStatus": "available",
+      "languages": [
+        {
+          "language": "Francais",
+          "level": "fluent"
+        },
+        {
+          "language": "Arabe",
+          "level": "fluent"
+        },
+        {
+          "language": "Anglais",
+          "level": "intermediate"
+        }
+      ]
+    },
+    {
+      "id": "collab-tiago",
+      "firstName": "Tiago",
+      "lastName": "Almeida",
+      "role": "driver",
+      "availabilityStatus": "available",
+      "languages": [
+        {
+          "language": "Portugais",
+          "level": "fluent"
+        },
+        {
+          "language": "Francais",
+          "level": "conversational"
+        },
+        {
+          "language": "Espagnol",
+          "level": "intermediate"
+        }
+      ]
+    }
+  ],
+  "vehicles": [
+    {
+      "id": "veh-mercedes-v",
+      "brand": "Mercedes",
+      "model": "Classe V",
+      "color": "Noir",
+      "plate": "AA-742-LV",
+      "vehicleType": "owner",
+      "vehicleStatus": "available",
+      "rentalEndDate": "",
+      "consumption": "8.6",
+      "consumptionUnit": "L/100 km",
+      "linkedCollaboratorId": "",
+      "linkedCollaboratorName": ""
+    },
+    {
+      "id": "veh-vito-tourer",
+      "brand": "Mercedes",
+      "model": "Vito Tourer",
+      "color": "Gris",
+      "plate": "HG-546-IT",
+      "vehicleType": "owner",
+      "vehicleStatus": "available",
+      "rentalEndDate": "",
+      "consumption": "9",
+      "consumptionUnit": "L/100 km",
+      "linkedCollaboratorId": "",
+      "linkedCollaboratorName": ""
+    },
+    {
+      "id": "veh-peugeot-508",
+      "brand": "Peugeot",
+      "model": "508",
+      "color": "Bleu nuit",
+      "plate": "FR-508-RP",
+      "vehicleType": "owner",
+      "vehicleStatus": "in_use",
+      "rentalEndDate": "",
+      "consumption": "6.4",
+      "consumptionUnit": "L/100 km",
+      "linkedCollaboratorId": "",
+      "linkedCollaboratorName": ""
+    },
+    {
+      "id": "veh-tesla-y",
+      "brand": "Tesla",
+      "model": "Model Y",
+      "color": "Blanc",
+      "plate": "EV-214-YT",
+      "vehicleType": "owner",
+      "vehicleStatus": "available",
+      "rentalEndDate": "",
+      "consumption": "17.8",
+      "consumptionUnit": "kWh/100 km",
+      "linkedCollaboratorId": "",
+      "linkedCollaboratorName": ""
+    },
+    {
+      "id": "veh-tiago-trafic",
+      "brand": "Renault",
+      "model": "Trafic",
+      "color": "Argent",
+      "plate": "PT-137-RP",
+      "vehicleType": "collaborator",
+      "vehicleStatus": "available",
+      "rentalEndDate": "",
+      "consumption": "8.9",
+      "consumptionUnit": "L/100 km",
+      "linkedCollaboratorId": "collab-tiago",
+      "linkedCollaboratorName": "Tiago Almeida"
+    },
+    {
+      "id": "veh-rental-caravelle",
+      "brand": "Volkswagen",
+      "model": "Caravelle",
+      "color": "Anthracite",
+      "plate": "WW-921-TR",
+      "vehicleType": "rental",
+      "vehicleStatus": "in_use",
+      "rentalEndDate": "2026-04-30",
+      "consumption": "8.2",
+      "consumptionUnit": "L/100 km",
+      "linkedCollaboratorId": "",
+      "linkedCollaboratorName": ""
+    },
+    {
+      "id": "veh-audi-a6",
+      "brand": "Audi",
+      "model": "A6",
+      "color": "Noir",
+      "plate": "RP-606-VP",
+      "vehicleType": "owner",
+      "vehicleStatus": "repair",
+      "rentalEndDate": "",
+      "consumption": "7.2",
+      "consumptionUnit": "L/100 km",
+      "linkedCollaboratorId": "",
+      "linkedCollaboratorName": ""
+    }
+  ],
+  "invoices": [
+    {
+      "id": "inv-2026-0001",
+      "number": "2026-0001",
+      "issuedAt": "2026-01-09",
+      "invoiceType": "client",
+      "missionId": "mission-jan-paris-versailles",
+      "missionCode": "MIS-2601",
+      "sourceLabel": "Facture client",
+      "paymentStatus": "paid",
+      "settledAt": "2026-01-09",
+      "externalFlow": "payable",
+      "paymentMethod": "wire",
+      "seller": {
+        "name": "Simbora Paris Tourisme",
+        "address": "18, rue des Artisans",
+        "location": "75012 Paris",
+        "phone": "0611223344",
+        "evtc": "EVTC750000321",
+        "siret": "81234567800027"
+      },
+      "client": {
+        "name": "Atelier Lumiere Voyages",
+        "address": "12, avenue des Voyageurs",
+        "location": "75000 Paris",
+        "siret": "12345678900011",
+        "vat": "FR12345678901",
+        "contact": "Contact operations",
+        "email": "contact@example.fr",
+        "phone": "0600000000"
+      },
+      "service": {
+        "description": "Transfert touristique Paris Versailles",
+        "date": "2026-01-08",
+        "pickup": "Hotel Lutetia",
+        "destination": "Versailles",
+        "passengers": 4,
+        "distanceKm": 58
+      },
+      "totals": {
+        "ht": 468.0,
+        "vat10": 52.0,
+        "vat20": 0,
+        "ttc": 520
+      },
+      "taxNote": "TVA appliquee selon le regime de transport de personnes.",
+      "insurance": "Assurance RC Pro tourisme et transport",
+      "attachment": null
+    },
+    {
+      "id": "inv-2026-0002",
+      "number": "2026-0002",
+      "issuedAt": "2026-01-15",
+      "invoiceType": "client",
+      "missionId": "mission-jan-cdg-paris",
+      "missionCode": "MIS-2602",
+      "sourceLabel": "Facture client",
+      "paymentStatus": "paid",
+      "settledAt": "2026-01-15",
+      "externalFlow": "payable",
+      "paymentMethod": "wire",
+      "seller": {
+        "name": "Simbora Paris Tourisme",
+        "address": "18, rue des Artisans",
+        "location": "75012 Paris",
+        "phone": "0611223344",
+        "evtc": "EVTC750000321",
+        "siret": "81234567800027"
+      },
+      "client": {
+        "name": "Famille Costa",
+        "address": "12, avenue des Voyageurs",
+        "location": "75000 Paris",
+        "siret": "12345678900011",
+        "vat": "FR12345678901",
+        "contact": "Contact operations",
+        "email": "contact@example.fr",
+        "phone": "0600000000"
+      },
+      "service": {
+        "description": "Accueil aeroport CDG",
+        "date": "2026-01-15",
+        "pickup": "CDG",
+        "destination": "Paris centre",
+        "passengers": 2,
+        "distanceKm": 34
+      },
+      "totals": {
+        "ht": 162.0,
+        "vat10": 18.0,
+        "vat20": 0,
+        "ttc": 180
+      },
+      "taxNote": "TVA appliquee selon le regime de transport de personnes.",
+      "insurance": "Assurance RC Pro tourisme et transport",
+      "attachment": null
+    },
+    {
+      "id": "inv-2026-0003",
+      "number": "2026-0003",
+      "issuedAt": "2026-01-28",
+      "invoiceType": "client",
+      "missionId": "mission-jan-loire",
+      "missionCode": "MIS-2603",
+      "sourceLabel": "Facture client",
+      "paymentStatus": "paid",
+      "settledAt": "2026-01-28",
+      "externalFlow": "payable",
+      "paymentMethod": "wire",
+      "seller": {
+        "name": "Simbora Paris Tourisme",
+        "address": "18, rue des Artisans",
+        "location": "75012 Paris",
+        "phone": "0611223344",
+        "evtc": "EVTC750000321",
+        "siret": "81234567800027"
+      },
+      "client": {
+        "name": "Nordic Travel Club",
+        "address": "12, avenue des Voyageurs",
+        "location": "75000 Paris",
+        "siret": "12345678900011",
+        "vat": "FR12345678901",
+        "contact": "Contact operations",
+        "email": "contact@example.fr",
+        "phone": "0600000000"
+      },
+      "service": {
+        "description": "Journee chateaux de la Loire",
+        "date": "2026-01-27",
+        "pickup": "Paris",
+        "destination": "Amboise",
+        "passengers": 6,
+        "distanceKm": 480
+      },
+      "totals": {
+        "ht": 1305.0,
+        "vat10": 145.0,
+        "vat20": 0,
+        "ttc": 1450
+      },
+      "taxNote": "TVA appliquee selon le regime de transport de personnes.",
+      "insurance": "Assurance RC Pro tourisme et transport",
+      "attachment": null
+    },
+    {
+      "id": "inv-2026-0004",
+      "number": "2026-0004",
+      "issuedAt": "2026-02-04",
+      "invoiceType": "client",
+      "missionId": "mission-feb-giverny",
+      "missionCode": "MIS-2604",
+      "sourceLabel": "Facture client",
+      "paymentStatus": "paid",
+      "settledAt": "2026-02-04",
+      "externalFlow": "payable",
+      "paymentMethod": "wire",
+      "seller": {
+        "name": "Simbora Paris Tourisme",
+        "address": "18, rue des Artisans",
+        "location": "75012 Paris",
+        "phone": "0611223344",
+        "evtc": "EVTC750000321",
+        "siret": "81234567800027"
+      },
+      "client": {
+        "name": "Agence Horizon",
+        "address": "12, avenue des Voyageurs",
+        "location": "75000 Paris",
+        "siret": "12345678900011",
+        "vat": "FR12345678901",
+        "contact": "Contact operations",
+        "email": "contact@example.fr",
+        "phone": "0600000000"
+      },
+      "service": {
+        "description": "Excursion Giverny",
+        "date": "2026-02-04",
+        "pickup": "Paris",
+        "destination": "Giverny",
+        "passengers": 5,
+        "distanceKm": 166
+      },
+      "totals": {
+        "ht": 702.0,
+        "vat10": 78.0,
+        "vat20": 0,
+        "ttc": 780
+      },
+      "taxNote": "TVA appliquee selon le regime de transport de personnes.",
+      "insurance": "Assurance RC Pro tourisme et transport",
+      "attachment": null
+    },
+    {
+      "id": "inv-2026-0005",
+      "number": "2026-0005",
+      "issuedAt": "2026-02-19",
+      "invoiceType": "client",
+      "missionId": "mission-feb-reims",
+      "missionCode": "MIS-2605",
+      "sourceLabel": "Facture client",
+      "paymentStatus": "paid",
+      "settledAt": "2026-02-19",
+      "externalFlow": "payable",
+      "paymentMethod": "wire",
+      "seller": {
+        "name": "Simbora Paris Tourisme",
+        "address": "18, rue des Artisans",
+        "location": "75012 Paris",
+        "phone": "0611223344",
+        "evtc": "EVTC750000321",
+        "siret": "81234567800027"
+      },
+      "client": {
+        "name": "Champagne Walks",
+        "address": "12, avenue des Voyageurs",
+        "location": "75000 Paris",
+        "siret": "12345678900011",
+        "vat": "FR12345678901",
+        "contact": "Contact operations",
+        "email": "contact@example.fr",
+        "phone": "0600000000"
+      },
+      "service": {
+        "description": "Route champagne Reims",
+        "date": "2026-02-18",
+        "pickup": "Paris",
+        "destination": "Reims",
+        "passengers": 4,
+        "distanceKm": 310
+      },
+      "totals": {
+        "ht": 882.0,
+        "vat10": 98.0,
+        "vat20": 0,
+        "ttc": 980
+      },
+      "taxNote": "TVA appliquee selon le regime de transport de personnes.",
+      "insurance": "Assurance RC Pro tourisme et transport",
+      "attachment": null
+    },
+    {
+      "id": "inv-2026-0006",
+      "number": "2026-0006",
+      "issuedAt": "2026-03-04",
+      "invoiceType": "client",
+      "missionId": "mission-mar-normandie",
+      "missionCode": "MIS-2606",
+      "sourceLabel": "Facture client",
+      "paymentStatus": "paid",
+      "settledAt": "2026-03-04",
+      "externalFlow": "payable",
+      "paymentMethod": "wire",
+      "seller": {
+        "name": "Simbora Paris Tourisme",
+        "address": "18, rue des Artisans",
+        "location": "75012 Paris",
+        "phone": "0611223344",
+        "evtc": "EVTC750000321",
+        "siret": "81234567800027"
+      },
+      "client": {
+        "name": "History Tours USA",
+        "address": "12, avenue des Voyageurs",
+        "location": "75000 Paris",
+        "siret": "12345678900011",
+        "vat": "FR12345678901",
+        "contact": "Contact operations",
+        "email": "contact@example.fr",
+        "phone": "0600000000"
+      },
+      "service": {
+        "description": "Journee plages du Debarquement",
+        "date": "2026-03-03",
+        "pickup": "Paris",
+        "destination": "Normandie",
+        "passengers": 7,
+        "distanceKm": 620
+      },
+      "totals": {
+        "ht": 1665.0,
+        "vat10": 185.0,
+        "vat20": 0,
+        "ttc": 1850
+      },
+      "taxNote": "TVA appliquee selon le regime de transport de personnes.",
+      "insurance": "Assurance RC Pro tourisme et transport",
+      "attachment": null
+    },
+    {
+      "id": "inv-2026-0007",
+      "number": "2026-0007",
+      "issuedAt": "2026-03-16",
+      "invoiceType": "client",
+      "missionId": "mission-mar-fontainebleau",
+      "missionCode": "MIS-2607",
+      "sourceLabel": "Facture client",
+      "paymentStatus": "paid",
+      "settledAt": "2026-03-16",
+      "externalFlow": "payable",
+      "paymentMethod": "wire",
+      "seller": {
+        "name": "Simbora Paris Tourisme",
+        "address": "18, rue des Artisans",
+        "location": "75012 Paris",
+        "phone": "0611223344",
+        "evtc": "EVTC750000321",
+        "siret": "81234567800027"
+      },
+      "client": {
+        "name": "Miller Family",
+        "address": "12, avenue des Voyageurs",
+        "location": "75000 Paris",
+        "siret": "12345678900011",
+        "vat": "FR12345678901",
+        "contact": "Contact operations",
+        "email": "contact@example.fr",
+        "phone": "0600000000"
+      },
+      "service": {
+        "description": "Excursion Fontainebleau",
+        "date": "2026-03-16",
+        "pickup": "Paris",
+        "destination": "Fontainebleau",
+        "passengers": 3,
+        "distanceKm": 142
+      },
+      "totals": {
+        "ht": 558.0,
+        "vat10": 62.0,
+        "vat20": 0,
+        "ttc": 620
+      },
+      "taxNote": "TVA appliquee selon le regime de transport de personnes.",
+      "insurance": "Assurance RC Pro tourisme et transport",
+      "attachment": null
+    },
+    {
+      "id": "inv-2026-0008",
+      "number": "2026-0008",
+      "issuedAt": "2026-03-30",
+      "invoiceType": "client",
+      "missionId": "mission-mar-montmartre",
+      "missionCode": "MIS-2608",
+      "sourceLabel": "Facture client",
+      "paymentStatus": "unpaid",
+      "settledAt": "",
+      "externalFlow": "payable",
+      "paymentMethod": "wire",
+      "seller": {
+        "name": "Simbora Paris Tourisme",
+        "address": "18, rue des Artisans",
+        "location": "75012 Paris",
+        "phone": "0611223344",
+        "evtc": "EVTC750000321",
+        "siret": "81234567800027"
+      },
+      "client": {
+        "name": "Brasil Experience",
+        "address": "12, avenue des Voyageurs",
+        "location": "75000 Paris",
+        "siret": "12345678900011",
+        "vat": "FR12345678901",
+        "contact": "Contact operations",
+        "email": "contact@example.fr",
+        "phone": "0600000000"
+      },
+      "service": {
+        "description": "City tour Paris en portugais",
+        "date": "2026-03-29",
+        "pickup": "Hotel Molitor",
+        "destination": "Montmartre",
+        "passengers": 4,
+        "distanceKm": 48
+      },
+      "totals": {
+        "ht": 387.0,
+        "vat10": 43.0,
+        "vat20": 0,
+        "ttc": 430
+      },
+      "taxNote": "TVA appliquee selon le regime de transport de personnes.",
+      "insurance": "Assurance RC Pro tourisme et transport",
+      "attachment": null
+    },
+    {
+      "id": "inv-2026-0009",
+      "number": "2026-0009",
+      "issuedAt": "2026-04-06",
+      "invoiceType": "client",
+      "missionId": "mission-apr-loire",
+      "missionCode": "MIS-2609",
+      "sourceLabel": "Facture client",
+      "paymentStatus": "unpaid",
+      "settledAt": "",
+      "externalFlow": "payable",
+      "paymentMethod": "wire",
+      "seller": {
+        "name": "Simbora Paris Tourisme",
+        "address": "18, rue des Artisans",
+        "location": "75012 Paris",
+        "phone": "0611223344",
+        "evtc": "EVTC750000321",
+        "siret": "81234567800027"
+      },
+      "client": {
+        "name": "Luxury Escapes",
+        "address": "12, avenue des Voyageurs",
+        "location": "75000 Paris",
+        "siret": "12345678900011",
+        "vat": "FR12345678901",
+        "contact": "Contact operations",
+        "email": "contact@example.fr",
+        "phone": "0600000000"
+      },
+      "service": {
+        "description": "Loire premium avec degustation",
+        "date": "2026-04-05",
+        "pickup": "Hotel Crillon",
+        "destination": "Tours",
+        "passengers": 6,
+        "distanceKm": 510
+      },
+      "totals": {
+        "ht": 1422.0,
+        "vat10": 158.0,
+        "vat20": 0,
+        "ttc": 1580
+      },
+      "taxNote": "TVA appliquee selon le regime de transport de personnes.",
+      "insurance": "Assurance RC Pro tourisme et transport",
+      "attachment": null
+    },
+    {
+      "id": "inv-2026-0010",
+      "number": "2026-0010",
+      "issuedAt": "2026-04-12",
+      "invoiceType": "client",
+      "missionId": "mission-apr-disney",
+      "missionCode": "MIS-2610",
+      "sourceLabel": "Facture client",
+      "paymentStatus": "unpaid",
+      "settledAt": "",
+      "externalFlow": "payable",
+      "paymentMethod": "wire",
+      "seller": {
+        "name": "Simbora Paris Tourisme",
+        "address": "18, rue des Artisans",
+        "location": "75012 Paris",
+        "phone": "0611223344",
+        "evtc": "EVTC750000321",
+        "siret": "81234567800027"
+      },
+      "client": {
+        "name": "Famille Oliveira",
+        "address": "12, avenue des Voyageurs",
+        "location": "75000 Paris",
+        "siret": "12345678900011",
+        "vat": "FR12345678901",
+        "contact": "Contact operations",
+        "email": "contact@example.fr",
+        "phone": "0600000000"
+      },
+      "service": {
+        "description": "Transfert prive Disneyland",
+        "date": "2026-04-12",
+        "pickup": "Paris",
+        "destination": "Disneyland Paris",
+        "passengers": 5,
+        "distanceKm": 96
+      },
+      "totals": {
+        "ht": 648.0,
+        "vat10": 72.0,
+        "vat20": 0,
+        "ttc": 720
+      },
+      "taxNote": "TVA appliquee selon le regime de transport de personnes.",
+      "insurance": "Assurance RC Pro tourisme et transport",
+      "attachment": null
+    },
+    {
+      "id": "ext-2026-001",
+      "number": "EXT-2026-001",
+      "issuedAt": "2026-01-31",
+      "invoiceType": "external",
+      "missionId": "",
+      "missionCode": "",
+      "sourceLabel": "Facture externe",
+      "paymentStatus": "paid",
+      "settledAt": "2026-01-31",
+      "externalFlow": "payable",
+      "paymentMethod": "wire",
+      "seller": {
+        "name": "Simbora Paris Tourisme",
+        "address": "18, rue des Artisans",
+        "location": "75012 Paris",
+        "phone": "0611223344",
+        "evtc": "EVTC750000321",
+        "siret": "81234567800027"
+      },
+      "client": {
+        "name": "TotalEnergies Fleet",
+        "address": "8, rue des Fournisseurs",
+        "location": "75000 Paris",
+        "siret": "98765432100018",
+        "vat": "FR98765432100",
+        "contact": "Service facturation",
+        "email": "facturation@example.fr",
+        "phone": "0144556677"
+      },
+      "service": {
+        "description": "Carburant flotte janvier",
+        "date": "2026-01-31",
+        "pickup": "Paris",
+        "destination": "Stations partenaires",
+        "passengers": 0,
+        "distanceKm": 0
+      },
+      "totals": {
+        "ht": 642.35,
+        "vat10": 0,
+        "vat20": 0,
+        "ttc": 642.35
+      },
+      "taxNote": "TVA appliquee selon le regime de transport de personnes.",
+      "insurance": "Assurance RC Pro tourisme et transport",
+      "attachment": null
+    },
+    {
+      "id": "ext-2026-002",
+      "number": "EXT-2026-002",
+      "issuedAt": "2026-02-28",
+      "invoiceType": "external",
+      "missionId": "",
+      "missionCode": "",
+      "sourceLabel": "Facture externe",
+      "paymentStatus": "paid",
+      "settledAt": "2026-02-28",
+      "externalFlow": "payable",
+      "paymentMethod": "wire",
+      "seller": {
+        "name": "Simbora Paris Tourisme",
+        "address": "18, rue des Artisans",
+        "location": "75012 Paris",
+        "phone": "0611223344",
+        "evtc": "EVTC750000321",
+        "siret": "81234567800027"
+      },
+      "client": {
+        "name": "Telepeage Pro",
+        "address": "8, rue des Fournisseurs",
+        "location": "75000 Paris",
+        "siret": "98765432100018",
+        "vat": "FR98765432100",
+        "contact": "Service facturation",
+        "email": "facturation@example.fr",
+        "phone": "0144556677"
+      },
+      "service": {
+        "description": "Peages et parkings fevrier",
+        "date": "2026-02-28",
+        "pickup": "France",
+        "destination": "Reseau autoroutier",
+        "passengers": 0,
+        "distanceKm": 0
+      },
+      "totals": {
+        "ht": 318.8,
+        "vat10": 0,
+        "vat20": 0,
+        "ttc": 318.8
+      },
+      "taxNote": "TVA appliquee selon le regime de transport de personnes.",
+      "insurance": "Assurance RC Pro tourisme et transport",
+      "attachment": null
+    },
+    {
+      "id": "ext-2026-003",
+      "number": "EXT-2026-003",
+      "issuedAt": "2026-03-12",
+      "invoiceType": "external",
+      "missionId": "",
+      "missionCode": "",
+      "sourceLabel": "Facture externe",
+      "paymentStatus": "paid",
+      "settledAt": "2026-03-12",
+      "externalFlow": "payable",
+      "paymentMethod": "wire",
+      "seller": {
+        "name": "Simbora Paris Tourisme",
+        "address": "18, rue des Artisans",
+        "location": "75012 Paris",
+        "phone": "0611223344",
+        "evtc": "EVTC750000321",
+        "siret": "81234567800027"
+      },
+      "client": {
+        "name": "Garage Montparnasse",
+        "address": "8, rue des Fournisseurs",
+        "location": "75000 Paris",
+        "siret": "98765432100018",
+        "vat": "FR98765432100",
+        "contact": "Service facturation",
+        "email": "facturation@example.fr",
+        "phone": "0144556677"
+      },
+      "service": {
+        "description": "Revision Mercedes Classe V",
+        "date": "2026-03-12",
+        "pickup": "Paris",
+        "destination": "Atelier",
+        "passengers": 0,
+        "distanceKm": 0
+      },
+      "totals": {
+        "ht": 1180,
+        "vat10": 0,
+        "vat20": 0,
+        "ttc": 1180
+      },
+      "taxNote": "TVA appliquee selon le regime de transport de personnes.",
+      "insurance": "Assurance RC Pro tourisme et transport",
+      "attachment": null
+    },
+    {
+      "id": "ext-2026-004",
+      "number": "EXT-2026-004",
+      "issuedAt": "2026-03-31",
+      "invoiceType": "external",
+      "missionId": "",
+      "missionCode": "",
+      "sourceLabel": "Facture externe",
+      "paymentStatus": "unpaid",
+      "settledAt": "",
+      "externalFlow": "payable",
+      "paymentMethod": "wire",
+      "seller": {
+        "name": "Simbora Paris Tourisme",
+        "address": "18, rue des Artisans",
+        "location": "75012 Paris",
+        "phone": "0611223344",
+        "evtc": "EVTC750000321",
+        "siret": "81234567800027"
+      },
+      "client": {
+        "name": "Tiago Almeida Services",
+        "address": "8, rue des Fournisseurs",
+        "location": "75000 Paris",
+        "siret": "98765432100018",
+        "vat": "FR98765432100",
+        "contact": "Service facturation",
+        "email": "facturation@example.fr",
+        "phone": "0144556677"
+      },
+      "service": {
+        "description": "Prestation chauffeur collaborateur mars",
+        "date": "2026-03-31",
+        "pickup": "Paris",
+        "destination": "Missions mars",
+        "passengers": 0,
+        "distanceKm": 0
+      },
+      "totals": {
+        "ht": 540,
+        "vat10": 0,
+        "vat20": 0,
+        "ttc": 540
+      },
+      "taxNote": "TVA appliquee selon le regime de transport de personnes.",
+      "insurance": "Assurance RC Pro tourisme et transport",
+      "attachment": null
+    },
+    {
+      "id": "ext-2026-005",
+      "number": "EXT-2026-005",
+      "issuedAt": "2026-04-10",
+      "invoiceType": "external",
+      "missionId": "",
+      "missionCode": "",
+      "sourceLabel": "Facture externe",
+      "paymentStatus": "unpaid",
+      "settledAt": "",
+      "externalFlow": "payable",
+      "paymentMethod": "wire",
+      "seller": {
+        "name": "Simbora Paris Tourisme",
+        "address": "18, rue des Artisans",
+        "location": "75012 Paris",
+        "phone": "0611223344",
+        "evtc": "EVTC750000321",
+        "siret": "81234567800027"
+      },
+      "client": {
+        "name": "Location Van Premium",
+        "address": "8, rue des Fournisseurs",
+        "location": "75000 Paris",
+        "siret": "98765432100018",
+        "vat": "FR98765432100",
+        "contact": "Service facturation",
+        "email": "facturation@example.fr",
+        "phone": "0144556677"
+      },
+      "service": {
+        "description": "Location Volkswagen Caravelle avril",
+        "date": "2026-04-10",
+        "pickup": "Paris",
+        "destination": "Agence location",
+        "passengers": 0,
+        "distanceKm": 0
+      },
+      "totals": {
+        "ht": 890,
+        "vat10": 0,
+        "vat20": 0,
+        "ttc": 890
+      },
+      "taxNote": "TVA appliquee selon le regime de transport de personnes.",
+      "insurance": "Assurance RC Pro tourisme et transport",
+      "attachment": null
+    }
+  ],
+  "financeEntries": [
+    {
+      "id": "fin-jan-lavage",
+      "kind": "manual",
+      "scope": "general",
+      "rowKey": "",
+      "sourceType": "manual",
+      "sourceId": "",
+      "missionId": "",
+      "label": "Lavage flotte janvier",
+      "description": "Lavage flotte janvier",
+      "category": "maintenance",
+      "direction": "expense",
+      "amount": 96,
+      "status": "validated",
+      "settledAt": "2026-01-10",
+      "note": "",
+      "createdAt": "2026-01-10T09:00:00.000Z",
+      "updatedAt": "2026-01-10T09:00:00.000Z"
+    },
+    {
+      "id": "fin-jan-commission",
+      "kind": "manual",
+      "scope": "general",
+      "rowKey": "",
+      "sourceType": "manual",
+      "sourceId": "",
+      "missionId": "",
+      "label": "Commission agence Loire",
+      "description": "Commission agence Loire",
+      "category": "external_invoices",
+      "direction": "expense",
+      "amount": 145,
+      "status": "validated",
+      "settledAt": "2026-01-29",
+      "note": "",
+      "createdAt": "2026-01-29T09:00:00.000Z",
+      "updatedAt": "2026-01-29T09:00:00.000Z"
+    },
+    {
+      "id": "fin-feb-parking",
+      "kind": "manual",
+      "scope": "general",
+      "rowKey": "",
+      "sourceType": "manual",
+      "sourceId": "",
+      "missionId": "",
+      "label": "Parkings Reims",
+      "description": "Parkings Reims",
+      "category": "tolls_parking",
+      "direction": "expense",
+      "amount": 42,
+      "status": "validated",
+      "settledAt": "2026-02-18",
+      "note": "",
+      "createdAt": "2026-02-18T09:00:00.000Z",
+      "updatedAt": "2026-02-18T09:00:00.000Z"
+    },
+    {
+      "id": "fin-feb-bonus-guide",
+      "kind": "manual",
+      "scope": "general",
+      "rowKey": "",
+      "sourceType": "manual",
+      "sourceId": "",
+      "missionId": "",
+      "label": "Prime guide champagne",
+      "description": "Prime guide champagne",
+      "category": "team",
+      "direction": "expense",
+      "amount": 120,
+      "status": "validated",
+      "settledAt": "2026-02-20",
+      "note": "",
+      "createdAt": "2026-02-20T09:00:00.000Z",
+      "updatedAt": "2026-02-20T09:00:00.000Z"
+    },
+    {
+      "id": "fin-mar-water",
+      "kind": "manual",
+      "scope": "general",
+      "rowKey": "",
+      "sourceType": "manual",
+      "sourceId": "",
+      "missionId": "",
+      "label": "Eau et accueil groupe Normandie",
+      "description": "Eau et accueil groupe Normandie",
+      "category": "other",
+      "direction": "expense",
+      "amount": 38,
+      "status": "validated",
+      "settledAt": "2026-03-04",
+      "note": "",
+      "createdAt": "2026-03-04T09:00:00.000Z",
+      "updatedAt": "2026-03-04T09:00:00.000Z"
+    },
+    {
+      "id": "fin-mar-partner",
+      "kind": "manual",
+      "scope": "general",
+      "rowKey": "",
+      "sourceType": "manual",
+      "sourceId": "",
+      "missionId": "",
+      "label": "Apporteur d'affaires Brasil Experience",
+      "description": "Apporteur d'affaires Brasil Experience",
+      "category": "external_invoices",
+      "direction": "expense",
+      "amount": 65,
+      "status": "pending",
+      "settledAt": "",
+      "note": "",
+      "createdAt": "2026-03-29T09:00:00.000Z",
+      "updatedAt": "2026-03-29T09:00:00.000Z"
+    },
+    {
+      "id": "fin-apr-amenities",
+      "kind": "manual",
+      "scope": "general",
+      "rowKey": "",
+      "sourceType": "manual",
+      "sourceId": "",
+      "missionId": "",
+      "label": "Amenities Loire premium",
+      "description": "Amenities Loire premium",
+      "category": "activities",
+      "direction": "expense",
+      "amount": 74,
+      "status": "validated",
+      "settledAt": "2026-04-05",
+      "note": "",
+      "createdAt": "2026-04-05T09:00:00.000Z",
+      "updatedAt": "2026-04-05T09:00:00.000Z"
+    },
+    {
+      "id": "fin-apr-adjustment",
+      "kind": "manual",
+      "scope": "general",
+      "rowKey": "",
+      "sourceType": "manual",
+      "sourceId": "",
+      "missionId": "",
+      "label": "Ajustement caisse especes",
+      "description": "Ajustement caisse especes",
+      "category": "other",
+      "direction": "income",
+      "amount": 55,
+      "status": "validated",
+      "settledAt": "2026-04-14",
+      "note": "",
+      "createdAt": "2026-04-14T09:00:00.000Z",
+      "updatedAt": "2026-04-14T09:00:00.000Z"
+    }
+  ],
+  "customMissions": [
+    {
+      "id": "mission-jan-paris-versailles",
+      "code": "MIS-2601",
+      "serviceDate": "2026-01-08",
+      "serviceType": "Transfert touristique",
+      "routeLabel": "Paris -> Versailles",
+      "departureTime": "08:15",
+      "arrivalTime": "13:00",
+      "distanceKm": 58,
+      "durationMinutes": 285,
+      "driveDurationMinutes": 245,
+      "passengers": 4,
+      "luggage": 3,
+      "quotedPrice": 520,
+      "recommendedPrice": 520,
+      "tolls": 18,
+      "parking": 12,
+      "targetMarginRate": 0.32,
+      "clientName": "Atelier Lumiere Voyages",
+      "pickupAddress": "Hotel Lutetia, Paris",
+      "destinationAddress": "Chateau de Versailles",
+      "meetingPoint": "Hall principal",
+      "stops": [
+        {
+          "kind": "pickup",
+          "label": "Prise en charge",
+          "address": "Hotel Lutetia, Paris",
+          "meetingPoint": "",
+          "activityBudget": 0,
+          "coords": null,
+          "placeId": ""
+        },
+        {
+          "kind": "activity",
+          "label": "Visite guidee Versailles",
+          "address": "Chateau de Versailles",
+          "meetingPoint": "",
+          "activityBudget": 120,
+          "coords": null,
+          "placeId": ""
+        },
+        {
+          "kind": "dropoff",
+          "label": "Destination",
+          "address": "Chateau de Versailles",
+          "meetingPoint": "",
+          "activityBudget": 0,
+          "coords": null,
+          "placeId": ""
+        }
+      ],
+      "notes": "Client VIP, prevoir eau et chargeurs.",
+      "billingStatus": "paid",
+      "priority": "vip"
+    },
+    {
+      "id": "mission-jan-cdg-paris",
+      "code": "MIS-2602",
+      "serviceDate": "2026-01-15",
+      "serviceType": "Accueil aeroport",
+      "routeLabel": "CDG -> Paris centre",
+      "departureTime": "10:30",
+      "arrivalTime": "12:00",
+      "distanceKm": 34,
+      "durationMinutes": 90,
+      "driveDurationMinutes": 60,
+      "passengers": 2,
+      "luggage": 4,
+      "quotedPrice": 180,
+      "recommendedPrice": 180,
+      "tolls": 6,
+      "parking": 0,
+      "targetMarginRate": 0.32,
+      "clientName": "Famille Costa",
+      "pickupAddress": "Aeroport CDG Terminal 2E",
+      "destinationAddress": "Hotel Regina Paris",
+      "meetingPoint": "Hall principal",
+      "stops": [
+        {
+          "kind": "pickup",
+          "label": "Prise en charge",
+          "address": "Aeroport CDG Terminal 2E",
+          "meetingPoint": "",
+          "activityBudget": 0,
+          "coords": null,
+          "placeId": ""
+        },
+        {
+          "kind": "dropoff",
+          "label": "Destination",
+          "address": "Hotel Regina Paris",
+          "meetingPoint": "",
+          "activityBudget": 0,
+          "coords": null,
+          "placeId": ""
+        }
+      ],
+      "notes": "Vol long courrier, attendre panneau nominatif.",
+      "billingStatus": "paid",
+      "priority": "standard"
+    },
+    {
+      "id": "mission-jan-loire",
+      "code": "MIS-2603",
+      "serviceDate": "2026-01-27",
+      "serviceType": "Journee touristique",
+      "routeLabel": "Paris -> Chateaux de la Loire",
+      "departureTime": "07:00",
+      "arrivalTime": "20:30",
+      "distanceKm": 480,
+      "durationMinutes": 810,
+      "driveDurationMinutes": 770,
+      "passengers": 6,
+      "luggage": 5,
+      "quotedPrice": 1450,
+      "recommendedPrice": 1450,
+      "tolls": 58,
+      "parking": 20,
+      "targetMarginRate": 0.32,
+      "clientName": "Nordic Travel Club",
+      "pickupAddress": "Hotel Opera Richepanse",
+      "destinationAddress": "Amboise",
+      "meetingPoint": "Hall principal",
+      "stops": [
+        {
+          "kind": "pickup",
+          "label": "Prise en charge",
+          "address": "Hotel Opera Richepanse",
+          "meetingPoint": "",
+          "activityBudget": 0,
+          "coords": null,
+          "placeId": ""
+        },
+        {
+          "kind": "activity",
+          "label": "Chambord",
+          "address": "Chateau de Chambord",
+          "meetingPoint": "",
+          "activityBudget": 180,
+          "coords": null,
+          "placeId": ""
+        },
+        {
+          "kind": "activity",
+          "label": "Chenonceau",
+          "address": "Chateau de Chenonceau",
+          "meetingPoint": "",
+          "activityBudget": 160,
+          "coords": null,
+          "placeId": ""
+        },
+        {
+          "kind": "dropoff",
+          "label": "Destination",
+          "address": "Amboise",
+          "meetingPoint": "",
+          "activityBudget": 0,
+          "coords": null,
+          "placeId": ""
+        }
+      ],
+      "notes": "Prevoir pause dejeuner a Blois.",
+      "billingStatus": "paid",
+      "priority": "high"
+    },
+    {
+      "id": "mission-feb-giverny",
+      "code": "MIS-2604",
+      "serviceDate": "2026-02-04",
+      "serviceType": "Excursion",
+      "routeLabel": "Paris -> Giverny",
+      "departureTime": "08:45",
+      "arrivalTime": "15:30",
+      "distanceKm": 166,
+      "durationMinutes": 405,
+      "driveDurationMinutes": 365,
+      "passengers": 5,
+      "luggage": 3,
+      "quotedPrice": 780,
+      "recommendedPrice": 780,
+      "tolls": 24,
+      "parking": 10,
+      "targetMarginRate": 0.32,
+      "clientName": "Agence Horizon",
+      "pickupAddress": "Le Marais, Paris",
+      "destinationAddress": "Fondation Monet Giverny",
+      "meetingPoint": "Hall principal",
+      "stops": [
+        {
+          "kind": "pickup",
+          "label": "Prise en charge",
+          "address": "Le Marais, Paris",
+          "meetingPoint": "",
+          "activityBudget": 0,
+          "coords": null,
+          "placeId": ""
+        },
+        {
+          "kind": "activity",
+          "label": "Fondation Monet",
+          "address": "84 rue Claude Monet, Giverny",
+          "meetingPoint": "",
+          "activityBudget": 95,
+          "coords": null,
+          "placeId": ""
+        },
+        {
+          "kind": "dropoff",
+          "label": "Destination",
+          "address": "Fondation Monet Giverny",
+          "meetingPoint": "",
+          "activityBudget": 0,
+          "coords": null,
+          "placeId": ""
+        }
+      ],
+      "notes": "Verifier ouverture boutique souvenirs.",
+      "billingStatus": "paid",
+      "priority": "standard"
+    },
+    {
+      "id": "mission-feb-reims",
+      "code": "MIS-2605",
+      "serviceDate": "2026-02-18",
+      "serviceType": "Route champagne",
+      "routeLabel": "Paris -> Reims",
+      "departureTime": "09:00",
+      "arrivalTime": "18:00",
+      "distanceKm": 310,
+      "durationMinutes": 540,
+      "driveDurationMinutes": 500,
+      "passengers": 4,
+      "luggage": 4,
+      "quotedPrice": 980,
+      "recommendedPrice": 980,
+      "tolls": 42,
+      "parking": 18,
+      "targetMarginRate": 0.32,
+      "clientName": "Champagne Walks",
+      "pickupAddress": "Hotel Balzac, Paris",
+      "destinationAddress": "Reims centre",
+      "meetingPoint": "Hall principal",
+      "stops": [
+        {
+          "kind": "pickup",
+          "label": "Prise en charge",
+          "address": "Hotel Balzac, Paris",
+          "meetingPoint": "",
+          "activityBudget": 0,
+          "coords": null,
+          "placeId": ""
+        },
+        {
+          "kind": "activity",
+          "label": "Maison de champagne",
+          "address": "Reims",
+          "meetingPoint": "",
+          "activityBudget": 220,
+          "coords": null,
+          "placeId": ""
+        },
+        {
+          "kind": "dropoff",
+          "label": "Destination",
+          "address": "Reims centre",
+          "meetingPoint": "",
+          "activityBudget": 0,
+          "coords": null,
+          "placeId": ""
+        }
+      ],
+      "notes": "Deux caves a coordonner avec le guide.",
+      "billingStatus": "paid",
+      "priority": "high"
+    },
+    {
+      "id": "mission-mar-normandie",
+      "code": "MIS-2606",
+      "serviceDate": "2026-03-03",
+      "serviceType": "Memoire",
+      "routeLabel": "Paris -> Plages du Debarquement",
+      "departureTime": "06:30",
+      "arrivalTime": "21:00",
+      "distanceKm": 620,
+      "durationMinutes": 870,
+      "driveDurationMinutes": 830,
+      "passengers": 7,
+      "luggage": 6,
+      "quotedPrice": 1850,
+      "recommendedPrice": 1850,
+      "tolls": 74,
+      "parking": 25,
+      "targetMarginRate": 0.32,
+      "clientName": "History Tours USA",
+      "pickupAddress": "Hotel Pullman Montparnasse",
+      "destinationAddress": "Omaha Beach",
+      "meetingPoint": "Hall principal",
+      "stops": [
+        {
+          "kind": "pickup",
+          "label": "Prise en charge",
+          "address": "Hotel Pullman Montparnasse",
+          "meetingPoint": "",
+          "activityBudget": 0,
+          "coords": null,
+          "placeId": ""
+        },
+        {
+          "kind": "activity",
+          "label": "Musee Airborne",
+          "address": "Sainte-Mere-Eglise",
+          "meetingPoint": "",
+          "activityBudget": 210,
+          "coords": null,
+          "placeId": ""
+        },
+        {
+          "kind": "activity",
+          "label": "Omaha Beach",
+          "address": "Colleville-sur-Mer",
+          "meetingPoint": "",
+          "activityBudget": 0,
+          "coords": null,
+          "placeId": ""
+        },
+        {
+          "kind": "dropoff",
+          "label": "Destination",
+          "address": "Omaha Beach",
+          "meetingPoint": "",
+          "activityBudget": 0,
+          "coords": null,
+          "placeId": ""
+        }
+      ],
+      "notes": "Groupe americain, anglais obligatoire.",
+      "billingStatus": "paid",
+      "priority": "vip"
+    },
+    {
+      "id": "mission-mar-fontainebleau",
+      "code": "MIS-2607",
+      "serviceDate": "2026-03-16",
+      "serviceType": "Excursion",
+      "routeLabel": "Paris -> Fontainebleau",
+      "departureTime": "09:15",
+      "arrivalTime": "16:30",
+      "distanceKm": 142,
+      "durationMinutes": 435,
+      "driveDurationMinutes": 395,
+      "passengers": 3,
+      "luggage": 2,
+      "quotedPrice": 620,
+      "recommendedPrice": 620,
+      "tolls": 16,
+      "parking": 8,
+      "targetMarginRate": 0.32,
+      "clientName": "Miller Family",
+      "pickupAddress": "Saint-Germain-des-Pres",
+      "destinationAddress": "Chateau de Fontainebleau",
+      "meetingPoint": "Hall principal",
+      "stops": [
+        {
+          "kind": "pickup",
+          "label": "Prise en charge",
+          "address": "Saint-Germain-des-Pres",
+          "meetingPoint": "",
+          "activityBudget": 0,
+          "coords": null,
+          "placeId": ""
+        },
+        {
+          "kind": "activity",
+          "label": "Chateau",
+          "address": "Fontainebleau",
+          "meetingPoint": "",
+          "activityBudget": 75,
+          "coords": null,
+          "placeId": ""
+        },
+        {
+          "kind": "dropoff",
+          "label": "Destination",
+          "address": "Chateau de Fontainebleau",
+          "meetingPoint": "",
+          "activityBudget": 0,
+          "coords": null,
+          "placeId": ""
+        }
+      ],
+      "notes": "Siege enfant demande.",
+      "billingStatus": "paid",
+      "priority": "standard"
+    },
+    {
+      "id": "mission-mar-montmartre",
+      "code": "MIS-2608",
+      "serviceDate": "2026-03-29",
+      "serviceType": "City tour",
+      "routeLabel": "Paris panoramique",
+      "departureTime": "14:00",
+      "arrivalTime": "18:30",
+      "distanceKm": 48,
+      "durationMinutes": 270,
+      "driveDurationMinutes": 230,
+      "passengers": 4,
+      "luggage": 1,
+      "quotedPrice": 430,
+      "recommendedPrice": 430,
+      "tolls": 0,
+      "parking": 15,
+      "targetMarginRate": 0.32,
+      "clientName": "Brasil Experience",
+      "pickupAddress": "Hotel Molitor",
+      "destinationAddress": "Montmartre",
+      "meetingPoint": "Hall principal",
+      "stops": [
+        {
+          "kind": "pickup",
+          "label": "Prise en charge",
+          "address": "Hotel Molitor",
+          "meetingPoint": "",
+          "activityBudget": 0,
+          "coords": null,
+          "placeId": ""
+        },
+        {
+          "kind": "activity",
+          "label": "Montmartre",
+          "address": "Place du Tertre, Paris",
+          "meetingPoint": "",
+          "activityBudget": 0,
+          "coords": null,
+          "placeId": ""
+        },
+        {
+          "kind": "dropoff",
+          "label": "Destination",
+          "address": "Montmartre",
+          "meetingPoint": "",
+          "activityBudget": 0,
+          "coords": null,
+          "placeId": ""
+        }
+      ],
+      "notes": "Client bresilien, guide portugais ideal.",
+      "billingStatus": "invoice_sent",
+      "priority": "standard"
+    },
+    {
+      "id": "mission-apr-loire",
+      "code": "MIS-2609",
+      "serviceDate": "2026-04-05",
+      "serviceType": "Journee touristique",
+      "routeLabel": "Paris -> Loire premium",
+      "departureTime": "07:30",
+      "arrivalTime": "20:00",
+      "distanceKm": 510,
+      "durationMinutes": 750,
+      "driveDurationMinutes": 710,
+      "passengers": 6,
+      "luggage": 6,
+      "quotedPrice": 1580,
+      "recommendedPrice": 1580,
+      "tolls": 62,
+      "parking": 22,
+      "targetMarginRate": 0.32,
+      "clientName": "Luxury Escapes",
+      "pickupAddress": "Hotel Crillon",
+      "destinationAddress": "Tours",
+      "meetingPoint": "Hall principal",
+      "stops": [
+        {
+          "kind": "pickup",
+          "label": "Prise en charge",
+          "address": "Hotel Crillon",
+          "meetingPoint": "",
+          "activityBudget": 0,
+          "coords": null,
+          "placeId": ""
+        },
+        {
+          "kind": "activity",
+          "label": "Chambord",
+          "address": "Chateau de Chambord",
+          "meetingPoint": "",
+          "activityBudget": 180,
+          "coords": null,
+          "placeId": ""
+        },
+        {
+          "kind": "activity",
+          "label": "Degustation",
+          "address": "Vouvray",
+          "meetingPoint": "",
+          "activityBudget": 240,
+          "coords": null,
+          "placeId": ""
+        },
+        {
+          "kind": "dropoff",
+          "label": "Destination",
+          "address": "Tours",
+          "meetingPoint": "",
+          "activityBudget": 0,
+          "coords": null,
+          "placeId": ""
+        }
+      ],
+      "notes": "Champagne dans le vehicule, verifier glaciere.",
+      "billingStatus": "invoice_sent",
+      "priority": "vip"
+    },
+    {
+      "id": "mission-apr-disney",
+      "code": "MIS-2610",
+      "serviceDate": "2026-04-12",
+      "serviceType": "Transfert prive",
+      "routeLabel": "Paris -> Disneyland",
+      "departureTime": "08:00",
+      "arrivalTime": "19:30",
+      "distanceKm": 96,
+      "durationMinutes": 690,
+      "driveDurationMinutes": 650,
+      "passengers": 5,
+      "luggage": 5,
+      "quotedPrice": 720,
+      "recommendedPrice": 720,
+      "tolls": 18,
+      "parking": 30,
+      "targetMarginRate": 0.32,
+      "clientName": "Famille Oliveira",
+      "pickupAddress": "Hotel Brach Paris",
+      "destinationAddress": "Disneyland Paris",
+      "meetingPoint": "Hall principal",
+      "stops": [
+        {
+          "kind": "pickup",
+          "label": "Prise en charge",
+          "address": "Hotel Brach Paris",
+          "meetingPoint": "",
+          "activityBudget": 0,
+          "coords": null,
+          "placeId": ""
+        },
+        {
+          "kind": "dropoff",
+          "label": "Destination",
+          "address": "Disneyland Paris",
+          "meetingPoint": "",
+          "activityBudget": 0,
+          "coords": null,
+          "placeId": ""
+        }
+      ],
+      "notes": "Portugais BR prefere, retour apres spectacle.",
+      "billingStatus": "to_invoice",
+      "priority": "high"
+    }
+  ],
+  "missionOverrides": {},
+  "missionAssignments": {
+    "mission-cdg-paris": {
+      "leadCollaboratorId": "collab-noa",
+      "supportCollaboratorId": "",
+      "vehicleId": "veh-mercedes-v"
+    },
+    "mission-giverny": {
+      "leadCollaboratorId": "collab-jade",
+      "supportCollaboratorId": "collab-salma",
+      "vehicleId": "veh-vito-tourer"
+    },
+    "mission-reims": {
+      "leadCollaboratorId": "collab-jade",
+      "supportCollaboratorId": "",
+      "vehicleId": "veh-peugeot-508"
+    },
+    "mission-monaco": {
+      "leadCollaboratorId": "collab-lucas",
+      "supportCollaboratorId": "",
+      "vehicleId": "veh-tesla-y"
+    },
+    "mission-annecy": {
+      "leadCollaboratorId": "collab-noa",
+      "supportCollaboratorId": "",
+      "vehicleId": "veh-rental-caravelle"
+    },
+    "mission-cassis": {
+      "leadCollaboratorId": "collab-tiago",
+      "supportCollaboratorId": "collab-salma",
+      "vehicleId": "veh-tiago-trafic"
+    },
+    "mission-saint-emilion": {
+      "leadCollaboratorId": "collab-noa",
+      "supportCollaboratorId": "collab-ines",
+      "vehicleId": "veh-vito-tourer"
+    },
+    "mission-jan-paris-versailles": {
+      "leadCollaboratorId": "collab-jade",
+      "supportCollaboratorId": "collab-ines",
+      "vehicleId": "veh-mercedes-v"
+    },
+    "mission-jan-cdg-paris": {
+      "leadCollaboratorId": "collab-noa",
+      "supportCollaboratorId": "",
+      "vehicleId": "veh-peugeot-508"
+    },
+    "mission-jan-loire": {
+      "leadCollaboratorId": "collab-lucas",
+      "supportCollaboratorId": "collab-salma",
+      "vehicleId": "veh-vito-tourer"
+    },
+    "mission-feb-giverny": {
+      "leadCollaboratorId": "collab-jade",
+      "supportCollaboratorId": "collab-ines",
+      "vehicleId": "veh-mercedes-v"
+    },
+    "mission-feb-reims": {
+      "leadCollaboratorId": "collab-noa",
+      "supportCollaboratorId": "collab-salma",
+      "vehicleId": "veh-vito-tourer"
+    },
+    "mission-mar-normandie": {
+      "leadCollaboratorId": "collab-tiago",
+      "supportCollaboratorId": "collab-salma",
+      "vehicleId": "veh-tiago-trafic"
+    },
+    "mission-mar-fontainebleau": {
+      "leadCollaboratorId": "collab-jade",
+      "supportCollaboratorId": "",
+      "vehicleId": "veh-peugeot-508"
+    },
+    "mission-mar-montmartre": {
+      "leadCollaboratorId": "collab-tiago",
+      "supportCollaboratorId": "collab-ines",
+      "vehicleId": "veh-tiago-trafic"
+    },
+    "mission-apr-loire": {
+      "leadCollaboratorId": "collab-noa",
+      "supportCollaboratorId": "collab-ines",
+      "vehicleId": "veh-rental-caravelle"
+    },
+    "mission-apr-disney": {
+      "leadCollaboratorId": "collab-tiago",
+      "supportCollaboratorId": "",
+      "vehicleId": "veh-tiago-trafic"
+    }
+  },
+  "selectedTripId": "mission-apr-disney"
+}
