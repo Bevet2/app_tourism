@@ -943,6 +943,120 @@ if (planningBoard || tripList || tripDetail || operationsFinanceWorkspace) {
     }
   }
 
+  function renderStaticRouteMap(mapContainer, routeSummary, mission) {
+    const routePath = Array.isArray(routeSummary?.path) ? routeSummary.path : [];
+    const markerCoords = (routeSummary?.stopCoords || [])
+      .map((coords) => toLatLngLiteral(coords))
+      .filter(Boolean);
+    const drawablePath = routePath.length >= 2 ? routePath : markerCoords;
+    const boundsPoints = [...drawablePath, ...markerCoords].filter(Boolean);
+
+    if (drawablePath.length < 2 || boundsPoints.length < 2) {
+      mapContainer.innerHTML =
+        "<p class=\"map-fallback\">Apercu de carte indisponible pour cette mission.</p>";
+      return;
+    }
+
+    const width = 720;
+    const height = 320;
+    const padding = 42;
+    const latitudes = boundsPoints.map((point) => point.lat);
+    const longitudes = boundsPoints.map((point) => point.lng);
+    const minLat = Math.min(...latitudes);
+    const maxLat = Math.max(...latitudes);
+    const minLng = Math.min(...longitudes);
+    const maxLng = Math.max(...longitudes);
+    const latSpan = Math.max(maxLat - minLat, 0.01);
+    const lngSpan = Math.max(maxLng - minLng, 0.01);
+    const projectPoint = (point) => ({
+      x: padding + ((point.lng - minLng) / lngSpan) * (width - padding * 2),
+      y: height - padding - ((point.lat - minLat) / latSpan) * (height - padding * 2),
+    });
+
+    mapContainer.innerHTML = "";
+    mapContainer.classList.add("trip-route-map-static");
+
+    const wrapper = document.createElement("div");
+    wrapper.className = "route-static-map";
+
+    const badge = document.createElement("p");
+    badge.className = "route-static-map-badge";
+    badge.textContent = "Apercu du trajet";
+
+    const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    svg.setAttribute("viewBox", `0 0 ${width} ${height}`);
+    svg.setAttribute("role", "img");
+    svg.setAttribute("aria-label", `Apercu du trajet ${mission.routeLabel || mission.code}`);
+
+    const background = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+    background.setAttribute("x", "0");
+    background.setAttribute("y", "0");
+    background.setAttribute("width", String(width));
+    background.setAttribute("height", String(height));
+    background.setAttribute("rx", "24");
+    background.setAttribute("class", "route-static-map-background");
+    svg.appendChild(background);
+
+    const gridGroup = document.createElementNS("http://www.w3.org/2000/svg", "g");
+    gridGroup.setAttribute("class", "route-static-map-grid");
+    [0.25, 0.5, 0.75].forEach((ratio) => {
+      const verticalLine = document.createElementNS("http://www.w3.org/2000/svg", "line");
+      verticalLine.setAttribute("x1", String(width * ratio));
+      verticalLine.setAttribute("y1", "0");
+      verticalLine.setAttribute("x2", String(width * ratio));
+      verticalLine.setAttribute("y2", String(height));
+      gridGroup.appendChild(verticalLine);
+
+      const horizontalLine = document.createElementNS("http://www.w3.org/2000/svg", "line");
+      horizontalLine.setAttribute("x1", "0");
+      horizontalLine.setAttribute("y1", String(height * ratio));
+      horizontalLine.setAttribute("x2", String(width));
+      horizontalLine.setAttribute("y2", String(height * ratio));
+      gridGroup.appendChild(horizontalLine);
+    });
+    svg.appendChild(gridGroup);
+
+    const routeLine = document.createElementNS("http://www.w3.org/2000/svg", "polyline");
+    routeLine.setAttribute(
+      "points",
+      drawablePath
+        .map((point) => projectPoint(point))
+        .map((point) => `${point.x.toFixed(1)},${point.y.toFixed(1)}`)
+        .join(" ")
+    );
+    routeLine.setAttribute("class", "route-static-map-line");
+    svg.appendChild(routeLine);
+
+    const stops = routeSummary.stops || missionStopsForRoute(mission);
+    markerCoords.forEach((coords, index) => {
+      const projected = projectPoint(coords);
+      const markerGroup = document.createElementNS("http://www.w3.org/2000/svg", "g");
+      markerGroup.setAttribute("class", "route-static-map-marker");
+
+      const title = document.createElementNS("http://www.w3.org/2000/svg", "title");
+      title.textContent = stops[index]?.address || `Etape ${index + 1}`;
+      markerGroup.appendChild(title);
+
+      const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+      circle.setAttribute("cx", projected.x.toFixed(1));
+      circle.setAttribute("cy", projected.y.toFixed(1));
+      circle.setAttribute("r", "15");
+      markerGroup.appendChild(circle);
+
+      const label = document.createElementNS("http://www.w3.org/2000/svg", "text");
+      label.setAttribute("x", projected.x.toFixed(1));
+      label.setAttribute("y", String(projected.y + 5));
+      label.textContent = String(index + 1);
+      markerGroup.appendChild(label);
+
+      svg.appendChild(markerGroup);
+    });
+
+    wrapper.appendChild(svg);
+    wrapper.appendChild(badge);
+    mapContainer.appendChild(wrapper);
+  }
+
   async function renderTripRouteMap(mission) {
     const mapContainer = document.querySelector("#trip-route-map");
     const requestId = ++activeRouteRequestId;
@@ -954,6 +1068,7 @@ if (planningBoard || tripList || tripDetail || operationsFinanceWorkspace) {
     }
 
     mapContainer.innerHTML = "";
+    mapContainer.classList.remove("trip-route-map-static");
 
     try {
       const { Map, googleMaps } = await ensureGoogleMapsLibraries();
@@ -989,8 +1104,15 @@ if (planningBoard || tripList || tripDetail || operationsFinanceWorkspace) {
 
       renderRouteSummaryOnMap(routeSummary, mission, googleMaps);
     } catch (error) {
+      const routeSummary = routeGeometryCache.get(mission.id) || buildFallbackRouteSummary(mission);
+      if (routeSummary) {
+        routeGeometryCache.set(mission.id, routeSummary);
+        renderStaticRouteMap(mapContainer, routeSummary, mission);
+        return;
+      }
+
       mapContainer.innerHTML =
-        "<p class=\"map-fallback\">Carte Google Maps indisponible pour le moment.</p>";
+        "<p class=\"map-fallback\">Apercu de carte indisponible pour cette mission.</p>";
     }
   }
 

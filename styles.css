@@ -3497,6 +3497,70 @@ button {
   box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.18);
 }
 
+.trip-route-map-static {
+  background:
+    radial-gradient(circle at 18% 18%, rgba(224, 145, 79, 0.16), transparent 28%),
+    linear-gradient(135deg, rgba(29, 78, 99, 0.08), rgba(255, 255, 255, 0.72));
+}
+
+.route-static-map {
+  position: relative;
+  width: 100%;
+  min-height: 320px;
+}
+
+.route-static-map svg {
+  display: block;
+  width: 100%;
+  height: 320px;
+}
+
+.route-static-map-background {
+  fill: rgba(255, 255, 255, 0.52);
+}
+
+.route-static-map-grid line {
+  stroke: rgba(29, 78, 99, 0.08);
+  stroke-width: 1;
+}
+
+.route-static-map-line {
+  fill: none;
+  stroke: var(--navy);
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 7;
+}
+
+.route-static-map-marker circle {
+  fill: #f7efe2;
+  stroke: var(--navy);
+  stroke-width: 4;
+}
+
+.route-static-map-marker text {
+  fill: var(--navy);
+  font-family: var(--font-display);
+  font-size: 15px;
+  font-weight: 800;
+  text-anchor: middle;
+}
+
+.route-static-map-badge {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  margin: 0;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.78);
+  color: var(--navy);
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  padding: 9px 12px;
+  text-transform: uppercase;
+}
+
 .trip-route-map-caption,
 .map-fallback {
   margin: 0;
