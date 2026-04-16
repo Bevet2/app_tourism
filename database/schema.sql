@@ -387,6 +387,27 @@ CREATE TABLE IF NOT EXISTS invoice_attachments (
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
+-- Lignes financieres libres ou overrides de missions/factures, gardees en JSON pour rester flexibles.
+CREATE TABLE IF NOT EXISTS finance_entries (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  company_id UUID NOT NULL REFERENCES companies(id) ON DELETE CASCADE,
+  entry_kind TEXT NOT NULL DEFAULT 'manual',
+  source_type TEXT NOT NULL DEFAULT 'manual',
+  source_key TEXT NOT NULL DEFAULT '',
+  payload JSONB NOT NULL DEFAULT '{}'::jsonb,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- Etat partage entre pages statiques : trajets, planning et selection courante.
+CREATE TABLE IF NOT EXISTS app_shared_state (
+  company_id UUID NOT NULL REFERENCES companies(id) ON DELETE CASCADE,
+  state_key TEXT NOT NULL,
+  payload JSONB NOT NULL DEFAULT 'null'::jsonb,
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  PRIMARY KEY (company_id, state_key)
+);
+
 ALTER TABLE IF EXISTS collaborators
   ALTER COLUMN full_name SET DEFAULT '',
   ALTER COLUMN role_title SET DEFAULT '';
@@ -602,3 +623,9 @@ CREATE INDEX IF NOT EXISTS idx_invoice_line_items_invoice
 
 CREATE INDEX IF NOT EXISTS idx_invoice_payments_invoice
   ON invoice_payments(invoice_id, paid_at);
+
+CREATE INDEX IF NOT EXISTS idx_finance_entries_company_source
+  ON finance_entries(company_id, source_type, source_key);
+
+CREATE INDEX IF NOT EXISTS idx_app_shared_state_company_key
+  ON app_shared_state(company_id, state_key);

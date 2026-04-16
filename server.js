@@ -300,6 +300,61 @@ function normalizeInvoicePayload(invoice) {
   };
 }
 
+// Les finances gardent la ligne originale en JSON pour accepter les sources futures.
+function normalizeFinanceEntryPayload(entry) {
+  const safeEntry = entry && typeof entry === "object" ? entry : {};
+  const clientKey = normalizeText(safeEntry.id) || randomUUID();
+  const entryKind = normalizeText(safeEntry.kind) === "override" ? "override" : "manual";
+  const sourceType = normalizeText(safeEntry.sourceType) || "manual";
+  const sourceKey =
+    normalizeText(safeEntry.rowKey) ||
+    normalizeText(safeEntry.sourceId) ||
+    normalizeText(safeEntry.missionId) ||
+    clientKey;
+
+  return {
+    clientKey,
+    entryKind,
+    sourceKey,
+    sourceType,
+    payload: {
+      ...safeEntry,
+      id: clientKey,
+      kind: entryKind,
+      sourceType,
+    },
+  };
+}
+
+function normalizeJsonArray(value) {
+  return Array.isArray(value) ? value : [];
+}
+
+function normalizeJsonObject(value) {
+  return value && typeof value === "object" && !Array.isArray(value) ? value : {};
+}
+
+// Etat JSON partage par les pages qui n'ont pas encore chacune une table dediee.
+function createEmptySharedState() {
+  return {
+    customMissions: [],
+    missionAssignments: {},
+    missionOverrides: {},
+    selectedTripId: "",
+  };
+}
+
+function normalizeSharedStatePayload(payload) {
+  const emptyState = createEmptySharedState();
+
+  return {
+    customMissions: normalizeJsonArray(payload?.customMissions || emptyState.customMissions),
+    missionAssignments: normalizeJsonObject(payload?.missionAssignments || emptyState.missionAssignments),
+    missionOverrides: normalizeJsonObject(payload?.missionOverrides || emptyState.missionOverrides),
+    selectedTripId: normalizeText(payload?.selectedTripId || emptyState.selectedTripId),
+  };
+}
+
 async function ensureDatabaseInitialized() {
   if (!databaseInitPromise) {
     databaseInitPromise = (async () => {
@@ -791,6 +846,104 @@ async function upsertInvoices(client, companyId, invoices) {
   }
 }
 
+async function upsertFinanceEntries(client, companyId, financeEntries) {
+  const financeClientKeys = [];
+
+  for (const entry of financeEntries) {
+    const resolved = await resolveEntityId(client, "financeEntry", entry.clientKey, companyId);
+    financeClientKeys.push(resolved.clientKey);
+
+    await client.query(
+      `INSERT INTO finance_entries (
+         id,
+         company_id,
+         entry_kind,
+         source_type,
+         source_key,
+         payload,
+         updated_at
+       )
+       VALUES ($1, $2, $3, $4, $5, $6::jsonb, NOW())
+       ON CONFLICT (id)
+       DO UPDATE SET
+         entry_kind = EXCLUDED.entry_kind,
+         source_type = EXCLUDED.source_type,
+         source_key = EXCLUDED.source_key,
+         payload = EXCLUDED.payload,
+         updated_at = NOW()`,
+      [
+        resolved.entityId,
+        companyId,
+        entry.entryKind,
+        entry.sourceType,
+        entry.sourceKey,
+        JSON.stringify(entry.payload),
+      ]
+    );
+  }
+
+  if (financeClientKeys.length === 0) {
+    await client.query(
+      `DELETE FROM finance_entries
+        WHERE id IN (
+          SELECT entity_id
+            FROM ui_entity_keys
+           WHERE company_id = $1
+             AND resource_type = 'financeEntry'
+        )`,
+      [companyId]
+    );
+    await client.query(
+      `DELETE FROM ui_entity_keys
+        WHERE company_id = $1
+          AND resource_type = 'financeEntry'`,
+      [companyId]
+    );
+    return;
+  }
+
+  await client.query(
+    `DELETE FROM finance_entries
+      WHERE id IN (
+        SELECT entity_id
+          FROM ui_entity_keys
+         WHERE company_id = $1
+           AND resource_type = 'financeEntry'
+           AND client_key <> ALL($2::text[])
+      )`,
+    [companyId, financeClientKeys]
+  );
+  await client.query(
+    `DELETE FROM ui_entity_keys
+      WHERE company_id = $1
+        AND resource_type = 'financeEntry'
+        AND client_key <> ALL($2::text[])`,
+    [companyId, financeClientKeys]
+  );
+}
+
+async function upsertSharedState(client, companyId, sharedState) {
+  const normalizedState = normalizeSharedStatePayload(sharedState);
+
+  // Un enregistrement par collection permet d'ajouter des pages sans migration lourde.
+  for (const [stateKey, payload] of Object.entries(normalizedState)) {
+    await client.query(
+      `INSERT INTO app_shared_state (
+         company_id,
+         state_key,
+         payload,
+         updated_at
+       )
+       VALUES ($1, $2, $3::jsonb, NOW())
+       ON CONFLICT (company_id, state_key)
+       DO UPDATE SET
+         payload = EXCLUDED.payload,
+         updated_at = NOW()`,
+      [companyId, stateKey, JSON.stringify(payload)]
+    );
+  }
+}
+
 async function serializeCollaborators(client, companyId) {
   const result = await client.query(
     `SELECT
@@ -1002,12 +1155,71 @@ async function serializeInvoices(client, companyId) {
   }));
 }
 
+async function serializeFinanceEntries(client, companyId) {
+  const result = await client.query(
+    `SELECT
+       finance_entry.id,
+       finance_entry.payload,
+       key_map.client_key
+     FROM finance_entries finance_entry
+     LEFT JOIN ui_entity_keys key_map
+       ON key_map.company_id = finance_entry.company_id
+      AND key_map.resource_type = 'financeEntry'
+      AND key_map.entity_id = finance_entry.id
+     WHERE finance_entry.company_id = $1
+     ORDER BY finance_entry.created_at ASC, finance_entry.updated_at ASC`,
+    [companyId]
+  );
+
+  return result.rows.map((row) => {
+    const payload =
+      row.payload && typeof row.payload === "object" && !Array.isArray(row.payload)
+        ? row.payload
+        : {};
+
+    return {
+      ...payload,
+      id: row.client_key || payload.id || row.id,
+    };
+  });
+}
+
+async function serializeSharedState(client, companyId) {
+  const result = await client.query(
+    `SELECT state_key, payload
+       FROM app_shared_state
+      WHERE company_id = $1`,
+    [companyId]
+  );
+  const sharedState = createEmptySharedState();
+
+  for (const row of result.rows) {
+    if (row.state_key === "customMissions") {
+      sharedState.customMissions = normalizeJsonArray(row.payload);
+    } else if (row.state_key === "missionAssignments") {
+      sharedState.missionAssignments = normalizeJsonObject(row.payload);
+    } else if (row.state_key === "missionOverrides") {
+      sharedState.missionOverrides = normalizeJsonObject(row.payload);
+    } else if (row.state_key === "selectedTripId") {
+      sharedState.selectedTripId = normalizeText(row.payload);
+    }
+  }
+
+  return sharedState;
+}
+
 async function readAppDataSnapshot() {
-  return withTransaction(async (client) => ({
-    collaborators: await serializeCollaborators(client, runtimeConfig.companyId),
-    vehicles: await serializeVehicles(client, runtimeConfig.companyId),
-    invoices: await serializeInvoices(client, runtimeConfig.companyId),
-  }));
+  return withTransaction(async (client) => {
+    const sharedState = await serializeSharedState(client, runtimeConfig.companyId);
+
+    return {
+      collaborators: await serializeCollaborators(client, runtimeConfig.companyId),
+      vehicles: await serializeVehicles(client, runtimeConfig.companyId),
+      invoices: await serializeInvoices(client, runtimeConfig.companyId),
+      financeEntries: await serializeFinanceEntries(client, runtimeConfig.companyId),
+      ...sharedState,
+    };
+  });
 }
 
 async function syncAppDataSnapshot(payload) {
@@ -1020,16 +1232,26 @@ async function syncAppDataSnapshot(payload) {
   const invoices = Array.isArray(payload?.invoices)
     ? payload.invoices.map(normalizeInvoicePayload).filter((invoice) => invoice.number)
     : [];
+  const financeEntries = Array.isArray(payload?.financeEntries)
+    ? payload.financeEntries.map(normalizeFinanceEntryPayload)
+    : [];
+  const sharedState = normalizeSharedStatePayload(payload);
 
   return withTransaction(async (client) => {
     await upsertCollaborators(client, runtimeConfig.companyId, collaborators);
     await upsertVehicles(client, runtimeConfig.companyId, vehicles);
     await upsertInvoices(client, runtimeConfig.companyId, invoices);
+    await upsertFinanceEntries(client, runtimeConfig.companyId, financeEntries);
+    await upsertSharedState(client, runtimeConfig.companyId, sharedState);
+
+    const nextSharedState = await serializeSharedState(client, runtimeConfig.companyId);
 
     return {
       collaborators: await serializeCollaborators(client, runtimeConfig.companyId),
       vehicles: await serializeVehicles(client, runtimeConfig.companyId),
       invoices: await serializeInvoices(client, runtimeConfig.companyId),
+      financeEntries: await serializeFinanceEntries(client, runtimeConfig.companyId),
+      ...nextSharedState,
     };
   });
 }

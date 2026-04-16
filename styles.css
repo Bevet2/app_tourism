@@ -20,6 +20,7 @@
 
 html {
   scroll-behavior: smooth;
+  -webkit-text-size-adjust: 100%;
 }
 
 body {
@@ -2804,9 +2805,18 @@ button {
   box-shadow: 0 0 0 2px rgba(29, 78, 99, 0.08), 0 12px 24px rgba(29, 78, 99, 0.08);
 }
 
+.planning-global-day-head {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+}
+
 .planning-global-day-trigger {
   appearance: none;
   -webkit-appearance: none;
+  width: 100%;
+  min-width: 0;
   border: none;
   background: transparent;
   padding: 0;
@@ -2816,6 +2826,34 @@ button {
   gap: 10px;
   cursor: pointer;
   text-align: left;
+}
+
+.planning-global-day-add {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 30px;
+  height: 30px;
+  border: 1px solid rgba(29, 78, 99, 0.12);
+  border-radius: 999px;
+  display: inline-grid;
+  place-items: center;
+  background: rgba(255, 255, 255, 0.76);
+  color: var(--navy);
+  font-family: "Space Grotesk", "Segoe UI", sans-serif;
+  font-size: 0.98rem;
+  font-weight: 800;
+  line-height: 0;
+  box-shadow: 0 8px 16px rgba(29, 78, 99, 0.07);
+  cursor: pointer;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    background 0.2s ease;
+}
+
+.planning-global-day-add::before {
+  content: "+";
+  transform: translateY(-1px);
 }
 
 .planning-global-day-trigger span {
@@ -2895,9 +2933,17 @@ button {
 .planning-global-more:hover,
 .planning-global-more:focus-visible,
 .planning-global-day-trigger:hover,
-.planning-global-day-trigger:focus-visible {
+.planning-global-day-trigger:focus-visible,
+.planning-global-day-add:hover,
+.planning-global-day-add:focus-visible {
   outline: none;
   transform: translateY(-1px);
+}
+
+.planning-global-day-add:hover,
+.planning-global-day-add:focus-visible {
+  background: rgba(29, 78, 99, 0.08);
+  box-shadow: 0 10px 18px rgba(29, 78, 99, 0.1);
 }
 
 .planning-global-day-empty {
@@ -3713,5 +3759,442 @@ button {
   .hero-copy h2 {
     max-width: none;
     font-size: 2.5rem;
+  }
+}
+
+/* Mobile chauffeur : raccourcis tactiles, cartes compactes et zones scrollables. */
+@media (max-width: 760px) {
+  :root {
+    --mobile-edge: 14px;
+    --mobile-radius: 22px;
+  }
+
+  body::before {
+    opacity: 0.6;
+  }
+
+  .page-shell {
+    width: 100%;
+    max-width: 100%;
+    padding:
+      max(14px, env(safe-area-inset-top))
+      var(--mobile-edge)
+      calc(34px + env(safe-area-inset-bottom));
+  }
+
+  .topbar {
+    gap: 14px;
+    margin-bottom: 18px;
+  }
+
+  .brand-block h1 {
+    margin-top: 6px;
+    font-size: clamp(2rem, 11vw, 3rem);
+    line-height: 0.98;
+  }
+
+  .brand-text,
+  .hero-text,
+  .vehicle-toolbar-text,
+  .collaborator-toolbar-text,
+  .invoice-toolbar-text,
+  .invoice-intro-text {
+    font-size: 0.96rem;
+    line-height: 1.58;
+  }
+
+  .quick-nav-shell {
+    position: sticky;
+    top: calc(8px + env(safe-area-inset-top));
+    z-index: 40;
+    margin-inline: -2px;
+  }
+
+  .nav-trigger {
+    min-height: 64px;
+    padding: 10px 12px;
+    border-radius: var(--mobile-radius);
+    backdrop-filter: blur(16px);
+  }
+
+  .nav-trigger-icon {
+    width: 42px;
+    height: 42px;
+    border-radius: 14px;
+  }
+
+  .nav-panel {
+    position: fixed;
+    top: calc(84px + env(safe-area-inset-top));
+    right: var(--mobile-edge);
+    left: var(--mobile-edge);
+    width: auto;
+    max-height: min(72dvh, 560px);
+    padding: 12px;
+    border-radius: 24px;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+
+  .nav-option {
+    min-height: 74px;
+    padding: 14px;
+    border-radius: 18px;
+  }
+
+  .hero-panel,
+  .content-panel,
+  .invoice-sheet {
+    padding: 20px;
+    border-radius: var(--mobile-radius);
+  }
+
+  .hero-panel {
+    gap: 18px;
+    margin-bottom: 18px;
+  }
+
+  .hero-copy h2 {
+    font-size: clamp(2rem, 10vw, 2.55rem);
+    line-height: 1;
+  }
+
+  .hero-actions,
+  .form-actions,
+  .panel-header-actions,
+  .entity-connection-actions,
+  .vehicle-card-tools {
+    display: grid;
+    grid-template-columns: 1fr;
+    width: 100%;
+  }
+
+  .primary-action,
+  .secondary-action,
+  .danger-action,
+  .panel-action,
+  .form-actions .primary-action,
+  .form-actions .secondary-action,
+  .form-actions .danger-action {
+    min-height: 50px;
+    width: 100%;
+    padding: 13px 16px;
+  }
+
+  .form-close,
+  .vehicle-edit-button {
+    min-width: 44px;
+    min-height: 44px;
+  }
+
+  .route-card,
+  .summary-item,
+  .detail-card,
+  .calendar-stat,
+  .vehicle-empty,
+  .collaborator-empty,
+  .vehicle-card,
+  .collaborator-card,
+  .invoice-empty,
+  .invoice-record,
+  .planning-day-column,
+  .planner-selection-card,
+  .trip-list-card,
+  .trip-detail-shell,
+  .side-card,
+  .mission-form-card,
+  .vehicle-form-card,
+  .collaborator-form-card,
+  .invoice-form-card,
+  .invoice-form-section {
+    padding: 18px;
+    border-radius: var(--mobile-radius);
+  }
+
+  .summary-strip,
+  .calendar-stats,
+  .trip-metric-grid,
+  .invoice-record-amounts {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+  }
+
+  .summary-item,
+  .calendar-stat {
+    min-height: 104px;
+  }
+
+  .summary-item strong,
+  .calendar-stat strong {
+    font-size: clamp(1.25rem, 7vw, 1.8rem);
+    overflow-wrap: anywhere;
+  }
+
+  .module-grid,
+  .vehicle-list,
+  .collaborator-list,
+  .invoice-record-list,
+  .placeholder-grid,
+  .calendar-command-grid,
+  .mission-form-grid,
+  .vehicle-form-grid,
+  .collaborator-form-grid,
+  .invoice-form-grid,
+  .invoice-form-section-grid,
+  .collaborator-vehicle-grid,
+  .field-row,
+  .assignment-form-grid,
+  .trip-detail-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .module-grid,
+  .vehicle-list,
+  .collaborator-list,
+  .invoice-record-list {
+    gap: 12px;
+  }
+
+  .module-card {
+    min-height: auto;
+    padding: 18px;
+    border-radius: var(--mobile-radius);
+  }
+
+  .panel-header,
+  .vehicle-toolbar,
+  .collaborator-toolbar,
+  .invoice-toolbar,
+  .vehicle-form-head,
+  .collaborator-form-head,
+  .invoice-form-head,
+  .collaborator-language-head,
+  .collaborator-vehicle-head,
+  .invoice-intro,
+  .invoice-record-head,
+  .invoice-sheet-head,
+  .invoice-section-head,
+  .planning-day-header,
+  .planner-selection-actions,
+  .side-card-header,
+  .resource-card-head,
+  .mission-stop-builder-head,
+  .mission-stop-row-head {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .panel-status,
+  .invoice-source-pill,
+  .vehicle-summary-chip,
+  .collaborator-role-badge,
+  .collaborator-language-count {
+    white-space: normal;
+  }
+
+  .vehicle-toolbar,
+  .collaborator-toolbar,
+  .invoice-toolbar,
+  .vehicle-filter-bar,
+  .invoice-filter-bar,
+  .collaborator-language-builder,
+  .collaborator-vehicle-builder {
+    padding: 16px;
+    border-radius: 20px;
+  }
+
+  .vehicle-filter-controls,
+  .invoice-filter-controls,
+  .vehicle-filter-inline,
+  .invoice-filter-inline,
+  .invoice-filter-group,
+  .vehicle-filter-group,
+  .invoice-filter-reset,
+  .vehicle-filter-reset {
+    width: 100%;
+  }
+
+  .field-group input,
+  .field-group select,
+  .field-group textarea {
+    min-height: 52px;
+    padding: 14px;
+    font-size: 16px;
+  }
+
+  .field-help {
+    font-size: 0.8rem;
+  }
+
+  .vehicle-kicker-wrap {
+    width: calc(100% + 72px);
+    min-height: 38px;
+    margin: -8px -72px 2px -18px;
+    padding: 10px 18px 9px;
+  }
+
+  .collaborator-kicker-wrap {
+    width: calc(100% + 72px);
+  }
+
+  .vehicle-card-summary,
+  .collaborator-card-head,
+  .collaborator-linked-vehicle-item {
+    align-items: stretch;
+  }
+
+  .vehicle-summary-meta,
+  .entity-connection-meta,
+  .collaborator-language-tags {
+    gap: 8px;
+  }
+
+  .vehicle-card-toggle {
+    margin-top: 0;
+  }
+
+  .collaborator-language-list {
+    display: grid;
+    gap: 8px;
+  }
+
+  .collaborator-language-item {
+    justify-content: space-between;
+    border-radius: 16px;
+  }
+
+  .invoice-sheet-actions,
+  .invoice-sheet-action-buttons,
+  .invoice-sheet-meta-boxes,
+  .invoice-attachment-actions {
+    width: 100%;
+    justify-content: stretch;
+  }
+
+  .invoice-party-card,
+  .invoice-service-card,
+  .invoice-total-card,
+  .invoice-attachment-card {
+    padding: 16px;
+    border-radius: 20px;
+  }
+
+  .invoice-service-grid,
+  .invoice-party-grid,
+  .invoice-total-card {
+    grid-template-columns: 1fr;
+  }
+
+  .calendar-overview {
+    gap: 12px;
+  }
+
+  .calendar-week,
+  .planner-board {
+    display: flex;
+    gap: 12px;
+    margin-inline: -2px;
+    padding: 0 2px 10px;
+    overflow-x: auto;
+    scroll-snap-type: x proximity;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .calendar-day,
+  .planning-day-column {
+    min-width: min(84vw, 340px);
+    scroll-snap-align: start;
+  }
+
+  .calendar-day {
+    min-height: 260px;
+    padding: 16px;
+    border-radius: var(--mobile-radius);
+  }
+
+  .planning-global-calendar-modal {
+    padding: 10px;
+  }
+
+  .planning-global-calendar-shell {
+    max-height: calc(100dvh - 20px);
+    overflow-y: auto;
+  }
+
+  .planning-global-calendar-grid {
+    gap: 10px;
+  }
+
+  .trip-dashboard {
+    gap: 14px;
+  }
+
+  .trip-list {
+    max-height: 52dvh;
+    overflow-y: auto;
+    padding-right: 2px;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .trip-list-item {
+    min-height: 84px;
+  }
+
+  .trip-route-map {
+    min-height: 260px;
+    border-radius: 18px;
+  }
+
+  .pac-container {
+    max-width: calc(100vw - 28px);
+    border-radius: 16px;
+  }
+}
+
+@media (max-width: 390px) {
+  .page-shell {
+    padding-inline: 10px;
+  }
+
+  .hero-panel,
+  .content-panel,
+  .invoice-sheet {
+    padding: 16px;
+  }
+
+  .summary-strip,
+  .calendar-stats,
+  .trip-metric-grid,
+  .invoice-record-amounts {
+    grid-template-columns: 1fr;
+  }
+
+  .nav-panel {
+    right: 10px;
+    left: 10px;
+  }
+}
+
+@media (hover: none) and (pointer: coarse) {
+  .module-card:hover,
+  .vehicle-card:hover,
+  .collaborator-card:hover,
+  .invoice-record:hover,
+  .trip-list-item:hover,
+  .primary-action:hover,
+  .secondary-action:hover,
+  .panel-action:hover {
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
   }
 }

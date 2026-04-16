@@ -2,7 +2,7 @@
 <html lang="fr">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <title>Route Pilote | Finances</title>
     <meta
       name="description"
@@ -14,7 +14,8 @@
       href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=Manrope:wght@400;500;600;700&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="styles.css?v=20260328-factures-24" />
+    <link rel="stylesheet" href="styles.css?v=20260415-calendar-plus-1" />
+    <link rel="stylesheet" href="finances.css?v=20260415-mobile-1" />
   </head>
   <body>
     <div class="page-shell">
@@ -93,83 +94,274 @@
       <main>
         <section class="hero-panel">
           <div class="hero-copy">
-            <p class="eyebrow">Page d&eacute;di&eacute;e</p>
-            <h2>Suivre les recettes et les frais de route.</h2>
+            <p class="eyebrow">Page finances</p>
+            <h2>Piloter les recettes, les d&eacute;penses et les missions depuis un seul endroit.</h2>
             <p class="hero-text">
-              Cette page servira &agrave; centraliser les encaissements, les d&eacute;penses,
-              les co&ucirc;ts par trajet et les vues mensuelles de rentabilit&eacute;.
+              Cette page est pens&eacute;e comme un cockpit de rentabilit&eacute; : elle met en avant
+              les gains, les pertes et les montants en attente, avec des graphiques et des filtres
+              pour comprendre rapidement la sant&eacute; financi&egrave;re de la soci&eacute;t&eacute;.
             </p>
 
             <div class="hero-actions">
-              <a class="primary-action" href="index.html">Retour &agrave; l'accueil</a>
-              <a class="secondary-action" href="factures.html">Voir la page factures</a>
+              <a class="primary-action" href="factures.html">Voir la page factures</a>
+              <a class="secondary-action" href="trajets.html">Voir la page trajets</a>
             </div>
           </div>
 
           <div class="hero-aside">
             <article class="route-card">
-              <span class="small-label">Suivi financier</span>
-              <strong>Recettes et d&eacute;penses</strong>
-              <p>Une page claire pour piloter l'activit&eacute; financi&egrave;re.</p>
+              <span class="small-label">Vue globale</span>
+              <strong>Finances li&eacute;es aux factures et aux missions</strong>
+              <p>Les valeurs en attente restent visibles en jaune jusqu'&agrave; validation.</p>
             </article>
 
             <div class="summary-strip">
               <article class="summary-item">
-                <span>Recettes semaine</span>
-                <strong>2480</strong>
+                <span>Recettes</span>
+                <strong id="finance-income-summary">0,00 &euro;</strong>
               </article>
               <article class="summary-item">
-                <span>Frais route</span>
-                <strong>410</strong>
+                <span>D&eacute;penses</span>
+                <strong id="finance-expense-summary">0,00 &euro;</strong>
               </article>
               <article class="summary-item">
-                <span>Missions pay&eacute;es</span>
-                <strong>8</strong>
+                <span>R&eacute;sultat net</span>
+                <strong id="finance-balance-summary">0,00 &euro;</strong>
               </article>
               <article class="summary-item">
-                <span>A suivre</span>
-                <strong>3</strong>
+                <span>En attente</span>
+                <strong id="finance-pending-summary">0,00 &euro;</strong>
               </article>
             </div>
           </div>
         </section>
 
         <section class="workspace">
-          <article class="content-panel active" aria-label="Finances">
+          <article class="content-panel active finance-panel" id="finance-workspace" aria-label="Finances">
             <div class="panel-header">
               <div>
                 <p class="panel-kicker">Finances</p>
-                <h3>Un point d'entr&eacute;e pour le suivi financier</h3>
+                <h3>Factures, missions et lignes compl&eacute;mentaires</h3>
               </div>
-              <span class="panel-status">En pr&eacute;paration</span>
+              <span class="panel-status">Suivi actif</span>
             </div>
 
-            <div class="placeholder-grid">
-              <article class="detail-card emphasis-card">
-                <p class="detail-kicker">Suivi</p>
-                <h4>Recettes, d&eacute;penses et rentabilit&eacute;</h4>
-                <p>
-                  On pourra y rassembler les montants encaiss&eacute;s, les frais de route et
-                  le suivi par client ou par trajet.
-                </p>
-              </article>
+            <div class="finance-toolbar">
+              <p class="finance-toolbar-text">
+                Les factures sont reprises automatiquement, les routes restent s&eacute;par&eacute;es
+                par mission, et vous pouvez ajouter des lignes manuelles pour compl&eacute;ter votre suivi.
+              </p>
+              <div class="finance-toolbar-actions">
+                <button
+                  class="secondary-action finance-filter-trigger"
+                  id="toggle-finance-filters"
+                  type="button"
+                  aria-expanded="false"
+                  aria-controls="finance-filter-bar"
+                >
+                  <span class="finance-filter-trigger-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" focusable="false">
+                      <path d="M4 6h16M7 12h10M10 18h4" />
+                    </svg>
+                  </span>
+                  <span id="finance-filter-toggle-label">Afficher les filtres</span>
+                </button>
+              </div>
+            </div>
 
-              <article class="detail-card">
-                <p class="detail-kicker">A ajouter ensuite</p>
-                <ul class="feature-list">
-                  <li>Carburant, p&eacute;ages et parking</li>
-                  <li>Montants encaiss&eacute;s par mission</li>
-                  <li>Vue mensuelle des revenus</li>
-                </ul>
-              </article>
-
-              <article class="detail-card">
-                <p class="detail-kicker">Exemple de vue</p>
-                <p class="mini-note">
-                  Recettes semaine<br />
-                  2 480 EUR<br />
-                  D&eacute;penses route 410 EUR
+            <div class="finance-filter-bar" id="finance-filter-bar" aria-label="Filtres des finances" hidden>
+              <div class="finance-filter-copy">
+                <p class="detail-kicker">Filtres</p>
+                <p class="finance-filter-summary" id="finance-filter-summary" aria-live="polite">
+                  Toutes les lignes financi&egrave;res affich&eacute;es
                 </p>
+              </div>
+
+              <div class="finance-filter-controls">
+                <div class="finance-filter-inline">
+                  <label class="field-group finance-filter-group">
+                    <span>Source</span>
+                    <select id="finance-source-filter" name="financeSourceFilter">
+                      <option value="all">Toutes</option>
+                      <option value="invoices">Factures</option>
+                      <option value="missions">Routes / missions</option>
+                      <option value="manual">Lignes libres</option>
+                    </select>
+                  </label>
+
+                  <label class="field-group finance-filter-group">
+                    <span>Cat&eacute;gorie</span>
+                    <select id="finance-category-filter" name="financeCategoryFilter">
+                      <option value="all">Toutes</option>
+                      <option value="mission">Mission</option>
+                      <option value="client_invoices">Factures clients</option>
+                      <option value="external_invoices">Factures externes</option>
+                      <option value="fuel">Carburant</option>
+                      <option value="team">Equipe</option>
+                      <option value="tolls_parking">P&eacute;age + parking</option>
+                      <option value="activities">Activit&eacute;s</option>
+                      <option value="maintenance">Entretien / r&eacute;paration</option>
+                      <option value="other">Autres</option>
+                    </select>
+                  </label>
+
+                  <label class="field-group finance-filter-group">
+                    <span>Etat</span>
+                    <select id="finance-status-filter" name="financeStatusFilter">
+                      <option value="all">Tous</option>
+                      <option value="pending">En attente</option>
+                      <option value="validated">Valid&eacute;</option>
+                      <option value="estimated">Estim&eacute;</option>
+                    </select>
+                  </label>
+
+                  <label class="field-group finance-filter-group">
+                    <span>Flux</span>
+                    <select id="finance-direction-filter" name="financeDirectionFilter">
+                      <option value="all">Tous</option>
+                      <option value="income">Recettes</option>
+                      <option value="expense">D&eacute;penses</option>
+                    </select>
+                  </label>
+
+                  <label class="field-group finance-filter-group">
+                    <span>P&eacute;riode</span>
+                    <select id="finance-period-filter" name="financePeriodFilter">
+                      <option value="all">Tout</option>
+                      <option value="7d">7 jours</option>
+                      <option value="30d">30 jours</option>
+                      <option value="year">Cette ann&eacute;e</option>
+                    </select>
+                  </label>
+
+                  <button class="secondary-action finance-filter-reset" id="reset-finance-filters" type="button">
+                    R&eacute;initialiser
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div class="finance-dashboard" id="finance-dashboard">
+              <article class="finance-empty-state">
+                <strong>Analyse visuelle en pr&eacute;paration</strong>
+                <p>Les graphiques de gains et pertes appara&icirc;tront ici.</p>
+              </article>
+            </div>
+
+            <form class="finance-form-card" id="finance-form-card" hidden>
+              <div class="finance-form-head">
+                <div>
+                  <p class="detail-kicker" id="finance-form-kicker">Nouvelle ligne</p>
+                  <h4 id="finance-form-title">Ajouter une ligne de finance</h4>
+                </div>
+                <button class="form-close" id="cancel-finance-form" type="button" aria-label="Fermer le formulaire">
+                  &#10005;
+                </button>
+              </div>
+
+              <p class="finance-form-context" id="finance-form-context" hidden></p>
+
+              <div class="finance-form-grid">
+                <label class="field-group">
+                  <span>Rattachement</span>
+                  <select id="finance-scope" name="financeScope">
+                    <option value="general">Ligne g&eacute;n&eacute;rale</option>
+                    <option value="mission">Ligne rattach&eacute;e &agrave; une mission</option>
+                  </select>
+                </label>
+
+                <label class="field-group field-group-wide" id="finance-mission-field" hidden>
+                  <span>Mission</span>
+                  <select id="finance-linked-mission" name="financeLinkedMission"></select>
+                </label>
+
+                <label class="field-group field-group-wide">
+                  <span>Libell&eacute;</span>
+                  <input
+                    id="finance-entry-label"
+                    name="financeEntryLabel"
+                    type="text"
+                    placeholder="Ex : plein carburant retour mission"
+                    required
+                  />
+                </label>
+
+                <label class="field-group">
+                  <span>Cat&eacute;gorie</span>
+                  <select id="finance-entry-category" name="financeEntryCategory">
+                    <option value="other">Autres</option>
+                    <option value="mission">Mission</option>
+                    <option value="client_invoices">Factures clients</option>
+                    <option value="external_invoices">Factures externes</option>
+                    <option value="fuel">Carburant</option>
+                    <option value="team">Equipe</option>
+                    <option value="tolls_parking">P&eacute;age + parking</option>
+                    <option value="activities">Activit&eacute;s</option>
+                    <option value="maintenance">Entretien / r&eacute;paration</option>
+                  </select>
+                </label>
+
+                <label class="field-group">
+                  <span>Nature</span>
+                  <select id="finance-entry-direction" name="financeEntryDirection">
+                    <option value="expense">D&eacute;pense</option>
+                    <option value="income">Recette</option>
+                  </select>
+                </label>
+
+                <label class="field-group">
+                  <span>Montant</span>
+                  <input
+                    id="finance-entry-amount"
+                    name="financeEntryAmount"
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    placeholder="0,00"
+                    required
+                  />
+                </label>
+
+                <label class="field-group">
+                  <span>Etat</span>
+                  <select id="finance-entry-status" name="financeEntryStatus">
+                    <option value="validated">Valid&eacute;</option>
+                    <option value="pending">En attente</option>
+                    <option value="estimated">Estim&eacute;</option>
+                  </select>
+                </label>
+
+                <label class="field-group">
+                  <span>Date de validation / r&egrave;glement</span>
+                  <input id="finance-entry-settled-at" name="financeEntrySettledAt" type="date" />
+                </label>
+
+                <label class="field-group field-group-wide">
+                  <span>Note</span>
+                  <textarea
+                    id="finance-entry-note"
+                    name="financeEntryNote"
+                    rows="3"
+                    placeholder="Ex : avance faite par le chauffeur, &agrave; r&eacute;gulariser."
+                  ></textarea>
+                </label>
+              </div>
+
+              <div class="form-actions">
+                <button class="primary-action" id="submit-finance-form" type="submit">
+                  Enregistrer la ligne
+                </button>
+                <button class="secondary-action" id="reset-finance-form" type="button">Effacer</button>
+                <button class="danger-action" id="delete-finance-entry" type="button" hidden>Supprimer</button>
+              </div>
+
+              <p class="form-message" id="finance-form-message" hidden></p>
+            </form>
+
+            <div class="finance-sections" id="finance-sections">
+              <article class="finance-empty-state">
+                <strong>Chargement des finances...</strong>
+                <p>Les factures, les missions et les lignes compl&eacute;mentaires arrivent ici.</p>
               </article>
             </div>
           </article>
@@ -177,6 +369,8 @@
       </main>
     </div>
 
-    <script src="script.js?v=20260328-factures-24"></script>
+    <script src="script.js?v=20260415-shared-data-1"></script>
+    <script src="operations.js?v=20260415-calendar-plus-1"></script>
+    <script src="finances.js?v=20260415-shared-data-1"></script>
   </body>
 </html>

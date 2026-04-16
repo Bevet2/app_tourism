@@ -58,8 +58,9 @@ const missionPreviewPriceNode = document.querySelector("#mission-preview-price")
 const missionFormKicker = document.querySelector("#mission-form-kicker");
 const missionFormTitle = document.querySelector("#mission-form-title");
 const missionFormSubmitButton = document.querySelector("#submit-mission-form");
+const operationsFinanceWorkspace = document.querySelector("#finance-workspace");
 
-if (planningBoard || tripList || tripDetail) {
+if (planningBoard || tripList || tripDetail || operationsFinanceWorkspace) {
   const collaboratorsStorageKey = "route-pilote-collaborators";
   const vehiclesStorageKey = "route-pilote-vehicles";
   const invoicesStorageKey = "route-pilote-invoices";
@@ -253,6 +254,35 @@ if (planningBoard || tripList || tripDetail) {
   let geocodingLibraryPromise = null;
   let activePlanningDate = new Date();
   let planningCalendarMonthCursor = new Date();
+  let sharedDataSyncTimer = 0;
+
+  function getSharedDataSync() {
+    const sharedSync = window.routePiloteSharedData?.sync;
+    if (typeof sharedSync === "function") {
+      return sharedSync;
+    }
+
+    return typeof window.syncAppDataToServer === "function" ? window.syncAppDataToServer : null;
+  }
+
+  function queueSharedDataSync(collectionName = "operations") {
+    window.dispatchEvent(
+      new CustomEvent("route-pilote-shared-data-updated", {
+        detail: { collectionName },
+      })
+    );
+
+    const syncSharedData = getSharedDataSync();
+    if (!syncSharedData) {
+      return;
+    }
+
+    // Une mission modifie souvent plusieurs collections; on groupe les sauvegardes serveur.
+    window.clearTimeout(sharedDataSyncTimer);
+    sharedDataSyncTimer = window.setTimeout(() => {
+      void syncSharedData().catch(() => undefined);
+    }, 80);
+  }
 
   function getStartOfWeek(date = new Date()) {
     const value = new Date(date);
@@ -1115,6 +1145,7 @@ if (planningBoard || tripList || tripDetail) {
 
   function saveMissionOverrides(overrides) {
     window.localStorage.setItem(missionOverridesStorageKey, JSON.stringify(overrides));
+    queueSharedDataSync("missionOverrides");
   }
 
   function getCustomMissions() {
@@ -1133,6 +1164,7 @@ if (planningBoard || tripList || tripDetail) {
 
   function saveCustomMissions(customMissions) {
     window.localStorage.setItem(customMissionsStorageKey, JSON.stringify(customMissions));
+    queueSharedDataSync("customMissions");
   }
 
   function cleanStoredText(value) {
@@ -1185,6 +1217,7 @@ if (planningBoard || tripList || tripDetail) {
 
   function saveStoredInvoices(invoices) {
     window.localStorage.setItem(invoicesStorageKey, JSON.stringify(invoices));
+    queueSharedDataSync("invoices");
   }
 
   function isClientInvoice(invoice) {
@@ -2290,6 +2323,7 @@ if (planningBoard || tripList || tripDetail) {
 
   function saveSelectedTrip(id) {
     window.localStorage.setItem(selectedTripStorageKey, id);
+    queueSharedDataSync("selectedTripId");
   }
 
   function vehicleScore(vehicle, mission, leadId) {
@@ -2437,6 +2471,128 @@ if (planningBoard || tripList || tripDetail) {
     };
   }
 
+  function missionFinanceStatus(mission) {
+    if (mission.billingStatus === "paid") {
+      return "validated";
+    }
+
+    if (mission.billingStatus === "invoice_sent") {
+      return "pending";
+    }
+
+    return "estimated";
+  }
+
+  function buildMissionFinanceRows(mission, assignment, catalog, collaboratorsList = collaboratorCatalog(catalog)) {
+    const state = financials(mission, assignment, catalog, collaboratorsList);
+    const status = missionFinanceStatus(mission);
+    const rowBase = {
+      sourceType: "mission",
+      sourceId: mission.id,
+      missionId: mission.id,
+      missionCode: mission.code,
+      missionLabel: mission.routeLabel,
+      serviceDate: mission.serviceDate,
+      status,
+      editable: true,
+    };
+
+    return [
+      {
+        ...rowBase,
+        rowKey: `mission:${mission.id}:mission`,
+        label: "Mission",
+        description: mission.routeLabel,
+        category: "mission",
+        direction: "income",
+        amount: Number(mission.quotedPrice || 0),
+      },
+      {
+        ...rowBase,
+        rowKey: `mission:${mission.id}:fuel`,
+        label: "Carburant",
+        description: state.activeVehicle
+          ? `${state.activeVehicle.label} - ${state.activeVehicle.consumption} ${state.activeVehicle.consumptionUnit}`
+          : "Estimation carburant",
+        category: "fuel",
+        direction: "expense",
+        amount: Number(state.fuelCost || 0),
+        status: "estimated",
+      },
+      {
+        ...rowBase,
+        rowKey: `mission:${mission.id}:team`,
+        label: "Equipe",
+        description: "Chauffeur, guide ou renfort affecte",
+        category: "team",
+        direction: "expense",
+        amount: Number(state.staffCost || 0),
+        status: "estimated",
+      },
+      {
+        ...rowBase,
+        rowKey: `mission:${mission.id}:tolls-parking`,
+        label: "Peage + parking",
+        description: "Frais annexes de la mission",
+        category: "tolls_parking",
+        direction: "expense",
+        amount: Number(mission.tolls || 0) + Number(mission.parking || 0),
+        status: "estimated",
+      },
+      {
+        ...rowBase,
+        rowKey: `mission:${mission.id}:activities`,
+        label: "Activites",
+        description: "Budgets activites et etapes touristiques",
+        category: "activities",
+        direction: "expense",
+        amount: Number(state.activityBudgetTotal || 0),
+        status: "estimated",
+      },
+    ];
+  }
+
+  function getMissionFinanceSnapshots() {
+    const { currentAssignments, catalog, collaboratorsList, missionsList } = assignmentState();
+
+    return missionsList.map((mission) => {
+      const assignment = currentAssignments[mission.id] || {
+        leadCollaboratorId: "",
+        supportCollaboratorId: "",
+        vehicleId: "",
+      };
+      const state = financials(mission, assignment, catalog, collaboratorsList);
+
+      return {
+        id: mission.id,
+        code: mission.code,
+        label: mission.routeLabel,
+        clientName: mission.clientName,
+        serviceDate: mission.serviceDate,
+        quotedPrice: Number(mission.quotedPrice || 0),
+        totalCost: Number(state.totalCost || 0),
+        margin: Number(state.margin || 0),
+        marginRate: Number(state.marginRate || 0),
+        billingStatus: mission.billingStatus,
+        status: missionFinanceStatus(mission),
+        rows: buildMissionFinanceRows(mission, assignment, catalog, collaboratorsList),
+      };
+    });
+  }
+
+  function publishOperationsFinanceData() {
+    window.routePiloteOperationsData = {
+      ...(window.routePiloteOperationsData || {}),
+      getMissionFinanceSnapshots: () =>
+        getMissionFinanceSnapshots().map((snapshot) => ({
+          ...snapshot,
+          rows: snapshot.rows.map((row) => ({ ...row })),
+        })),
+    };
+
+    window.dispatchEvent(new CustomEvent("route-pilote-operations-updated"));
+  }
+
   function pricingSnapshotForMission(missionDraft) {
     const currentAssignments = assignments();
     const catalog = vehicleCatalog();
@@ -2533,6 +2689,7 @@ if (planningBoard || tripList || tripDetail) {
     }
 
     window.localStorage.setItem(missionAssignmentsStorageKey, JSON.stringify(next));
+    queueSharedDataSync("missionAssignments");
     renderOperations();
   }
 
@@ -2554,6 +2711,7 @@ if (planningBoard || tripList || tripDetail) {
     };
 
     window.localStorage.setItem(missionAssignmentsStorageKey, JSON.stringify(currentAssignments));
+    queueSharedDataSync("missionAssignments");
     renderOperations();
   }
 
@@ -2744,15 +2902,24 @@ if (planningBoard || tripList || tripDetail) {
         <article class="planning-global-day ${
           currentMonth ? "current-month" : "outside-month"
         } ${isToday ? "today" : ""} ${isVisibleWeek ? "active-week" : ""}">
-          <button
-            class="planning-global-day-trigger"
-            type="button"
-            data-calendar-day="${dayKey}"
-            aria-label="Ouvrir la semaine du ${formatDay(dayKey)}"
-          >
-            <span>${new Intl.DateTimeFormat("fr-FR", { weekday: "short" }).format(dayDate)}</span>
-            <strong>${dayDate.getDate()}</strong>
-          </button>
+          <div class="planning-global-day-head">
+            <button
+              class="planning-global-day-trigger"
+              type="button"
+              data-calendar-day="${dayKey}"
+              aria-label="Ouvrir la semaine du ${formatDay(dayKey)}"
+            >
+              <span>${new Intl.DateTimeFormat("fr-FR", { weekday: "short" }).format(dayDate)}</span>
+              <strong>${dayDate.getDate()}</strong>
+            </button>
+            <button
+              class="planning-global-day-add"
+              type="button"
+              data-calendar-add-day="${dayKey}"
+              aria-label="Ajouter une mission le ${formatDay(dayKey)}"
+              title="Ajouter une mission"
+            ></button>
+          </div>
 
           <div class="planning-global-day-stack">
             ${
@@ -3182,6 +3349,8 @@ if (planningBoard || tripList || tripDetail) {
         renderTripRouteMap(mission);
       }
     }
+
+    publishOperationsFinanceData();
   }
 
   document.addEventListener("change", (event) => {
@@ -3222,6 +3391,15 @@ if (planningBoard || tripList || tripDetail) {
       saveSelectedTrip(mission.id);
       closePlanningGlobalCalendar();
       renderOperations();
+      return;
+    }
+
+    const globalDayAddButton = event.target.closest("[data-calendar-add-day]");
+    if (globalDayAddButton) {
+      const dayKey = globalDayAddButton.getAttribute("data-calendar-add-day");
+      if (dayKey) {
+        openMissionFormForDate(dayKey);
+      }
       return;
     }
 
@@ -3431,10 +3609,18 @@ if (planningBoard || tripList || tripDetail) {
     });
   }
 
-  resetMissionForm();
-  setActivePlanningDate(new Date());
-  setPlanningCalendarMonthCursor(new Date());
-  mountPlanningGlobalCalendarToBody();
-  void setupMissionAddressAutocompletes();
-  renderOperations();
+  function startOperationsApp() {
+    resetMissionForm();
+    setActivePlanningDate(new Date());
+    setPlanningCalendarMonthCursor(new Date());
+    mountPlanningGlobalCalendarToBody();
+    void setupMissionAddressAutocompletes();
+    renderOperations();
+  }
+
+  if (window.routePiloteAppReadyPromise && typeof window.routePiloteAppReadyPromise.finally === "function") {
+    window.routePiloteAppReadyPromise.finally(startOperationsApp);
+  } else {
+    startOperationsApp();
+  }
 }

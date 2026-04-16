@@ -144,10 +144,13 @@ const invoiceVat10Input = document.querySelector("#invoice-vat-10");
 const invoiceVat20Input = document.querySelector("#invoice-vat-20");
 const invoiceInsuranceInput = document.querySelector("#invoice-insurance");
 const invoiceTaxNoteInput = document.querySelector("#invoice-tax-note");
+const financeWorkspace = document.querySelector("#finance-workspace");
+const operationsWorkspace = document.querySelector("#planning-board, #trip-list, #trip-detail");
 
 const vehiclesStorageKey = "route-pilote-vehicles";
 const collaboratorsStorageKey = "route-pilote-collaborators";
 const invoicesStorageKey = "route-pilote-invoices";
+const financeEntriesStorageKey = "route-pilote-finance-entries";
 const selectedTripStorageKey = "route-pilote-selected-trip-v1";
 const customMissionsStorageKey = "route-pilote-custom-missions-v1";
 const missionOverridesStorageKey = "route-pilote-mission-overrides-v1";
@@ -748,7 +751,7 @@ const defaultMissionAssignments = {
 };
 
 function hasPersistenceManagedView() {
-  return Boolean(vehicleForm || collaboratorForm || invoiceForm);
+  return Boolean(vehicleForm || collaboratorForm || invoiceForm || financeWorkspace || operationsWorkspace);
 }
 
 function createEntityId(prefix = "item") {
@@ -784,11 +787,50 @@ async function apiRequest(url, options = {}) {
   return payload;
 }
 
+function hasObjectEntries(value) {
+  return Boolean(value && typeof value === "object" && !Array.isArray(value) && Object.keys(value).length > 0);
+}
+
+function snapshotHasField(snapshot, fieldName) {
+  return Object.prototype.hasOwnProperty.call(snapshot || {}, fieldName);
+}
+
+function getSnapshotArray(snapshot, fieldName) {
+  return Array.isArray(snapshot?.[fieldName]) ? snapshot[fieldName] : [];
+}
+
+function getSnapshotObject(snapshot, fieldName) {
+  const value = snapshot?.[fieldName];
+  return value && typeof value === "object" && !Array.isArray(value) ? value : {};
+}
+
+function writeSnapshotArray(snapshot, fieldName, storageKey) {
+  if (!snapshotHasField(snapshot, fieldName)) {
+    return;
+  }
+
+  window.localStorage.setItem(storageKey, JSON.stringify(getSnapshotArray(snapshot, fieldName)));
+}
+
+function writeSnapshotObject(snapshot, fieldName, storageKey) {
+  if (!snapshotHasField(snapshot, fieldName)) {
+    return;
+  }
+
+  window.localStorage.setItem(storageKey, JSON.stringify(getSnapshotObject(snapshot, fieldName)));
+}
+
+// Les pages statiques continuent de lire localStorage, donc le snapshot serveur
+// devient la source commune et chaque page recupere uniquement ses donnees utiles.
 function hasMeaningfulRemoteData(snapshot) {
   return Boolean(
-    Array.isArray(snapshot?.collaborators) && snapshot.collaborators.length > 0 ||
-    Array.isArray(snapshot?.vehicles) && snapshot.vehicles.length > 0 ||
-    Array.isArray(snapshot?.invoices) && snapshot.invoices.length > 0
+    getSnapshotArray(snapshot, "collaborators").length > 0 ||
+    getSnapshotArray(snapshot, "vehicles").length > 0 ||
+    getSnapshotArray(snapshot, "invoices").length > 0 ||
+    getSnapshotArray(snapshot, "financeEntries").length > 0 ||
+    getSnapshotArray(snapshot, "customMissions").length > 0 ||
+    hasObjectEntries(snapshot?.missionOverrides) ||
+    hasObjectEntries(snapshot?.missionAssignments)
   );
 }
 
@@ -796,7 +838,11 @@ function hasMeaningfulLocalData() {
   return (
     readStoredArray(collaboratorsStorageKey).length > 0 ||
     readStoredArray(vehiclesStorageKey).length > 0 ||
-    readStoredArray(invoicesStorageKey).length > 0
+    readStoredArray(invoicesStorageKey).length > 0 ||
+    readStoredArray(financeEntriesStorageKey).length > 0 ||
+    readStoredArray(customMissionsStorageKey).length > 0 ||
+    hasObjectEntries(readStoredObject(missionOverridesStorageKey)) ||
+    hasObjectEntries(readStoredObject(missionAssignmentsStorageKey))
   );
 }
 
@@ -805,20 +851,21 @@ function applyRemoteAppData(snapshot) {
     return;
   }
 
-  window.localStorage.setItem(
-    collaboratorsStorageKey,
-    JSON.stringify(Array.isArray(snapshot.collaborators) ? snapshot.collaborators : [])
-  );
-  window.localStorage.setItem(
-    vehiclesStorageKey,
-    JSON.stringify(Array.isArray(snapshot.vehicles) ? snapshot.vehicles : [])
-  );
-  window.localStorage.setItem(
-    invoicesStorageKey,
-    JSON.stringify(Array.isArray(snapshot.invoices) ? snapshot.invoices : [])
-  );
+  writeSnapshotArray(snapshot, "collaborators", collaboratorsStorageKey);
+  writeSnapshotArray(snapshot, "vehicles", vehiclesStorageKey);
+  writeSnapshotArray(snapshot, "invoices", invoicesStorageKey);
+  writeSnapshotArray(snapshot, "financeEntries", financeEntriesStorageKey);
+  writeSnapshotArray(snapshot, "customMissions", customMissionsStorageKey);
+  writeSnapshotObject(snapshot, "missionOverrides", missionOverridesStorageKey);
+  writeSnapshotObject(snapshot, "missionAssignments", missionAssignmentsStorageKey);
+
+  if (snapshotHasField(snapshot, "selectedTripId")) {
+    window.localStorage.setItem(selectedTripStorageKey, cleanInputValue(snapshot.selectedTripId));
+  }
 }
 
+// Snapshot complet envoye au serveur : il rassemble les collections classiques
+// et les donnees partagees entre calendrier, trajets, factures et finances.
 function getLocalAppSnapshot() {
   return {
     collaborators: readStoredArray(collaboratorsStorageKey).map((storedCollaborator) =>
@@ -839,7 +886,42 @@ function getLocalAppSnapshot() {
 
       return normalizedInvoice;
     }),
+    financeEntries: readStoredArray(financeEntriesStorageKey),
+    customMissions: readStoredArray(customMissionsStorageKey),
+    missionOverrides: readStoredObject(missionOverridesStorageKey),
+    missionAssignments: readStoredObject(missionAssignmentsStorageKey),
+    selectedTripId: cleanInputValue(window.localStorage.getItem(selectedTripStorageKey)),
   };
+}
+
+function mergeLocalOnlySharedData(remoteSnapshot) {
+  const nextSnapshot = { ...(remoteSnapshot || {}) };
+  let didMerge = false;
+  const localArrayFallbacks = [
+    { fieldName: "financeEntries", value: readStoredArray(financeEntriesStorageKey) },
+    { fieldName: "customMissions", value: readStoredArray(customMissionsStorageKey) },
+  ];
+  const localObjectFallbacks = [
+    { fieldName: "missionOverrides", value: readStoredObject(missionOverridesStorageKey) },
+    { fieldName: "missionAssignments", value: readStoredObject(missionAssignmentsStorageKey) },
+  ];
+
+  // Si le serveur n'a pas encore une collection recente, on garde le travail local.
+  localArrayFallbacks.forEach(({ fieldName, value }) => {
+    if (value.length > 0 && getSnapshotArray(nextSnapshot, fieldName).length === 0) {
+      nextSnapshot[fieldName] = value;
+      didMerge = true;
+    }
+  });
+
+  localObjectFallbacks.forEach(({ fieldName, value }) => {
+    if (hasObjectEntries(value) && !hasObjectEntries(getSnapshotObject(nextSnapshot, fieldName))) {
+      nextSnapshot[fieldName] = value;
+      didMerge = true;
+    }
+  });
+
+  return { didMerge, snapshot: nextSnapshot };
 }
 
 async function ensureRemotePersistenceReady() {
@@ -876,6 +958,7 @@ async function syncAppDataToServer() {
   return result.data;
 }
 
+// Au demarrage, on evite d'ecraser un navigateur deja rempli par une base vide.
 async function bootstrapAppPersistence() {
   if (!hasPersistenceManagedView()) {
     return;
@@ -895,7 +978,13 @@ async function bootstrapAppPersistence() {
       return;
     }
 
-    applyRemoteAppData(remoteSnapshot);
+    const { didMerge, snapshot: mergedSnapshot } = mergeLocalOnlySharedData(remoteSnapshot);
+    applyRemoteAppData(mergedSnapshot);
+
+    if (didMerge) {
+      await syncAppDataToServer();
+      return;
+    }
   } catch (error) {
     remotePersistenceEnabled = false;
   }
@@ -1535,6 +1624,22 @@ function readStoredArray(storageKey) {
     return Array.isArray(parsedItems) ? parsedItems : [];
   } catch (error) {
     return [];
+  }
+}
+
+function readStoredObject(storageKey) {
+  try {
+    const rawItems = window.localStorage.getItem(storageKey);
+    if (!rawItems) {
+      return {};
+    }
+
+    const parsedItems = JSON.parse(rawItems);
+    return parsedItems && typeof parsedItems === "object" && !Array.isArray(parsedItems)
+      ? parsedItems
+      : {};
+  } catch (error) {
+    return {};
   }
 }
 
@@ -6457,7 +6562,30 @@ async function initializeApp() {
   resetInvoiceForm();
   syncInvoiceTypeFields();
   renderInvoices();
+  window.dispatchEvent(new CustomEvent("route-pilote-app-data-ready"));
 }
 
-void initializeApp();
+window.syncAppDataToServer = syncAppDataToServer;
+window.getLocalAppSnapshot = getLocalAppSnapshot;
+window.applyRemoteAppData = applyRemoteAppData;
+
+// API minimale pour que les pages independantes partagent les memes donnees.
+window.routePiloteSharedData = {
+  storageKeys: {
+    collaborators: collaboratorsStorageKey,
+    vehicles: vehiclesStorageKey,
+    invoices: invoicesStorageKey,
+    financeEntries: financeEntriesStorageKey,
+    customMissions: customMissionsStorageKey,
+    missionOverrides: missionOverridesStorageKey,
+    missionAssignments: missionAssignmentsStorageKey,
+    selectedTrip: selectedTripStorageKey,
+  },
+  applySnapshot: applyRemoteAppData,
+  getSnapshot: getLocalAppSnapshot,
+  sync: syncAppDataToServer,
+};
+
+window.routePiloteAppReadyPromise = initializeApp();
+void window.routePiloteAppReadyPromise;
 
