@@ -181,6 +181,7 @@ let currentInvoiceAttachmentMeta = null;
 let remotePersistenceEnabled = false;
 
 const appDataApiEndpoint = "/api/app-data";
+const bundledAppSnapshotPath = "data/app_state.json";
 
 const allVehicleTypeFilters = new Set(["all", "owner", "collaborator", "rental"]);
 const allVehicleStatusFilters = new Set(["all", "available", "in_use", "repair", "rental_ended"]);
@@ -1731,6 +1732,14 @@ function hasMeaningfulRemoteData(snapshot) {
   );
 }
 
+function hasRichAppData(snapshot) {
+  return Boolean(
+    getSnapshotArray(snapshot, "invoices").length > 1 ||
+    getSnapshotArray(snapshot, "financeEntries").length > 0 ||
+    getSnapshotArray(snapshot, "customMissions").length > 0
+  );
+}
+
 function hasMeaningfulLocalData() {
   return (
     readStoredArray(collaboratorsStorageKey).length > 0 ||
@@ -1789,6 +1798,34 @@ function getLocalAppSnapshot() {
     missionAssignments: readStoredObject(missionAssignmentsStorageKey),
     selectedTripId: cleanInputValue(window.localStorage.getItem(selectedTripStorageKey)),
   };
+}
+
+async function fetchBundledAppSnapshot() {
+  try {
+    const response = await window.fetch(bundledAppSnapshotPath, { cache: "no-store" });
+    if (!response.ok) {
+      return null;
+    }
+
+    const snapshot = await response.json();
+    return snapshot && typeof snapshot === "object" ? snapshot : null;
+  } catch (error) {
+    return null;
+  }
+}
+
+async function bootstrapBundledAppSnapshot() {
+  if (hasMeaningfulLocalData()) {
+    return false;
+  }
+
+  const bundledSnapshot = await fetchBundledAppSnapshot();
+  if (!hasMeaningfulRemoteData(bundledSnapshot)) {
+    return false;
+  }
+
+  applyRemoteAppData(bundledSnapshot);
+  return true;
 }
 
 function mergeLocalOnlySharedData(remoteSnapshot) {
@@ -1869,6 +1906,12 @@ async function bootstrapAppPersistence() {
   try {
     const result = await apiRequest(appDataApiEndpoint, { method: "GET" });
     const remoteSnapshot = result.data || {};
+    const localSnapshot = getLocalAppSnapshot();
+
+    if (!hasRichAppData(remoteSnapshot) && hasRichAppData(localSnapshot)) {
+      await syncAppDataToServer();
+      return;
+    }
 
     if (!hasMeaningfulRemoteData(remoteSnapshot) && hasMeaningfulLocalData()) {
       await syncAppDataToServer();
@@ -7705,6 +7748,7 @@ async function initializeApp() {
   startAppLanguageObserver();
   syncCurrentLabel();
   buildCurrentWeekCalendar();
+  await bootstrapBundledAppSnapshot();
   bootstrapLocalReferenceData();
   await bootstrapAppPersistence();
   setVehicleFormMode();
