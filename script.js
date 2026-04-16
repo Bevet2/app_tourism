@@ -446,6 +446,8 @@ const appTranslationTable = {
     "Nom": "Sobrenome",
     "Fonction": "Função",
     "Guide": "Guia",
+    "Chauffeur mission": "Motorista da missão",
+    "Motorista mission": "Motorista da missão",
     "Chauffeur": "Motorista",
     "Disponibilite": "Disponibilidade",
     "Disponibilité": "Disponibilidade",
@@ -860,9 +862,12 @@ const appTranslationTable = {
     "Ajouter une mission": "Adicionar uma missão"
   },
 };
-const reverseAppTranslationTable = new Map(
-  Object.entries(appTranslationTable.pt).map(([sourceText, translatedText]) => [translatedText, sourceText])
-);
+const reverseAppTranslationTable = new Map();
+Object.entries(appTranslationTable.pt).forEach(([sourceText, translatedText]) => {
+  if (!reverseAppTranslationTable.has(translatedText)) {
+    reverseAppTranslationTable.set(translatedText, sourceText);
+  }
+});
 const appPartialTranslationTable = {
   pt: [
     ["FACTURES À SUIVRE", "FATURAS A ACOMPANHAR"],
@@ -1026,6 +1031,8 @@ const appPartialTranslationTable = {
     ["Italien", "Italiano"],
     ["Espagnol", "Espanhol"],
     ["Portugais", "Português"],
+    ["Chauffeur mission", "Motorista da missão"],
+    ["Motorista mission", "Motorista da missão"],
     ["Chauffeur", "Motorista"],
     ["prefere, retour apres spectacle", "preferido, retorno após o espetáculo"],
     ["préféré, retour après spectacle", "preferido, retorno após o espetáculo"],
