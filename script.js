@@ -2,6 +2,7 @@
 const navTrigger = document.querySelector("#nav-trigger");
 const navPanel = document.querySelector("#nav-menu-panel");
 const navCurrentLabel = document.querySelector("#nav-current-label");
+const languageStorageKey = "route-pilote-language";
 const calendarWeek = document.querySelector("#calendar-week");
 const totalRidesNode = document.querySelector("#calendar-total-rides");
 const totalClientsNode = document.querySelector("#calendar-total-clients");
@@ -277,6 +278,780 @@ const invoiceCurrencyFormatter = new Intl.NumberFormat("fr-FR", {
   minimumFractionDigits: 2,
   maximumFractionDigits: 2,
 });
+
+const supportedAppLanguages = new Set(["fr", "pt"]);
+const appTranslationTable = {
+  pt: {
+    "Route Pilote | Tableau de bord chauffeur": "Route Pilote | Painel do motorista",
+    "Route Pilote | Mes Véhicules": "Route Pilote | Meus Veículos",
+    "Route Pilote | Mes Collaborateurs": "Route Pilote | Meus Colaboradores",
+    "Route Pilote | Factures": "Route Pilote | Faturas",
+    "Route Pilote | Finances": "Route Pilote | Finanças",
+    "Route Pilote | Planification des missions": "Route Pilote | Planejamento das missões",
+    "Route Pilote | Trajets": "Route Pilote | Trajetos",
+    "Tableau de bord chauffeur": "Painel do motorista",
+    "Pilotage des missions": "Gestão das missões",
+    "Navigation": "Navegação",
+    "Ouvrir une page": "Abrir uma página",
+    "Langue": "Idioma",
+    "Changer la langue": "Alterar idioma",
+    "Français": "Francês",
+    "Português": "Português BR",
+    "Mon Calendrier": "Meu Calendário",
+    "Mes Collaborateurs": "Meus Colaboradores",
+    "Mes Véhicules": "Meus Veículos",
+    "Mes Vehicules": "Meus Veículos",
+    "Finances": "Finanças",
+    "Trajets": "Trajetos",
+    "Factures": "Faturas",
+    "Une page d'accueil simple et directe pour suivre les clients, les trajets, les véhicules et l'activité du jour.": "Uma página inicial simples e direta para acompanhar clientes, trajetos, veículos e a atividade do dia.",
+    "Page de planification pour affecter les chauffeurs, les accompagnateurs et les véhicules sur chaque départ de la semaine.": "Página de planejamento para atribuir motoristas, acompanhantes e veículos a cada saída da semana.",
+    "Page d'exploitation des trajets pour suivre les parcours, les couts estimés et les informations de facturation liées à chaque mission.": "Página operacional dos trajetos para acompanhar percursos, custos estimados e informações de faturamento ligadas a cada missão.",
+    "Page dédiée à l'équipe terrain, aux contacts utiles et aux disponibilités.": "Página dedicada à equipe de campo, aos contatos úteis e às disponibilidades.",
+    "Page dediee a l'equipe terrain, aux contacts utiles et aux disponibilites.": "Página dedicada à equipe de campo, aos contatos úteis e às disponibilidades.",
+    "Page dédiée à la flotte, à l'état des véhicules et à la capacité d'accueil.": "Página dedicada à frota, ao estado dos veículos e à capacidade de recepção.",
+    "Page dediee a la flotte, a l'etat des vehicules et a la capacite d'accueil.": "Página dedicada à frota, ao estado dos veículos e à capacidade de recepção.",
+    "Page dédiée aux factures, aux statuts de paiement et aux documents clients.": "Página dedicada às faturas, aos status de pagamento e aos documentos dos clientes.",
+    "Page dediee aux factures, aux statuts de paiement et aux documents clients.": "Página dedicada às faturas, aos status de pagamento e aos documentos dos clientes.",
+    "Page dédiée au suivi des recettes, des frais de route et de la rentabilité.": "Página dedicada ao acompanhamento das receitas, dos custos de rota e da rentabilidade.",
+    "Page dediee au suivi des recettes, des frais de route et de la rentabilite.": "Página dedicada ao acompanhamento das receitas, dos custos de rota e da rentabilidade.",
+    "Vue complète du planning et des courses.": "Visão completa do planejamento e das corridas.",
+    "Planifier les missions, l'équipe et la flotte.": "Planejar as missões, a equipe e a frota.",
+    "Contacts utiles et disponibilités de l'équipe.": "Contatos úteis e disponibilidades da equipe.",
+    "Etat, capacité et suivi de la flotte.": "Estado, capacidade e acompanhamento da frota.",
+    "Recettes, dépenses et suivi financier.": "Receitas, despesas e acompanhamento financeiro.",
+    "Parcours, horaires et points de prise en charge.": "Percursos, horários e pontos de embarque.",
+    "Parcours, couts carburant et suivi des missions.": "Percursos, custos de combustível e acompanhamento das missões.",
+    "Documents clients et paiements à suivre.": "Documentos de clientes e pagamentos a acompanhar.",
+    "Résumé de la journée": "Resumo do dia",
+    "Retrouvez l'essentiel en un coup d'oeil avant chaque départ.": "Veja o essencial de relance antes de cada partida.",
+    "Cette base regroupe les six espaces clés de votre activité de chauffeur. Le bloc calendrier reste visible sur l'accueil, et le menu ouvre les pages dédiées que nous allons détailler ensuite.": "Esta base reúne os seis espaços principais da sua atividade de motorista. O bloco do calendário fica visível na página inicial, e o menu abre as páginas dedicadas que vamos detalhar depois.",
+    "Voir le calendrier": "Ver o calendário",
+    "Ouvrir la page trajets": "Abrir a página de trajetos",
+    "Prochain service": "Próximo serviço",
+    "Trajets du jour": "Trajetos do dia",
+    "Clients attendus": "Clientes previstos",
+    "Véhicules prêts": "Veículos prontos",
+    "Calendrier": "Calendário",
+    "Courses planifiées sur les 7 prochains jours": "Corridas planejadas para os próximos 7 dias",
+    "Page véhicules": "Página de veículos",
+    "Page vehicules": "Página de veículos",
+    "Ajouter et retrouver rapidement les véhicules utilisés.": "Adicionar e encontrar rapidamente os veículos utilizados.",
+    "Cette page sert à enregistrer les véhicules avec les informations essentielles: marque, modèle, couleur, plaque d'immatriculation et consommation.": "Esta página serve para registrar os veículos com as informações essenciais: marca, modelo, cor, matrícula e consumo.",
+    "Retour à l'accueil": "Voltar ao início",
+    "Ajouter un véhicule": "Adicionar um veículo",
+    "Ajouter un vehicule": "Adicionar um veículo",
+    "Flotte": "Frota",
+    "Liste simple des véhicules": "Lista simples dos veículos",
+    "Liste simple des vehicules": "Lista simples dos veículos",
+    "Une base rapide pour retrouver les véhicules déjà ajoutés.": "Uma base rápida para encontrar os veículos já adicionados.",
+    "Véhicules ajoutés": "Veículos adicionados",
+    "Véhicules loués": "Veículos alugados",
+    "Véhicules disponibles": "Veículos disponíveis",
+    "Mes véhicules": "Meus veículos",
+    "Mes vehicules": "Meus veículos",
+    "Les véhicules déjà ajoutés": "Veículos já adicionados",
+    "Les vehicules deja ajoutes": "Veículos já adicionados",
+    "Gestion simple": "Gestão simples",
+    "Ajoutez un véhicule pour retrouver rapidement son modèle, sa couleur, sa plaque et sa consommation.": "Adicione um veículo para encontrar rapidamente o modelo, a cor, a matrícula e o consumo.",
+    "Nouveau véhicule": "Novo veículo",
+    "Nouveau vehicule": "Novo veículo",
+    "Modifier le véhicule": "Editar o veículo",
+    "Modifier le vehicule": "Editar o veículo",
+    "Ajouter un véhicule à la liste": "Adicionar um veículo à lista",
+    "Marque": "Marca",
+    "Modele": "Modelo",
+    "Modèle": "Modelo",
+    "Couleur": "Cor",
+    "Plaque d'immatriculation": "Matrícula",
+    "Type de véhicule": "Tipo de veículo",
+    "Type de vehicule": "Tipo de veículo",
+    "Mon véhicule": "Meu veículo",
+    "Mon vehicule": "Meu veículo",
+    "Véhicule d'un collaborateur": "Veículo de um colaborador",
+    "Vehicule d'un collaborateur": "Veículo de um colaborador",
+    "Véhicule loué": "Veículo alugado",
+    "Vehicule loue": "Veículo alugado",
+    "Etat du véhicule": "Estado do veículo",
+    "Etat du vehicule": "Estado do veículo",
+    "Disponible": "Disponível",
+    "En utilisation": "Em utilização",
+    "Reparation": "Reparação",
+    "Réparation": "Reparação",
+    "Location terminée": "Aluguel terminado",
+    "Location terminee": "Aluguel terminado",
+    "Consommation": "Consumo",
+    "Unite": "Unidade",
+    "Date de fin de location": "Data de fim do aluguel",
+    "Collaborateur chauffeur": "Colaborador motorista",
+    "Choisir un chauffeur": "Escolher um motorista",
+    "Enregistrer le véhicule": "Salvar o veículo",
+    "Enregistrer le vehicule": "Salvar o veículo",
+    "Exclure le véhicule": "Excluir o veículo",
+    "Exclure le vehicule": "Excluir o veículo",
+    "Filtres": "Filtros",
+    "Type": "Tipo",
+    "Etat": "Estado",
+    "Tous les types": "Todos os tipos",
+    "Tous les états": "Todos os estados",
+    "Tous les etats": "Todos os estados",
+    "Réinitialiser": "Reiniciar",
+    "Reinitialiser": "Reiniciar",
+    "Toutes les factures affichées": "Todas as faturas exibidas",
+    "Toutes les factures affichees": "Todas as faturas exibidas",
+    "Page collaborateurs": "Página de colaboradores",
+    "Ajouter et retrouver rapidement les personnes qui travaillent avec vous.": "Adicionar e encontrar rapidamente as pessoas que trabalham com você.",
+    "Cette page sert à enregistrer les collaborateurs avec les informations essentielles: prénom, nom, fonction et langues parlées avec leur niveau.": "Esta página serve para registrar os colaboradores com as informações essenciais: nome, sobrenome, função e idiomas falados com nível.",
+    "Equipe": "Equipe",
+    "Liste simple des collaborateurs": "Lista simples de colaboradores",
+    "Une base rapide pour retrouver les guides et les chauffeurs déjà ajoutés.": "Uma base rápida para encontrar os guias e motoristas já adicionados.",
+    "Collaborateurs ajoutés": "Colaboradores adicionados",
+    "Guides": "Guias",
+    "Chauffeurs": "Motoristas",
+    "Langues suivies": "Idiomas acompanhados",
+    "Les collaborateurs déjà ajoutés": "Colaboradores já adicionados",
+    "Ajoutez un collaborateur pour retrouver rapidement son nom, sa fonction et les langues qu'il peut utiliser avec vos clients.": "Adicione um colaborador para encontrar rapidamente o nome, a função e os idiomas que ele pode usar com seus clientes.",
+    "Ajouter un collaborateur": "Adicionar um colaborador",
+    "Nouveau collaborateur": "Novo colaborador",
+    "Modifier le collaborateur": "Editar o colaborador",
+    "Ajouter un collaborateur à la liste": "Adicionar um colaborador à lista",
+    "Prénom": "Nome",
+    "Prenom": "Nome",
+    "Nom": "Sobrenome",
+    "Fonction": "Função",
+    "Guide": "Guia",
+    "Chauffeur": "Motorista",
+    "Disponibilite": "Disponibilidade",
+    "Disponibilité": "Disponibilidade",
+    "En mission": "Em missão",
+    "Indisponible": "Indisponível",
+    "Vehicule associe": "Veículo associado",
+    "Véhicule associé": "Veículo associado",
+    "Vehicules associes": "Veículos associados",
+    "Véhicules associés": "Veículos associados",
+    "Langues": "Idiomas",
+    "Langue": "Idioma",
+    "Niveau": "Nível",
+    "Notions": "Noções",
+    "Intermediaire": "Intermediário",
+    "Intermédiaire": "Intermediário",
+    "Conversationnel": "Conversacional",
+    "Courant": "Fluente",
+    "Ajouter la langue": "Adicionar idioma",
+    "Enregistrer le collaborateur": "Salvar o colaborador",
+    "Effacer": "Limpar",
+    "Page factures": "Página de faturas",
+    "Construire une base claire pour vos factures clients.": "Construir uma base clara para suas faturas de clientes.",
+    "Voir la page finances": "Ver a página de finanças",
+    "Facturation": "Faturamento",
+    "Modele de facture generique": "Modelo de fatura genérico",
+    "Une base neutre pour ensuite générer vos propres documents.": "Uma base neutra para depois gerar seus próprios documentos.",
+    "Factures creees": "Faturas criadas",
+    "Factures créées": "Faturas criadas",
+    "Interlocuteur": "Contato",
+    "Societe exemple": "Empresa exemplo",
+    "Société exemple": "Empresa exemplo",
+    "Total actif": "Total ativo",
+    "Facture client": "Fatura de cliente",
+    "Facture externe": "Fatura externa",
+    "Une base de travail pour vos documents clients": "Uma base de trabalho para seus documentos de clientes",
+    "Creation simple": "Criação simples",
+    "Ajouter une facture": "Adicionar uma fatura",
+    "Reglement": "Pagamento",
+    "Règlement": "Pagamento",
+    "Toutes": "Todas",
+    "Reglees": "Pagas",
+    "Réglées": "Pagas",
+    "Non reglees": "Não pagas",
+    "Non réglées": "Não pagas",
+    "Nouvelle facture": "Nova fatura",
+    "Renseigner les informations du document": "Preencher as informações do documento",
+    "Facture": "Fatura",
+    "Informations generales du document.": "Informações gerais do documento.",
+    "Type de facture": "Tipo de fatura",
+    "Numero de facture": "Número da fatura",
+    "Numéro de facture": "Número da fatura",
+    "Date d'emission": "Data de emissão",
+    "Date d'émission": "Data de emissão",
+    "Mission source": "Missão de origem",
+    "Choisir une mission du planning": "Escolher uma missão do planejamento",
+    "Pre-remplir depuis la mission": "Preencher a partir da missão",
+    "Mode de paiement": "Forma de pagamento",
+    "Virement": "Transferência",
+    "Carte": "Cartão",
+    "Especes": "Dinheiro",
+    "Espèces": "Dinheiro",
+    "Cheque": "Cheque",
+    "Chèque": "Cheque",
+    "Date de reglement": "Data de pagamento",
+    "Date de règlement": "Data de pagamento",
+    "Nature de la facture externe": "Natureza da fatura externa",
+    "Facture a payer": "Fatura a pagar",
+    "Facture à payer": "Fatura a pagar",
+    "Facture a recevoir": "Fatura a receber",
+    "Facture à recevoir": "Fatura a receber",
+    "Fichier de la facture externe": "Arquivo da fatura externa",
+    "Emetteur": "Emissor",
+    "Émetteur": "Emissor",
+    "Informations de votre activite.": "Informações da sua atividade.",
+    "Nom ou raison sociale": "Nome ou razão social",
+    "Adresse": "Endereço",
+    "Code postal et ville": "Código postal e cidade",
+    "Telephone": "Telefone",
+    "Téléphone": "Telefone",
+    "Registre EVTC": "Registro EVTC",
+    "SIRET": "SIRET",
+    "Client": "Cliente",
+    "Entreprise et contact de facturation.": "Empresa e contato de faturamento.",
+    "Nom du client": "Nome do cliente",
+    "TVA intracommunautaire": "IVA intracomunitário",
+    "Contact": "Contato",
+    "Email": "Email",
+    "Prestation": "Serviço",
+    "Details de la course ou du service facture.": "Detalhes da corrida ou do serviço faturado.",
+    "Designation / objet": "Designação / objeto",
+    "Désignation / objet": "Designação / objeto",
+    "Date de prise en charge": "Data de embarque",
+    "Lieu de prise en charge": "Local de embarque",
+    "Destination": "Destino",
+    "Nombre de passagers": "Número de passageiros",
+    "Kilometres parcourus": "Quilômetros percorridos",
+    "Kilomètres parcourus": "Quilômetros percorridos",
+    "Montants et mentions": "Valores e observações",
+    "Total HT": "Total sem IVA",
+    "Total TTC": "Total com IVA",
+    "TVA 10 %": "IVA 10 %",
+    "TVA 20 %": "IVA 20 %",
+    "Assurance": "Seguro",
+    "Mention legale": "Observação legal",
+    "Mention légale": "Observação legal",
+    "Ajouter la facture": "Adicionar a fatura",
+    "Page finances": "Página de finanças",
+    "Piloter les recettes, les dépenses et les missions depuis un seul endroit.": "Gerir receitas, despesas e missões em um só lugar.",
+    "Cette page est pensée comme un cockpit de rentabilité : elle met en avant les gains, les pertes et les montants en attente, avec des graphiques et des filtres pour comprendre rapidement la santé financière de la société.": "Esta página foi pensada como um cockpit de rentabilidade: ela destaca ganhos, perdas e valores pendentes, com gráficos e filtros para entender rapidamente a saúde financeira da empresa.",
+    "Cette page est pensee comme un cockpit de rentabilite : elle met en avant les gains, les pertes et les montants en attente, avec des graphiques et des filtres pour comprendre rapidement la sante financiere de la societe.": "Esta página foi pensada como um cockpit de rentabilidade: ela destaca ganhos, perdas e valores pendentes, com gráficos e filtros para entender rapidamente a saúde financeira da empresa.",
+    "Voir la page factures": "Ver a página de faturas",
+    "Voir la page trajets": "Ver a página de trajetos",
+    "Voir les finances": "Ver as finanças",
+    "Voir la fiche trajet": "Ver a ficha do trajeto",
+    "Voir la mission": "Ver a missão",
+    "Vue globale": "Visão global",
+    "Finances liées aux factures et aux missions": "Finanças ligadas às faturas e missões",
+    "Les valeurs en attente restent visibles en jaune jusqu'à validation.": "Os valores pendentes continuam visíveis em amarelo até a validação.",
+    "Factures, missions et lignes complémentaires": "Faturas, missões e linhas complementares",
+    "Factures, missions et lignes complementaires": "Faturas, missões e linhas complementares",
+    "Les factures sont reprises automatiquement, les routes restent séparées par mission, et vous pouvez ajouter des lignes manuelles pour compléter votre suivi.": "As faturas são retomadas automaticamente, as rotas ficam separadas por missão, e você pode adicionar linhas manuais para completar o acompanhamento.",
+    "Les factures sont reprises automatiquement, les routes restent separees par mission, et vous pouvez ajouter des lignes manuelles pour completer votre suivi.": "As faturas são retomadas automaticamente, as rotas ficam separadas por missão, e você pode adicionar linhas manuais para completar o acompanhamento.",
+    "Recettes": "Receitas",
+    "Dépenses": "Despesas",
+    "Depenses": "Despesas",
+    "Résultat net": "Resultado líquido",
+    "Resultat net": "Resultado líquido",
+    "En attente": "Pendente",
+    "Suivi actif": "Acompanhamento ativo",
+    "Afficher les filtres": "Mostrar filtros",
+    "Masquer les filtres": "Ocultar filtros",
+    "Source": "Origem",
+    "Toutes": "Todas",
+    "Factures clients": "Faturas de clientes",
+    "Factures externes": "Faturas externas",
+    "Routes / missions": "Rotas / missões",
+    "Lignes libres": "Linhas livres",
+    "Catégorie": "Categoria",
+    "Categorie": "Categoria",
+    "Mission": "Missão",
+    "Carburant": "Combustível",
+    "Peage + parking": "Pedágio + estacionamento",
+    "Péage + parking": "Pedágio + estacionamento",
+    "Activites": "Atividades",
+    "Activités": "Atividades",
+    "Entretien / reparation": "Manutenção / reparo",
+    "Entretien / réparation": "Manutenção / reparo",
+    "Autres": "Outros",
+    "Flux": "Fluxo",
+    "Tous": "Todos",
+    "Recette": "Receita",
+    "Depense": "Despesa",
+    "Dépense": "Despesa",
+    "Période": "Período",
+    "Periode": "Período",
+    "Tout": "Tudo",
+    "7 jours": "7 dias",
+    "30 jours": "30 dias",
+    "Cette année": "Este ano",
+    "Cette annee": "Este ano",
+    "Année en cours": "Ano atual",
+    "Annee en cours": "Ano atual",
+    "Analyse": "Análise",
+    "Analyse financière": "Análise financeira",
+    "Analyse financiere": "Análise financeira",
+    "Analyse visuelle en préparation": "Análise visual em preparação",
+    "Analyse visuelle en preparation": "Análise visual em preparação",
+    "Les graphiques de gains et pertes apparaîtront ici.": "Os gráficos de ganhos e perdas aparecerão aqui.",
+    "Les graphiques de gains et pertes apparaitront ici.": "Os gráficos de ganhos e perdas aparecerão aqui.",
+    "Résultat net et tendance": "Resultado líquido e tendência",
+    "Resultat net et tendance": "Resultado líquido e tendência",
+    "Vue consolidee des factures, missions et lignes ajoutees. Les montants en attente restent visibles sans etre caches dans les totaux.": "Visão consolidada das faturas, missões e linhas adicionadas. Os valores pendentes continuam visíveis sem serem escondidos dos totais.",
+    "Vue consolidée des factures, missions et lignes ajoutées. Les montants en attente restent visibles sans être cachés dans les totaux.": "Visão consolidada das faturas, missões e linhas adicionadas. Os valores pendentes continuam visíveis sem serem escondidos dos totais.",
+    "Total net": "Total líquido",
+    "Benefice ou perte, consolide par periode.": "Lucro ou perda, consolidado por período.",
+    "Bénéfice ou perte, consolidé par période.": "Lucro ou perda, consolidado por período.",
+    "Barres par categorie": "Barras por categoria",
+    "Barres par catégorie": "Barras por categoria",
+    "Courbe mensuelle": "Curva mensal",
+    "Barres mensuelles": "Barras mensais",
+    "Courbe": "Curva",
+    "Barres": "Barras",
+    "Mois": "Mês",
+    "Changer de graphique": "Alterar gráfico",
+    "Resultat net par mois": "Resultado líquido por mês",
+    "Résultat net par mois": "Resultado líquido por mês",
+    "Impact net par categorie": "Impacto líquido por categoria",
+    "Impact net par catégorie": "Impacto líquido por categoria",
+    "Rentabilite par mission": "Rentabilidade por missão",
+    "Rentabilité par mission": "Rentabilidade por missão",
+    "Categories": "Categorias",
+    "Catégories": "Categorias",
+    "Valeurs": "Valores",
+    "Liste consolidee": "Lista consolidada",
+    "Liste consolidée": "Lista consolidada",
+    "+ Ajouter une ligne": "+ Adicionar uma linha",
+    "Ajouter une ligne": "Adicionar uma linha",
+    "Ajouter une ligne de finance": "Adicionar uma linha financeira",
+    "Nouvelle ligne": "Nova linha",
+    "Modifier la ligne": "Editar a linha",
+    "Modifier la ligne de finance": "Editar a linha financeira",
+    "Ajuster une valeur": "Ajustar um valor",
+    "Ajuster la valeur de mission": "Ajustar o valor da missão",
+    "Ajuster": "Ajustar",
+    "Voir": "Ver",
+    "Rattachement": "Vinculação",
+    "Ligne générale": "Linha geral",
+    "Ligne generale": "Linha geral",
+    "Ligne rattachée à une mission": "Linha vinculada a uma missão",
+    "Ligne rattachee a une mission": "Linha vinculada a uma missão",
+    "Libelle": "Rótulo",
+    "Libellé": "Rótulo",
+    "Nature": "Natureza",
+    "Montant": "Valor",
+    "Statut": "Status",
+    "Validé": "Validado",
+    "Valide": "Validado",
+    "Estimé": "Estimado",
+    "Estime": "Estimado",
+    "Date de validation / règlement": "Data de validação / pagamento",
+    "Date de validation / reglement": "Data de validação / pagamento",
+    "Note": "Nota",
+    "Enregistrer": "Salvar",
+    "Enregistrer la ligne": "Salvar a linha",
+    "Enregistrer les modifications": "Salvar as alterações",
+    "Revenir aux valeurs": "Voltar aos valores",
+    "Retirer l'ajustement": "Remover o ajuste",
+    "Supprimer": "Excluir",
+    "Missions rentables": "Missões rentáveis",
+    "Chargement des finances...": "Carregando finanças...",
+    "Les factures, les missions et les lignes complémentaires arrivent ici.": "As faturas, missões e linhas complementares aparecem aqui.",
+    "Les factures, les missions et les lignes complementaires arrivent ici.": "As faturas, missões e linhas complementares aparecem aqui.",
+    "Aucune ligne financière pour le moment": "Nenhuma linha financeira por enquanto",
+    "Aucune ligne financiere pour le moment": "Nenhuma linha financeira por enquanto",
+    "Toutes les lignes financières affichées": "Todas as linhas financeiras exibidas",
+    "Toutes les lignes financieres affichees": "Todas as linhas financeiras exibidas",
+    "Aucune valeur trouvée": "Nenhum valor encontrado",
+    "Aucune valeur trouvee": "Nenhum valor encontrado",
+    "Modifiez les filtres ou ajoutez une ligne.": "Altere os filtros ou adicione uma linha.",
+    "Sans libelle": "Sem rótulo",
+    "Sans libellé": "Sem rótulo",
+    "Details de mission": "Detalhes da missão",
+    "Détails de mission": "Detalhes da missão",
+    "Ajouter une ligne mission": "Adicionar uma linha à missão",
+    "Aucun detail": "Nenhum detalhe",
+    "Aucun détail": "Nenhum detalhe",
+    "Valeur": "Valor",
+    "Fermer le formulaire": "Fechar o formulário",
+    "Ex : plein carburant retour mission": "Ex.: abastecimento no retorno da missão",
+    "Ex : avance faite par le chauffeur, à régulariser.": "Ex.: adiantamento feito pelo motorista, a regularizar.",
+    "Ex : avance faite par le chauffeur, a regulariser.": "Ex.: adiantamento feito pelo motorista, a regularizar.",
+    "Planning exploitation": "Planejamento operacional",
+    "Affecter les bons collaborateurs et les bons véhicules mission par mission.": "Atribuir os colaboradores e veículos certos missão por missão.",
+    "Ouvrir les trajets": "Abrir os trajetos",
+    "Verifier la flotte": "Verificar a frota",
+    "Vérifier la flotte": "Verificar a frota",
+    "Semaine active": "Semana ativa",
+    "Semaine en cours": "Semana atual",
+    "Missions semaine": "Missões da semana",
+    "Missions complètes": "Missões completas",
+    "Missions completes": "Missões completas",
+    "Passagers planifiés": "Passageiros planejados",
+    "Passagers planifies": "Passageiros planejados",
+    "CA estimé": "Faturamento estimado",
+    "CA estime": "Faturamento estimado",
+    "Le planning hebdomadaire des missions et des affectations": "Planejamento semanal das missões e atribuições",
+    "Pret a exploiter": "Pronto para operar",
+    "Prêt à exploiter": "Pronto para operar",
+    "Calendrier global": "Calendário global",
+    "Nouvelle mission": "Nova missão",
+    "Toutes les missions par mois": "Todas as missões por mês",
+    "Mois precedent": "Mês anterior",
+    "Mois précédent": "Mês anterior",
+    "Mois actif": "Mês ativo",
+    "Mois suivant": "Mês seguinte",
+    "Revenir a cette semaine": "Voltar a esta semana",
+    "Revenir à cette semaine": "Voltar a esta semana",
+    "Lun": "Seg",
+    "Mar": "Ter",
+    "Mer": "Qua",
+    "Jeu": "Qui",
+    "Ven": "Sex",
+    "Sam": "Sáb",
+    "Dim": "Dom",
+    "Pilotage": "Gestão",
+    "Prioriser les missions et fermer les trous de planning": "Priorizar missões e fechar lacunas no planejamento",
+    "Points ouverts": "Pontos abertos",
+    "Ressources": "Recursos",
+    "Vehicules exploitables": "Veículos operacionais",
+    "Véhicules exploitables": "Veículos operacionais",
+    "Collaborateurs mobilisables": "Colaboradores disponíveis",
+    "Ajouter une mission au planning": "Adicionar uma missão ao planejamento",
+    "Code mission": "Código da missão",
+    "Type de service": "Tipo de serviço",
+    "Date": "Data",
+    "Heure de depart": "Hora de partida",
+    "Heure de départ": "Hora de partida",
+    "Heure d'arrivee": "Hora de chegada",
+    "Heure d'arrivée": "Hora de chegada",
+    "Adresse de recuperation": "Endereço de embarque",
+    "Adresse de récupération": "Endereço de embarque",
+    "Point de rendez-vous": "Ponto de encontro",
+    "Etapes et activites": "Etapas e atividades",
+    "Étapes et activités": "Etapas e atividades",
+    "Ajouter une etape": "Adicionar uma etapa",
+    "Ajouter une étape": "Adicionar uma etapa",
+    "Adresse de destination": "Endereço de destino",
+    "Passagers": "Passageiros",
+    "Bagages": "Bagagens",
+    "Prix vendu (EUR)": "Preço vendido (EUR)",
+    "Marge cible (%)": "Margem alvo (%)",
+    "Peages (EUR)": "Pedágios (EUR)",
+    "Péages (EUR)": "Pedágios (EUR)",
+    "Parking (EUR)": "Estacionamento (EUR)",
+    "Priorite": "Prioridade",
+    "Priorité": "Prioridade",
+    "Standard": "Padrão",
+    "Prioritaire": "Prioritária",
+    "VIP": "VIP",
+    "Statut facturation": "Status de faturamento",
+    "Devis valide": "Orçamento validado",
+    "Devis validé": "Orçamento validado",
+    "A facturer": "A faturar",
+    "À facturer": "A faturar",
+    "Facture envoyee": "Fatura enviada",
+    "Facture envoyée": "Fatura enviada",
+    "Reglee": "Paga",
+    "Réglée": "Paga",
+    "Notes mission": "Notas da missão",
+    "Simulation": "Simulação",
+    "Etapes activites": "Etapas de atividades",
+    "Étapes activités": "Etapas de atividades",
+    "Budget activites": "Orçamento de atividades",
+    "Budget activités": "Orçamento de atividades",
+    "Prix conseille": "Preço recomendado",
+    "Prix conseillé": "Preço recomendado",
+    "Calcule a l'ajout": "Calculado ao adicionar",
+    "Calculé à l'ajout": "Calculado ao adicionar",
+    "Ajouter la mission": "Adicionar a missão",
+    "Collaborateurs disponibles": "Colaboradores disponíveis",
+    "Vehicules utilisables cette semaine": "Veículos utilizáveis esta semana",
+    "Véhicules utilisables cette semaine": "Veículos utilizáveis esta semana",
+    "Alertes": "Alertas",
+    "Ce qui bloque encore": "O que ainda bloqueia",
+    "Page trajets": "Página de trajetos",
+    "Exploitation trajet": "Operação de trajeto",
+    "Suivre chaque parcours avec son cout carburant, sa marge et ses contraintes terrain.": "Acompanhar cada percurso com seu custo de combustível, sua margem e suas restrições de campo.",
+    "Suivre chaque parcours avec son coût carburant, sa marge et ses contraintes terrain.": "Acompanhar cada percurso com seu custo de combustível, sua margem e suas restrições de campo.",
+    "Vue exploitation": "Visão operacional",
+    "Une lecture directe pour arbitrer rapidement sur la journée.": "Uma leitura direta para decidir rapidamente durante o dia.",
+    "Une lecture directe pour arbitrer rapidement sur la journee.": "Uma leitura direta para decidir rapidamente durante o dia.",
+    "CA estimé": "Faturamento estimado",
+    "CA estime": "Faturamento estimado",
+    "Cout opérationnel": "Custo operacional",
+    "Cout operationnel": "Custo operacional",
+    "Coût opérationnel": "Custo operacional",
+    "Marge moyenne": "Margem média",
+    "Le détail d'exploitation mission par mission": "O detalhe operacional missão por missão",
+    "Le detail d'exploitation mission par mission": "O detalhe operacional missão por missão",
+    "Ajouter une mission exploitable": "Adicionar uma missão operacional",
+    "Choisir un trajet": "Escolher um trajeto",
+    "Sélectionnez une mission pour retrouver son parcours, ses ressources, son estimation carburant et son statut de facturation.": "Selecione uma missão para encontrar o percurso, os recursos, a estimativa de combustível e o status de faturamento.",
+    "Selectionnez une mission pour retrouver son parcours, ses ressources, son estimation carburant et son statut de facturation.": "Selecione uma missão para encontrar o percurso, os recursos, a estimativa de combustível e o status de faturamento.",
+    "Carte du trajet": "Mapa do trajeto",
+    "Mission selectionnee": "Missão selecionada",
+    "Mission sélectionnée": "Missão selecionada",
+    "Modifier la mission": "Editar a missão",
+    "Ouvrir la facture": "Abrir a fatura",
+    "Affectation": "Atribuição",
+    "Equipe et vehicule de mission": "Equipe e veículo da missão",
+    "Équipe et véhicule de mission": "Equipe e veículo da missão",
+    "Renfort": "Reforço",
+    "Vehicule": "Veículo",
+    "Véhicule": "Veículo",
+    "Parcours": "Percurso",
+    "Itineraire voiture et etapes de mission": "Itinerário de carro e etapas da missão",
+    "Itinéraire voiture et étapes de mission": "Itinerário de carro e etapas da missão",
+    "Estimation couts": "Estimativa de custos",
+    "Estimation coûts": "Estimativa de custos",
+    "Cout total": "Custo total",
+    "Coût total": "Custo total",
+    "Marge brute": "Margem bruta",
+    "Taux de marge": "Taxa de margem",
+    "Prix / passager": "Preço / passageiro",
+    "Infos mission": "Informações da missão",
+    "Aujourd'hui": "Hoje",
+    "Transfert prive": "Traslado privado",
+    "Transfert privé": "Traslado privado",
+    "Transfert vignoble": "Traslado vinícola",
+    "Transfert evenement": "Traslado evento",
+    "Transfert événement": "Traslado evento",
+    "Circuit demi-journee": "Circuito de meio dia",
+    "Circuit demi-journée": "Circuito de meio dia",
+    "Aucune mission · cliquer pour en ajouter une": "Nenhuma missão · clique para adicionar",
+    "Aucune mission Â· cliquer pour en ajouter une": "Nenhuma missão · clique para adicionar",
+    "Ajouter une mission": "Adicionar uma missão"
+  },
+};
+const reverseAppTranslationTable = new Map(
+  Object.entries(appTranslationTable.pt).map(([sourceText, translatedText]) => [translatedText, sourceText])
+);
+const appPartialTranslationTable = {
+  pt: [
+    ["FACTURES À SUIVRE", "FATURAS A ACOMPANHAR"],
+    ["FACTURES A SUIVRE", "FATURAS A ACOMPANHAR"],
+    ["Factures à suivre", "Faturas a acompanhar"],
+    ["Factures a suivre", "Faturas a acompanhar"],
+    ["COLLABORATEURS", "COLABORADORES"],
+    ["COLLABORATEUR", "COLABORADOR"],
+    ["Collaborateurs", "Colaboradores"],
+    ["Collaborateur", "Colaborador"],
+    ["CLIENTS PRÉVUS", "CLIENTES PREVISTOS"],
+    ["CLIENTS PREVUS", "CLIENTES PREVISTOS"],
+    ["Clients prévus", "Clientes previstos"],
+    ["Clients prevus", "Clientes previstos"],
+    ["VÉHICULES MOBILISÉS", "VEÍCULOS MOBILIZADOS"],
+    ["VEHICULES MOBILISES", "VEÍCULOS MOBILIZADOS"],
+    ["Véhicules mobilisés", "Veículos mobilizados"],
+    ["Vehicules mobilises", "Veículos mobilizados"],
+    ["KILOMETRES SEMAINE", "QUILÔMETROS DA SEMANA"],
+    ["KILOMÈTRES SEMAINE", "QUILÔMETROS DA SEMANA"],
+    ["Kilometres semaine", "Quilômetros da semana"],
+    ["Kilomètres semaine", "Quilômetros da semana"],
+    ["SEMAINE", "SEMANA"],
+    ["Semaine", "Semana"],
+    ["PAIEMENT", "PAGAMENTO"],
+    ["Paiement", "Pagamento"],
+    ["Documents", "Documentos"],
+    ["FACTURE n°", "FATURA n°"],
+    ["Factures clients + factures externes", "Faturas de clientes + faturas externas"],
+    ["Détail course + montant + mode de paiement", "Detalhe da corrida + valor + forma de pagamento"],
+    ["Detail course + montant + mode de paiement", "Detalhe da corrida + valor + forma de pagamento"],
+    ["CE QUE L'ON POURRA AJOUTER", "O QUE PODEREMOS ADICIONAR"],
+    ["Ce que l'on pourra ajouter", "O que poderemos adicionar"],
+    ["Ce que l'on garde", "O que mantemos"],
+    ["Accéder à la page complète du planning chauffeur", "Acessar a página completa do planejamento do motorista"],
+    ["Acceder a la page complete du planning chauffeur", "Acessar a página completa do planejamento do motorista"],
+    ["Voir la page dédiée à l'équipe terrain et aux contacts", "Ver a página dedicada à equipe de campo e aos contatos"],
+    ["Voir la page dediee a l'equipe terrain et aux contacts", "Ver a página dedicada à equipe de campo e aos contatos"],
+    ["Consulter la future page des documents clients et des relances", "Consultar a futura página dos documentos de clientes e lembretes"],
+    ["Les 7 prochains jours de courses planifiées", "Os próximos 7 dias de corridas planejadas"],
+    ["Les 7 prochains jours de courses planifiees", "Os próximos 7 dias de corridas planejadas"],
+    ["Vue glissante sur 7 jours", "Visão móvel de 7 dias"],
+    ["Retrouvez ici tous les départs prévus sur les 7 jours courants, avec l'heure, le trajet, le nombre de clients et le véhicule affecté", "Veja aqui todas as saídas previstas nos próximos 7 dias, com horário, trajeto, número de clientes e veículo atribuído"],
+    ["Retrouvez ici tous les departs prevus sur les 7 jours courants, avec l'heure, le trajet, le nombre de clients et le vehicule affecte", "Veja aqui todas as saídas previstas nos próximos 7 dias, com horário, trajeto, número de clientes e veículo atribuído"],
+    ["Le calendrier devient une vraie vue opérationnelle: vous placez les chauffeurs, les renforts et les véhicules au bon moment, puis vous repérez tout de suite les trous de planning, les soucis de capacité et les missions prêtes à partir", "O calendário vira uma visão operacional de verdade: você posiciona motoristas, reforços e veículos no momento certo, depois identifica rapidamente lacunas no planejamento, problemas de capacidade e missões prontas para sair"],
+    ["Le calendrier devient une vraie vue operationnelle: vous placez les chauffeurs, les renforts et les vehicules au bon moment, puis vous reperez tout de suite les trous de planning, les soucis de capacite et les missions pretes a partir", "O calendário vira uma visão operacional de verdade: você posiciona motoristas, reforços e veículos no momento certo, depois identifica rapidamente lacunas no planejamento, problemas de capacidade e missões prontas para sair"],
+    ["Une seule vue pour les missions, les ressources et les arbitrages", "Uma única visão para missões, recursos e decisões"],
+    ["Chaque mission affiche directement le chauffeur, le renfort, le véhicule et les signaux d'alerte. L'objectif n'est plus seulement de voir un agenda, mais de valider l'exécution", "Cada missão mostra diretamente o motorista, o reforço, o veículo e os alertas. O objetivo deixa de ser apenas ver uma agenda e passa a validar a execução"],
+    ["Chaque mission affiche directement le chauffeur, le renfort, le vehicule et les signaux d'alerte. L'objectif n'est plus seulement de voir un agenda, mais de valider l'execution", "Cada missão mostra diretamente o motorista, o reforço, o veículo e os alertas. O objetivo deixa de ser apenas ver uma agenda e passa a validar a execução"],
+    ["Capacité insuffisante, ressource indisponible, mission sans chauffeur ou véhicule non encore affecté: tout remonte ici", "Capacidade insuficiente, recurso indisponível, missão sem motorista ou veículo ainda não atribuído: tudo aparece aqui"],
+    ["Capacite insuffisante, ressource indisponible, mission sans chauffeur ou vehicule non encore affecte: tout remonte ici", "Capacidade insuficiente, recurso indisponível, missão sem motorista ou veículo ainda não atribuído: tudo aparece aqui"],
+    ["La page trajets devient le centre de détail de chaque mission: départ, destination, passagers, bagages, affectation, estimation carburant selon le véhicule choisi, puis lecture directe de la marge et de l'état de facturation", "A página de trajetos vira o centro de detalhe de cada missão: saída, destino, passageiros, bagagens, atribuição, estimativa de combustível conforme o veículo escolhido e leitura direta da margem e do status de faturamento"],
+    ["La page trajets devient le centre de detail de chaque mission: depart, destination, passagers, bagages, affectation, estimation carburant selon le vehicule choisi, puis lecture directe de la marge et de l'etat de facturation", "A página de trajetos vira o centro de detalhe de cada missão: saída, destino, passageiros, bagagens, atribuição, estimativa de combustível conforme o veículo escolhido e leitura direta da margem e do status de faturamento"],
+    ["Trajets, couts et facturation", "Trajetos, custos e faturamento"],
+    ["Trajets, coûts et facturation", "Trajetos, custos e faturamento"],
+    ["Le détail d'exploitation mission par mission", "O detalhe operacional missão por missão"],
+    ["Le detail d'exploitation mission par mission", "O detalhe operacional missão por missão"],
+    ["Choisir un trajet", "Escolher um trajeto"],
+    ["Sélectionnez une mission pour retrouver son parcours, ses ressources, son estimation carburant et son statut de facturation", "Selecione uma missão para encontrar o percurso, os recursos, a estimativa de combustível e o status de faturamento"],
+    ["Selectionnez une mission pour retrouver son parcours, ses ressources, son estimation carburant et son statut de facturation", "Selecione uma missão para encontrar o percurso, os recursos, a estimativa de combustível e o status de faturamento"],
+    ["Itineraire routier calcule sur le parcours complet de la mission", "Itinerário rodoviário calculado sobre todo o percurso da missão"],
+    ["Itinéraire routier calculé sur le parcours complet de la mission", "Itinerário rodoviário calculado sobre todo o percurso da missão"],
+    ["Carburant, equipe, activites et frais annexes", "Combustível, equipe, atividades e custos adicionais"],
+    ["Carburant, équipe, activités et frais annexes", "Combustível, equipe, atividades e custos adicionais"],
+    ["Cette première version reprend la structure d'une vraie facture PDF pour poser une base propre: émetteur, client, détail de course, mode de paiement, totaux et mentions", "Esta primeira versão retoma a estrutura de uma fatura PDF real para criar uma base limpa: emissor, cliente, detalhe da corrida, forma de pagamento, totais e observações"],
+    ["Cette premiere version reprend la structure d'une vraie facture PDF pour poser une base propre: emetteur, client, detail de course, mode de paiement, totaux et mentions", "Esta primeira versão retoma a estrutura de uma fatura PDF real para criar uma base limpa: emissor, cliente, detalhe da corrida, forma de pagamento, totais e observações"],
+    ["Ajoutez ici vos factures clients et vos factures externes. Chaque document restera visible dans la grille avec son détail complet si vous l'ouvrez", "Adicione aqui suas faturas de clientes e suas faturas externas. Cada documento ficará visível na grade com o detalhe completo quando você abrir"],
+    ["Ajoutez ici vos factures clients et vos factures externes. Chaque document restera visible dans la grille avec son detail complet si vous l'ouvrez", "Adicione aqui suas faturas de clientes e suas faturas externas. Cada documento ficará visível na grade com o detalhe completo quando você abrir"],
+    ["Toutes les factures apparaissent ici sous forme de grille. Vous pouvez y ranger vos factures clients et vos factures externes, puis ouvrir le document complet au clic", "Todas as faturas aparecem aqui em formato de grade. Você pode guardar faturas de clientes e faturas externas, depois abrir o documento completo com um clique"],
+    ["Ajoutez un véhicule pour retrouver rapidement sa marque, son modèle, sa couleur, sa plaque, sa consommation, son type et son état", "Adicione um veículo para encontrar rapidamente marca, modelo, cor, placa, consumo, tipo e estado"],
+    ["Ajoutez un vehicule pour retrouver rapidement sa marque, son modele, sa couleur, sa plaque, sa consommation, son type et son etat", "Adicione um veículo para encontrar rapidamente marca, modelo, cor, placa, consumo, tipo e estado"],
+    ["Tous les vehicules affiches", "Todos os veículos exibidos"],
+    ["Tous les véhicules affichés", "Todos os veículos exibidos"],
+    ["Pret pour le suivi", "Pronto para acompanhamento"],
+    ["Prêt pour le suivi", "Pronto para acompanhamento"],
+    ["Revenir au calendrier", "Voltar ao calendário"],
+    ["Modifier la facture", "Editar a fatura"],
+    ["Modifier ce vehicule", "Editar este veículo"],
+    ["Modifier ce véhicule", "Editar este veículo"],
+    ["Modifier ce collaborateur", "Editar este colaborador"],
+    ["Modifier", "Editar"],
+    ["Non reglee", "Não paga"],
+    ["Non réglée", "Não paga"],
+    ["Reglee", "Paga"],
+    ["Réglée", "Paga"],
+    ["Aucun renfort", "Nenhum reforço"],
+    ["Choisir un vehicule", "Escolher um veículo"],
+    ["Choisir un véhicule", "Escolher um veículo"],
+    ["Vehicule a fournir", "Veículo a definir"],
+    ["Véhicule à fournir", "Veículo a definir"],
+    ["Vehicule collaborateur", "Veículo de colaborador"],
+    ["Véhicule collaborateur", "Veículo de colaborador"],
+    ["Vehicule recommande", "Veículo recomendado"],
+    ["Véhicule recommandé", "Veículo recomendado"],
+    ["pour l'accueil et la logistique", "para recepção e logística"],
+    ["Renfort recommande", "Reforço recomendado"],
+    ["Renfort recommandé", "Reforço recomendado"],
+    ["Disponibilite limitee", "Disponibilidade limitada"],
+    ["Disponibilité limitée", "Disponibilidade limitada"],
+    ["a une disponibilite limitee", "tem disponibilidade limitada"],
+    ["a une disponibilité limitée", "tem disponibilidade limitada"],
+    ["Francais", "Francês"],
+    ["Français", "Francês"],
+    ["Anglais", "Inglês"],
+    ["Italien", "Italiano"],
+    ["Espagnol", "Espanhol"],
+    ["Portugais", "Português"],
+    ["Chauffeur", "Motorista"],
+    ["prefere, retour apres spectacle", "preferido, retorno após o espetáculo"],
+    ["préféré, retour après spectacle", "preferido, retorno após o espetáculo"],
+    ["clients", "clientes"],
+    ["langues", "idiomas"],
+    ["Retour groupe apres visite", "Retorno do grupo após a visita"],
+    ["Retour fin de degustation", "Retorno no fim da degustação"],
+    ["Retour en soiree", "Retorno à noite"],
+    ["Retour apres diner", "Retorno após o jantar"],
+    ["Retour port et hotels", "Retorno ao porto e hotéis"],
+    ["Portugais BR prefere, retour apres spectacle", "Português BR preferido, retorno após o espetáculo"],
+    ["Eau et accueil groupe Normandie", "Água e recepção grupo Normandia"],
+    ["Ajustement caisse especes", "Ajuste caixa dinheiro"],
+    ["Ajustement caisse espèces", "Ajuste caixa dinheiro"],
+    ["Hotels rive droite", "Hotéis margem direita"],
+    ["Hôtels rive droite", "Hotéis margem direita"],
+    ["Famille Oliveira", "Família Oliveira"],
+    ["Transfert prive Disneyland", "Traslado privado Disneyland"],
+    ["Transfert privé Disneyland", "Traslado privado Disneyland"],
+    ["Transfert prive", "Traslado privado"],
+    ["Transfert privé", "Traslado privado"],
+    ["Transfert vignoble", "Traslado vinícola"],
+    ["Transfert evenement", "Traslado evento"],
+    ["Transfert événement", "Traslado evento"],
+    ["Maison Azur Travel", "Casa Azur Travel"],
+    ["Ateliers Seine Voyages", "Ateliês Seine Voyages"],
+    ["Simbora Paris Tourisme", "Simbora Paris Tourisme"],
+    ["Paris centre", "Paris centro"],
+    ["Circuit demi-journee", "Circuito de meio dia"],
+    ["Circuit demi-journée", "Circuito de meio dia"],
+    ["Transfert aeroport", "Traslado aeroporto"],
+    ["Transfert aéroport", "Traslado aeroporto"],
+    ["Statut facturation", "Status de faturamento"],
+    ["A facturer", "A faturar"],
+    ["À facturer", "A faturar"],
+    ["Facture envoyee", "Fatura enviada"],
+    ["Facture envoyée", "Fatura enviada"],
+    ["Devis valide", "Orçamento validado"],
+    ["Devis validé", "Orçamento validado"],
+    ["Les factures sont reprises automatiquement", "As faturas são retomadas automaticamente"],
+    ["les routes restent séparées par mission", "as rotas ficam separadas por missão"],
+    ["les routes restent separees par mission", "as rotas ficam separadas por missão"],
+    ["vous pouvez ajouter des lignes manuelles pour compléter votre suivi", "você pode adicionar linhas manuais para completar o acompanhamento"],
+    ["vous pouvez ajouter des lignes manuelles pour completer votre suivi", "você pode adicionar linhas manuais para completar o acompanhamento"],
+    ["Vue consolidee des factures, missions et lignes ajoutees", "Visão consolidada das faturas, missões e linhas adicionadas"],
+    ["Vue consolidée des factures, missions et lignes ajoutées", "Visão consolidada das faturas, missões e linhas adicionadas"],
+    ["Les montants en attente restent visibles sans etre caches dans les totaux", "Os valores pendentes continuam visíveis sem serem escondidos dos totais"],
+    ["Les montants en attente restent visibles sans être cachés dans les totaux", "Os valores pendentes continuam visíveis sem serem escondidos dos totais"],
+    ["Benefice ou perte, consolide par periode", "Lucro ou perda, consolidado por período"],
+    ["Bénéfice ou perte, consolidé par période", "Lucro ou perda, consolidado por período"],
+    ["Barres par categorie", "Barras por categoria"],
+    ["Barres par catégorie", "Barras por categoria"],
+    ["Courbe mensuelle", "Curva mensal"],
+    ["Barres mensuelles", "Barras mensais"],
+    ["Impact net par categorie", "Impacto líquido por categoria"],
+    ["Impact net par catégorie", "Impacto líquido por categoria"],
+    ["Rentabilite par mission", "Rentabilidade por missão"],
+    ["Rentabilité par mission", "Rentabilidade por missão"],
+    ["Categories", "Categorias"],
+    ["Catégories", "Categorias"],
+    ["Aucune categorie", "Nenhuma categoria"],
+    ["Aucune catégorie", "Nenhuma categoria"],
+    ["Aucune mission", "Nenhuma missão"],
+    ["Aucune ligne financiere pour le moment", "Nenhuma linha financeira por enquanto"],
+    ["Aucune ligne financière pour le moment", "Nenhuma linha financeira por enquanto"],
+    ["Aucune valeur trouvee", "Nenhum valor encontrado"],
+    ["Aucune valeur trouvée", "Nenhum valor encontrado"],
+    ["Ajoutez des valeurs pour afficher ce graphique", "Adicione valores para exibir este gráfico"],
+    ["Modifiez les filtres ou ajoutez une ligne", "Altere os filtros ou adicione uma linha"],
+    ["Les categories apparaissent avec les premieres valeurs", "As categorias aparecem com os primeiros valores"],
+    ["Les catégories apparaissent avec les premières valeurs", "As categorias aparecem com os primeiros valores"],
+    ["Les missions de la page trajets seront reprises ici", "As missões da página de trajetos serão retomadas aqui"],
+    ["Toutes les lignes financieres affichees", "Todas as linhas financeiras exibidas"],
+    ["Toutes les lignes financières affichées", "Todas as linhas financeiras exibidas"],
+    ["ligne(s) affichee(s) sur", "linha(s) exibida(s) de"],
+    ["ligne(s) affichée(s) sur", "linha(s) exibida(s) de"],
+    ["valeur(s) detaillee(s)", "valor(es) detalhado(s)"],
+    ["valeur(s) détaillée(s)", "valor(es) detalhado(s)"],
+    ["valeur(s)", "valor(es)"],
+    ["Recettes", "Receitas"],
+    ["recettes", "receitas"],
+    ["Depenses", "Despesas"],
+    ["Dépenses", "Despesas"],
+    ["depenses", "despesas"],
+    ["dépenses", "despesas"],
+    ["Resultat net", "Resultado líquido"],
+    ["Résultat net", "Resultado líquido"],
+    ["Total net", "Total líquido"],
+    ["Date non renseignee", "Data não informada"],
+    ["Date non renseignée", "Data não informada"],
+    ["Facture client", "Fatura de cliente"],
+    ["Facture externe", "Fatura externa"],
+    ["Facture externe a payer", "Fatura externa a pagar"],
+    ["Facture externe à payer", "Fatura externa a pagar"],
+    ["Facture externe a recevoir", "Fatura externa a receber"],
+    ["Facture externe à recevoir", "Fatura externa a receber"],
+    ["Ligne libre", "Linha livre"],
+    ["Sans libelle", "Sem rótulo"],
+    ["Sans libellé", "Sem rótulo"],
+    ["Details de mission", "Detalhes da missão"],
+    ["Détails de mission", "Detalhes da missão"],
+    ["Aucun detail", "Nenhum detalhe"],
+    ["Aucun détail", "Nenhum detalhe"],
+    ["Ajout manuel", "Adição manual"],
+    ["Emetteur externe", "Emissor externo"],
+    ["Émetteur externe", "Emissor externo"],
+    ["Client non renseigne", "Cliente não informado"],
+    ["Client non renseigné", "Cliente não informado"],
+    ["net", "líquido"],
+    [" net", " líquido"],
+    ["benefice", "lucro"],
+    ["bénéfice", "lucro"],
+    ["perte", "perda"],
+    ["consolide", "consolidado"],
+    ["consolidé", "consolidado"],
+    ["periode", "período"],
+    ["période", "período"],
+  ],
+};
+const translatedTextNodeSources = new WeakMap();
+const translatedAttributeSources = new WeakMap();
+let currentAppLanguage = getStoredAppLanguage();
+let appLanguageObserver = null;
+let isApplyingAppLanguage = false;
 
 const rideTemplates = [
   [
@@ -1533,6 +2308,246 @@ function syncCurrentLabel() {
   }
 }
 
+function normalizeAppLanguage(language) {
+  return supportedAppLanguages.has(language) ? language : "fr";
+}
+
+function getStoredAppLanguage() {
+  try {
+    return normalizeAppLanguage(window.localStorage.getItem(languageStorageKey) || "fr");
+  } catch (error) {
+    return "fr";
+  }
+}
+
+function getAppLocale() {
+  return currentAppLanguage === "pt" ? "pt-BR" : "fr-FR";
+}
+
+function normalizeTranslationText(value) {
+  return String(value ?? "").replace(/\s+/g, " ").trim();
+}
+
+function getTranslationSourceText(value) {
+  const normalizedValue = normalizeTranslationText(value);
+  return reverseAppTranslationTable.get(normalizedValue) || normalizedValue;
+}
+
+function getTranslatedText(sourceText, language) {
+  if (language === "fr") {
+    return sourceText;
+  }
+
+  const exactTranslation = appTranslationTable[language]?.[sourceText];
+  if (exactTranslation) {
+    return exactTranslation;
+  }
+
+  return (appPartialTranslationTable[language] || []).reduce(
+    (translatedText, [sourcePart, translatedPart]) =>
+      translatedText.split(sourcePart).join(translatedPart),
+    sourceText
+  );
+}
+
+function shouldSkipTranslationNode(node) {
+  const element = node.nodeType === Node.ELEMENT_NODE ? node : node.parentElement;
+  return Boolean(element?.closest("script, style, svg, canvas, textarea"));
+}
+
+function translateTextNode(textNode, language) {
+  if (!textNode?.nodeValue || shouldSkipTranslationNode(textNode)) {
+    return;
+  }
+
+  const normalizedValue = normalizeTranslationText(textNode.nodeValue);
+  if (!normalizedValue) {
+    return;
+  }
+
+  const sourceText =
+    translatedTextNodeSources.get(textNode) || getTranslationSourceText(normalizedValue);
+  translatedTextNodeSources.set(textNode, sourceText);
+
+  const translatedText = getTranslatedText(sourceText, language);
+  if (translatedText === normalizedValue) {
+    return;
+  }
+
+  const leadingSpace = textNode.nodeValue.match(/^\s*/)?.[0] || "";
+  const trailingSpace = textNode.nodeValue.match(/\s*$/)?.[0] || "";
+  textNode.nodeValue = `${leadingSpace}${translatedText}${trailingSpace}`;
+}
+
+function translateElementAttributes(element, language) {
+  if (!(element instanceof Element) || shouldSkipTranslationNode(element)) {
+    return;
+  }
+
+  ["placeholder", "aria-label", "title", "alt"].forEach((attributeName) => {
+    if (!element.hasAttribute(attributeName)) {
+      return;
+    }
+
+    const attributeValue = element.getAttribute(attributeName) || "";
+    const normalizedValue = normalizeTranslationText(attributeValue);
+    if (!normalizedValue) {
+      return;
+    }
+
+    const sourceMap = translatedAttributeSources.get(element) || {};
+    const sourceText = sourceMap[attributeName] || getTranslationSourceText(normalizedValue);
+    sourceMap[attributeName] = sourceText;
+    translatedAttributeSources.set(element, sourceMap);
+
+    const translatedValue = getTranslatedText(sourceText, language);
+    if (translatedValue !== attributeValue) {
+      element.setAttribute(attributeName, translatedValue);
+    }
+  });
+}
+
+function translateNodeTree(rootNode, language) {
+  if (!rootNode || shouldSkipTranslationNode(rootNode)) {
+    return;
+  }
+
+  if (rootNode.nodeType === Node.TEXT_NODE) {
+    translateTextNode(rootNode, language);
+    return;
+  }
+
+  if (!(rootNode instanceof Element) && rootNode !== document.body) {
+    return;
+  }
+
+  if (rootNode instanceof Element) {
+    translateElementAttributes(rootNode, language);
+  }
+
+  const textWalker = document.createTreeWalker(rootNode, NodeFilter.SHOW_TEXT, {
+    acceptNode: (node) =>
+      shouldSkipTranslationNode(node) ? NodeFilter.FILTER_REJECT : NodeFilter.FILTER_ACCEPT,
+  });
+  let textNode = textWalker.nextNode();
+  while (textNode) {
+    translateTextNode(textNode, language);
+    textNode = textWalker.nextNode();
+  }
+
+  const attributeNodes =
+    rootNode instanceof Element
+      ? [rootNode, ...rootNode.querySelectorAll("[placeholder], [aria-label], [title], [alt]")]
+      : Array.from(document.querySelectorAll("[placeholder], [aria-label], [title], [alt]"));
+  attributeNodes.forEach((element) => translateElementAttributes(element, language));
+}
+
+function updateLanguageSwitcherState(language) {
+  document.querySelectorAll("[data-language-option]").forEach((button) => {
+    const isActive = button.getAttribute("data-language-option") === language;
+    button.classList.toggle("active", isActive);
+    button.setAttribute("aria-pressed", String(isActive));
+  });
+}
+
+function applyAppLanguage(language = currentAppLanguage, rootNode = document.body) {
+  currentAppLanguage = normalizeAppLanguage(language);
+  document.documentElement.lang = currentAppLanguage === "pt" ? "pt-BR" : "fr";
+  isApplyingAppLanguage = true;
+
+  const sourceTitle = getTranslationSourceText(document.title);
+  document.title = getTranslatedText(sourceTitle, currentAppLanguage);
+  translateNodeTree(rootNode, currentAppLanguage);
+  updateLanguageSwitcherState(currentAppLanguage);
+
+  isApplyingAppLanguage = false;
+}
+
+function setAppLanguage(language) {
+  currentAppLanguage = normalizeAppLanguage(language);
+
+  try {
+    window.localStorage.setItem(languageStorageKey, currentAppLanguage);
+  } catch (error) {
+    // La langue reste appliquee meme si le navigateur bloque localStorage.
+  }
+
+  buildCurrentWeekCalendar();
+  renderVehicles();
+  renderCollaborators();
+  renderInvoices();
+  applyAppLanguage(currentAppLanguage);
+  window.dispatchEvent(
+    new CustomEvent("route-pilote-language-changed", {
+      detail: { language: currentAppLanguage, locale: getAppLocale() },
+    })
+  );
+}
+
+function mountLanguageSwitcher() {
+  const quickNavShell = document.querySelector(".quick-nav-shell");
+  if (!quickNavShell || quickNavShell.querySelector(".language-switcher")) {
+    return;
+  }
+
+  const switcher = document.createElement("div");
+  switcher.className = "language-switcher";
+  switcher.setAttribute("role", "group");
+  switcher.setAttribute("aria-label", "Changer la langue");
+  switcher.innerHTML = `
+    <span class="language-switcher-label">Langue</span>
+    <div class="language-switcher-options">
+      <button class="language-switch-option" type="button" data-language-option="fr" aria-pressed="false" title="Français">FR</button>
+      <button class="language-switch-option" type="button" data-language-option="pt" aria-pressed="false" title="Português BR">PT</button>
+    </div>
+  `;
+
+  switcher.addEventListener("click", (event) => {
+    const option = event.target instanceof Element ? event.target.closest("[data-language-option]") : null;
+    if (!option) {
+      return;
+    }
+
+    setAppLanguage(option.getAttribute("data-language-option"));
+  });
+
+  quickNavShell.insertBefore(switcher, quickNavShell.firstChild);
+  updateLanguageSwitcherState(currentAppLanguage);
+}
+
+function startAppLanguageObserver() {
+  if (appLanguageObserver || !document.body) {
+    return;
+  }
+
+  appLanguageObserver = new MutationObserver((mutations) => {
+    if (isApplyingAppLanguage || currentAppLanguage === "fr") {
+      return;
+    }
+
+    mutations.forEach((mutation) => {
+      if (mutation.type === "characterData") {
+        translateTextNode(mutation.target, currentAppLanguage);
+        return;
+      }
+
+      if (mutation.type === "attributes") {
+        translateElementAttributes(mutation.target, currentAppLanguage);
+        return;
+      }
+
+      mutation.addedNodes.forEach((node) => translateNodeTree(node, currentAppLanguage));
+    });
+  });
+  appLanguageObserver.observe(document.body, {
+    attributeFilter: ["alt", "aria-label", "placeholder", "title"],
+    attributes: true,
+    characterData: true,
+    childList: true,
+    subtree: true,
+  });
+}
+
 function buildCurrentWeekCalendar() {
   if (!calendarWeek) {
     return;
@@ -1567,8 +2582,13 @@ function buildCurrentWeekCalendar() {
       const currentDate = new Date(today);
       currentDate.setDate(today.getDate() + index);
 
-      const weekday = capitalizeLabel(calendarWeekdayFormatter.format(currentDate));
-      const displayDate = calendarDayFormatter.format(currentDate);
+      const weekday = capitalizeLabel(
+        new Intl.DateTimeFormat(getAppLocale(), { weekday: "long" }).format(currentDate)
+      );
+      const displayDate = new Intl.DateTimeFormat(getAppLocale(), {
+        day: "numeric",
+        month: "long",
+      }).format(currentDate);
       const todayBadge = index === 0 ? '<span class="today-badge">Aujourd\'hui</span>' : "";
 
       const tripsMarkup = rides
@@ -1855,7 +2875,11 @@ function formatVehicleRentalEndDate(rentalEndDate) {
     return normalizedDate;
   }
 
-  return rentalEndDateFormatter.format(displayDate);
+  return new Intl.DateTimeFormat(getAppLocale(), {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  }).format(displayDate);
 }
 
 function getVehicleTypeClass(vehicleType) {
@@ -4077,7 +5101,12 @@ function normalizeInvoiceAmount(value) {
 }
 
 function formatInvoiceAmount(value) {
-  return invoiceCurrencyFormatter.format(normalizeInvoiceAmount(value));
+  return new Intl.NumberFormat(getAppLocale(), {
+    style: "currency",
+    currency: "EUR",
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(normalizeInvoiceAmount(value));
 }
 
 function formatInvoiceDate(value) {
@@ -4091,7 +5120,11 @@ function formatInvoiceDate(value) {
     return normalizedDate;
   }
 
-  return invoiceDateFormatter.format(displayDate);
+  return new Intl.DateTimeFormat(getAppLocale(), {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  }).format(displayDate);
 }
 
 function getStoredInvoices() {
@@ -6546,6 +7579,8 @@ if (invoicePreview) {
 }
 
 async function initializeApp() {
+  mountLanguageSwitcher();
+  startAppLanguageObserver();
   syncCurrentLabel();
   buildCurrentWeekCalendar();
   bootstrapLocalReferenceData();
@@ -6562,12 +7597,21 @@ async function initializeApp() {
   resetInvoiceForm();
   syncInvoiceTypeFields();
   renderInvoices();
+  applyAppLanguage(currentAppLanguage);
   window.dispatchEvent(new CustomEvent("route-pilote-app-data-ready"));
 }
 
 window.syncAppDataToServer = syncAppDataToServer;
 window.getLocalAppSnapshot = getLocalAppSnapshot;
 window.applyRemoteAppData = applyRemoteAppData;
+window.routePiloteLanguage = {
+  get: () => currentAppLanguage,
+  locale: getAppLocale,
+  set: setAppLanguage,
+  translate: () => applyAppLanguage(currentAppLanguage),
+  translateText: (value) =>
+    getTranslatedText(getTranslationSourceText(normalizeTranslationText(value)), currentAppLanguage),
+};
 
 // API minimale pour que les pages independantes partagent les memes donnees.
 window.routePiloteSharedData = {

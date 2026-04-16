@@ -127,6 +127,67 @@ button {
 .quick-nav-shell {
   display: flex;
   justify-content: flex-end;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.language-switcher {
+  flex: 0 0 auto;
+  min-width: 112px;
+  padding: 8px;
+  border: 1px solid rgba(29, 78, 99, 0.14);
+  border-radius: 22px;
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.78), rgba(248, 243, 234, 0.9));
+  box-shadow: 0 14px 26px rgba(29, 78, 99, 0.08);
+}
+
+.language-switcher-label {
+  display: block;
+  padding: 0 8px 6px;
+  color: var(--navy);
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.language-switcher-options {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 5px;
+}
+
+.language-switch-option {
+  min-height: 34px;
+  border: 1px solid transparent;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.58);
+  color: rgba(28, 41, 49, 0.7);
+  font-family: "Space Grotesk", "Segoe UI", sans-serif;
+  font-size: 0.82rem;
+  font-weight: 800;
+  cursor: pointer;
+  transition:
+    transform 0.2s ease,
+    border-color 0.2s ease,
+    background 0.2s ease,
+    color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.language-switch-option:hover,
+.language-switch-option:focus-visible {
+  transform: translateY(-1px);
+  border-color: rgba(29, 78, 99, 0.18);
+  color: var(--navy);
+  outline: none;
+}
+
+.language-switch-option.active {
+  background: rgba(29, 78, 99, 0.92);
+  color: #fffaf2;
+  box-shadow: 0 10px 18px rgba(29, 78, 99, 0.14);
 }
 
 .nav-menu {
@@ -416,13 +477,30 @@ button {
 }
 
 .summary-item {
+  min-width: 0;
   min-height: 128px;
   display: grid;
   align-content: space-between;
+  overflow: hidden;
 }
 
 .summary-item strong {
+  display: block;
+  max-width: 100%;
   font-size: clamp(1.8rem, 4vw, 2.4rem);
+  line-height: 1.05;
+  overflow-wrap: anywhere;
+}
+
+#finance-income-summary,
+#finance-expense-summary,
+#finance-balance-summary,
+#finance-pending-summary {
+  font-size: clamp(1.35rem, 2.05vw, 1.65rem);
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  overflow-wrap: normal;
+  font-variant-numeric: tabular-nums;
 }
 
 .invoice-summary-strip .summary-item {
@@ -3808,6 +3886,26 @@ button {
     top: calc(8px + env(safe-area-inset-top));
     z-index: 40;
     margin-inline: -2px;
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: start;
+    gap: 10px;
+  }
+
+  .language-switcher {
+    min-width: 86px;
+    padding: 7px;
+    border-radius: 18px;
+  }
+
+  .language-switcher-label {
+    display: none;
+  }
+
+  .language-switch-option {
+    min-height: 44px;
+    border-radius: 13px;
+    font-size: 0.78rem;
   }
 
   .nav-trigger {

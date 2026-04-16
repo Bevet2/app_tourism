@@ -317,8 +317,16 @@ if (planningBoard || tripList || tripDetail || operationsFinanceWorkspace) {
     return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
   }
 
+  function getOperationsLanguage() {
+    return typeof window.routePiloteLanguage?.get === "function" ? window.routePiloteLanguage.get() : "fr";
+  }
+
+  function getOperationsLocale() {
+    return typeof window.routePiloteLanguage?.locale === "function" ? window.routePiloteLanguage.locale() : "fr-FR";
+  }
+
   function formatCurrency(value, decimals = 0) {
-    return new Intl.NumberFormat("fr-FR", {
+    return new Intl.NumberFormat(getOperationsLocale(), {
       style: "currency",
       currency: "EUR",
       minimumFractionDigits: decimals,
@@ -327,7 +335,7 @@ if (planningBoard || tripList || tripDetail || operationsFinanceWorkspace) {
   }
 
   function formatDistance(value) {
-    return `${new Intl.NumberFormat("fr-FR").format(value)} km`;
+    return `${new Intl.NumberFormat(getOperationsLocale()).format(value)} km`;
   }
 
   function formatDuration(value) {
@@ -341,7 +349,7 @@ if (planningBoard || tripList || tripDetail || operationsFinanceWorkspace) {
   }
 
   function formatDay(dateKey, short = false) {
-    return new Intl.DateTimeFormat("fr-FR", {
+    return new Intl.DateTimeFormat(getOperationsLocale(), {
       weekday: short ? "short" : "long",
       day: "numeric",
       month: short ? "short" : "long",
@@ -352,12 +360,14 @@ if (planningBoard || tripList || tripDetail || operationsFinanceWorkspace) {
     const start = getStartOfWeek(date);
     const end = new Date(start);
     end.setDate(start.getDate() + 6);
-    const formatter = new Intl.DateTimeFormat("fr-FR", { day: "numeric", month: "long" });
-    return `Semaine du ${formatter.format(start)} au ${formatter.format(end)}`;
+    const formatter = new Intl.DateTimeFormat(getOperationsLocale(), { day: "numeric", month: "long" });
+    return getOperationsLanguage() === "pt"
+      ? `Semana de ${formatter.format(start)} a ${formatter.format(end)}`
+      : `Semaine du ${formatter.format(start)} au ${formatter.format(end)}`;
   }
 
   function monthLabel(date = planningCalendarMonthCursor) {
-    return new Intl.DateTimeFormat("fr-FR", {
+    return new Intl.DateTimeFormat(getOperationsLocale(), {
       month: "long",
       year: "numeric",
     }).format(normalizeCalendarDate(date));
@@ -2593,6 +2603,14 @@ if (planningBoard || tripList || tripDetail || operationsFinanceWorkspace) {
     window.dispatchEvent(new CustomEvent("route-pilote-operations-updated"));
   }
 
+  function applyOperationsLanguage() {
+    if (typeof window.routePiloteLanguage?.get !== "function" || window.routePiloteLanguage.get() === "fr") {
+      return;
+    }
+
+    window.routePiloteLanguage.translate();
+  }
+
   function pricingSnapshotForMission(missionDraft) {
     const currentAssignments = assignments();
     const catalog = vehicleCatalog();
@@ -2909,7 +2927,7 @@ if (planningBoard || tripList || tripDetail || operationsFinanceWorkspace) {
               data-calendar-day="${dayKey}"
               aria-label="Ouvrir la semaine du ${formatDay(dayKey)}"
             >
-              <span>${new Intl.DateTimeFormat("fr-FR", { weekday: "short" }).format(dayDate)}</span>
+              <span>${new Intl.DateTimeFormat(getOperationsLocale(), { weekday: "short" }).format(dayDate)}</span>
               <strong>${dayDate.getDate()}</strong>
             </button>
             <button
@@ -3009,7 +3027,7 @@ if (planningBoard || tripList || tripDetail || operationsFinanceWorkspace) {
                         <strong>${formatDay(day, true)}</strong>
                         ${isToday ? '<span class="today-badge">Aujourd\'hui</span>' : ""}
                       </div>
-                      <span class="calendar-day-date">${new Intl.DateTimeFormat("fr-FR", {
+                      <span class="calendar-day-date">${new Intl.DateTimeFormat(getOperationsLocale(), {
                         day: "numeric",
                         month: "long",
                       }).format(new Date(`${day}T00:00:00`))}</span>
@@ -3351,6 +3369,7 @@ if (planningBoard || tripList || tripDetail || operationsFinanceWorkspace) {
     }
 
     publishOperationsFinanceData();
+    applyOperationsLanguage();
   }
 
   document.addEventListener("change", (event) => {
@@ -3617,6 +3636,8 @@ if (planningBoard || tripList || tripDetail || operationsFinanceWorkspace) {
     void setupMissionAddressAutocompletes();
     renderOperations();
   }
+
+  window.addEventListener("route-pilote-language-changed", renderOperations);
 
   if (window.routePiloteAppReadyPromise && typeof window.routePiloteAppReadyPromise.finally === "function") {
     window.routePiloteAppReadyPromise.finally(startOperationsApp);

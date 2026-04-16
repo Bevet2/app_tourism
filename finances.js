@@ -141,17 +141,48 @@
     return /^\d{4}-\d{2}-\d{2}$/.test(text) ? text : "";
   }
 
+  function getFinanceLocale() {
+    return typeof window.routePiloteLanguage?.locale === "function" ? window.routePiloteLanguage.locale() : "fr-FR";
+  }
+
+  function translateFinanceText(value) {
+    const text = String(value ?? "");
+    const translator = window.routePiloteLanguage?.translateText;
+    return typeof translator === "function" ? translator(text) : text;
+  }
+
+  function categoryLabel(category) {
+    return translateFinanceText(categoryLabels[normalizeCategory(category)] || categoryLabels.other);
+  }
+
+  function statusLabel(status) {
+    return translateFinanceText(statusLabels[normalizeStatus(status)] || statusLabels.validated);
+  }
+
+  function chartModeLabel(mode) {
+    return translateFinanceText(chartModeLabels[normalizeChartMode(mode)] || chartModeLabels.line);
+  }
+
   function formatCurrency(value) {
-    return currencyFormatter.format(toNumber(value));
+    return new Intl.NumberFormat(getFinanceLocale(), {
+      style: "currency",
+      currency: "EUR",
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(toNumber(value));
   }
 
   function formatDate(value) {
     const dateKey = normalizeDate(value);
     if (!dateKey) {
-      return "Date non renseignee";
+      return translateFinanceText("Date non renseignee");
     }
 
-    return dateFormatter.format(new Date(`${dateKey}T00:00:00`));
+    return new Intl.DateTimeFormat(getFinanceLocale(), {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+    }).format(new Date(`${dateKey}T00:00:00`));
   }
 
   function readStoredArray(storageKey) {
@@ -464,39 +495,44 @@
 
   function setFinanceFormMode() {
     if (financeFormKicker) {
-      financeFormKicker.textContent =
+      financeFormKicker.textContent = translateFinanceText(
         editingFinanceMode === "override"
           ? "Ajuster une valeur"
           : editingFinanceEntryId
             ? "Modifier la ligne"
-            : "Nouvelle ligne";
+            : "Nouvelle ligne"
+      );
     }
 
     if (financeFormTitle) {
-      financeFormTitle.textContent =
+      financeFormTitle.textContent = translateFinanceText(
         editingFinanceMode === "override"
           ? "Ajuster la valeur de mission"
           : editingFinanceEntryId
             ? "Modifier la ligne de finance"
-            : "Ajouter une ligne de finance";
+            : "Ajouter une ligne de finance"
+      );
     }
 
     if (submitFinanceFormButton) {
-      submitFinanceFormButton.textContent =
+      submitFinanceFormButton.textContent = translateFinanceText(
         editingFinanceMode === "override" || editingFinanceEntryId
           ? "Enregistrer les modifications"
-          : "Enregistrer la ligne";
+          : "Enregistrer la ligne"
+      );
     }
 
     if (resetFinanceFormButton) {
-      resetFinanceFormButton.textContent =
-        editingFinanceMode === "override" || editingFinanceEntryId ? "Revenir aux valeurs" : "Effacer";
+      resetFinanceFormButton.textContent = translateFinanceText(
+        editingFinanceMode === "override" || editingFinanceEntryId ? "Revenir aux valeurs" : "Effacer"
+      );
     }
 
     if (deleteFinanceEntryButton) {
       deleteFinanceEntryButton.hidden = !editingFinanceEntryId;
-      deleteFinanceEntryButton.textContent =
-        editingFinanceMode === "override" ? "Retirer l'ajustement" : "Supprimer";
+      deleteFinanceEntryButton.textContent = translateFinanceText(
+        editingFinanceMode === "override" ? "Retirer l'ajustement" : "Supprimer"
+      );
     }
   }
 
@@ -828,23 +864,27 @@
     }
 
     if (totalCount === 0) {
-      financeFilterSummary.textContent = "Aucune ligne financiere pour le moment";
+      financeFilterSummary.textContent = translateFinanceText("Aucune ligne financiere pour le moment");
       return;
     }
 
     financeFilterSummary.textContent =
       visibleCount === totalCount
-        ? "Toutes les lignes financieres affichees"
-        : `${visibleCount} ligne(s) affichee(s) sur ${totalCount}`;
+        ? translateFinanceText("Toutes les lignes financieres affichees")
+        : translateFinanceText(`${visibleCount} ligne(s) affichee(s) sur ${totalCount}`);
   }
 
   function getNetTooltipText(label, net, options = {}) {
-    const safeLabel = label || "Valeur";
+    const safeLabel = translateFinanceText(label || "Valeur");
     const numericNet = toNumber(net);
-    const directionLabel = numericNet >= 0 ? "benefice" : "perte";
+    const directionLabel = translateFinanceText(numericNet >= 0 ? "benefice" : "perte");
     const details = [
-      Number.isFinite(options.income) ? `recettes ${formatCurrency(options.income)}` : "",
-      Number.isFinite(options.expense) ? `depenses ${formatCurrency(options.expense)}` : "",
+      Number.isFinite(options.income)
+        ? `${translateFinanceText("recettes")} ${formatCurrency(options.income)}`
+        : "",
+      Number.isFinite(options.expense)
+        ? `${translateFinanceText("depenses")} ${formatCurrency(options.expense)}`
+        : "",
     ]
       .filter(Boolean)
       .join(" / ");
@@ -860,7 +900,10 @@
   }
 
   function getMonthLabel(monthKey) {
-    return monthFormatter.format(new Date(`${monthKey}-01T00:00:00`)).replace(".", "");
+    return new Intl.DateTimeFormat(getFinanceLocale(), {
+      month: "short",
+      year: "2-digit",
+    }).format(new Date(`${monthKey}-01T00:00:00`)).replace(".", "");
   }
 
   function getTimelineBuckets(rows) {
@@ -916,15 +959,15 @@
     ];
 
     return `
-      <div class="finance-market-chart-controls" aria-label="Changer de graphique">
+      <div class="finance-market-chart-controls" aria-label="${escapeText(translateFinanceText("Changer de graphique"))}">
         ${buttons
           .map(
             (button) => `
               <button
                 class="finance-market-chart-toggle ${button.mode === currentFinanceChartMode ? "active" : ""}"
                 type="button"
-                title="${escapeText(button.label)}"
-                aria-label="${escapeText(button.label)}"
+                title="${escapeText(translateFinanceText(button.label))}"
+                aria-label="${escapeText(translateFinanceText(button.label))}"
                 data-finance-chart-mode="${escapeText(button.mode)}"
               >
                 <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true">${button.icon}</svg>
@@ -959,7 +1002,9 @@
 
     return `
       <div class="finance-market-chart-frame">
-        <svg class="finance-market-chart-svg" viewBox="0 0 ${width} ${height}" role="img" aria-label="Resultat net par mois">
+        <svg class="finance-market-chart-svg" viewBox="0 0 ${width} ${height}" role="img" aria-label="${escapeText(
+          translateFinanceText("Resultat net par mois")
+        )}">
           ${gridValues
             .map(
               (gridValue) => `
@@ -1043,18 +1088,18 @@
           ${
             categoryBuckets.length
               ? categoryBuckets
-                  .map((bucket) => {
-                    const width = Math.max(5, (Math.abs(bucket.net) / maxAbs) * 100);
-                    const tooltip = getNetTooltipText(categoryLabels[bucket.category], bucket.net, bucket);
+                .map((bucket) => {
+                  const width = Math.max(5, (Math.abs(bucket.net) / maxAbs) * 100);
+                  const tooltip = getNetTooltipText(categoryLabel(bucket.category), bucket.net, bucket);
 
-                    return `
-                      <article class="finance-bar-chart-row">
-                        <div class="finance-bar-chart-copy">
-                          <strong>${escapeText(categoryLabels[bucket.category])}</strong>
-                          <span>Recettes ${escapeText(formatCurrency(bucket.income))} / depenses ${escapeText(
-                            formatCurrency(bucket.expense)
-                          )}</span>
-                        </div>
+                  return `
+                    <article class="finance-bar-chart-row">
+                      <div class="finance-bar-chart-copy">
+                        <strong>${escapeText(categoryLabel(bucket.category))}</strong>
+                        <span>${escapeText(translateFinanceText("Recettes"))} ${escapeText(
+                          formatCurrency(bucket.income)
+                        )} / ${escapeText(translateFinanceText("depenses"))} ${escapeText(formatCurrency(bucket.expense))}</span>
+                      </div>
                         <div class="finance-bar-chart-track">
                           <span
                             class="finance-bar-chart-fill ${bucket.net < 0 ? "negative" : "positive"}"
@@ -1070,7 +1115,11 @@
                     `;
                   })
                   .join("")
-              : '<article class="finance-empty-state"><strong>Aucune categorie</strong><p>Ajoutez des valeurs pour afficher ce graphique.</p></article>'
+              : `<article class="finance-empty-state"><strong>${escapeText(
+                  translateFinanceText("Aucune categorie")
+                )}</strong><p>${escapeText(
+                  translateFinanceText("Ajoutez des valeurs pour afficher ce graphique.")
+                )}</p></article>`
           }
         </div>
         <div class="finance-market-hover-tooltip" hidden></div>
@@ -1119,8 +1168,8 @@
     return `
       <section class="finance-market-side-block">
         <div class="finance-chart-head">
-          <h5>Categories</h5>
-          <p class="finance-chart-note">Impact net par categorie</p>
+          <h5>${escapeText(translateFinanceText("Categories"))}</h5>
+          <p class="finance-chart-note">${escapeText(translateFinanceText("Impact net par categorie"))}</p>
         </div>
         <div class="finance-category-chart">
           ${
@@ -1132,8 +1181,8 @@
                     return `
                       <article class="finance-category-row">
                         <div class="finance-category-copy">
-                          <strong>${escapeText(categoryLabels[bucket.category])}</strong>
-                          <span>${escapeText(formatCurrency(bucket.net))} net</span>
+                          <strong>${escapeText(categoryLabel(bucket.category))}</strong>
+                          <span>${escapeText(formatCurrency(bucket.net))} ${escapeText(translateFinanceText("net"))}</span>
                         </div>
                         <div class="finance-category-track">
                           <span class="finance-category-track-fill" style="width:${width.toFixed(2)}%"></span>
@@ -1143,7 +1192,11 @@
                     `;
                   })
                   .join("")
-              : '<article class="finance-empty-state"><strong>Aucune categorie</strong><p>Les categories apparaissent avec les premieres valeurs.</p></article>'
+              : `<article class="finance-empty-state"><strong>${escapeText(
+                  translateFinanceText("Aucune categorie")
+                )}</strong><p>${escapeText(
+                  translateFinanceText("Les categories apparaissent avec les premieres valeurs.")
+                )}</p></article>`
           }
         </div>
       </section>
@@ -1168,8 +1221,8 @@
     return `
       <section class="finance-market-side-block">
         <div class="finance-chart-head">
-          <h5>Mission</h5>
-          <p class="finance-chart-note">Rentabilite par mission</p>
+          <h5>${escapeText(translateFinanceText("Mission"))}</h5>
+          <p class="finance-chart-note">${escapeText(translateFinanceText("Rentabilite par mission"))}</p>
         </div>
         <div class="finance-mission-performance">
           ${
@@ -1180,8 +1233,8 @@
                     return `
                       <article class="finance-mission-performance-row">
                         <div class="finance-mission-performance-copy">
-                          <strong>${escapeText(mission.code || "Mission")}</strong>
-                          <span>${escapeText(mission.label || "Sans libelle")}</span>
+                          <strong>${escapeText(mission.code || translateFinanceText("Mission"))}</strong>
+                          <span>${escapeText(translateFinanceText(mission.label || "Sans libelle"))}</span>
                         </div>
                         <div class="finance-mission-performance-bar">
                           <span
@@ -1196,7 +1249,11 @@
                     `;
                   })
                   .join("")
-              : '<article class="finance-empty-state"><strong>Aucune mission</strong><p>Les missions de la page trajets seront reprises ici.</p></article>'
+              : `<article class="finance-empty-state"><strong>${escapeText(
+                  translateFinanceText("Aucune mission")
+                )}</strong><p>${escapeText(
+                  translateFinanceText("Les missions de la page trajets seront reprises ici.")
+                )}</p></article>`
           }
         </div>
       </section>
@@ -1224,20 +1281,23 @@
           : renderTimelineChart(timelineBuckets);
 
     financeDashboard.innerHTML = `
-      <section class="finance-market-card" aria-label="Analyse financiere">
+      <section class="finance-market-card" aria-label="${escapeText(translateFinanceText("Analyse financiere"))}">
         <div class="finance-market-head">
           <div>
-            <p class="detail-kicker">Analyse</p>
-            <h4>Resultat net et tendance</h4>
+            <p class="detail-kicker">${escapeText(translateFinanceText("Analyse"))}</p>
+            <h4>${escapeText(translateFinanceText("Resultat net et tendance"))}</h4>
             <p class="finance-market-subtitle">
-              Vue consolidee des factures, missions et lignes ajoutees. Les montants en attente restent
-              visibles sans etre caches dans les totaux.
+              ${escapeText(
+                translateFinanceText(
+                  "Vue consolidee des factures, missions et lignes ajoutees. Les montants en attente restent visibles sans etre caches dans les totaux."
+                )
+              )}
             </p>
           </div>
           <div class="finance-market-price ${balance < 0 ? "negative" : "positive"}">
-            <span>Resultat net</span>
+            <span>${escapeText(translateFinanceText("Resultat net"))}</span>
             <strong>${escapeText(formatCurrency(balance))}</strong>
-            <small>${escapeText(chartModeLabels[currentFinanceChartMode])}</small>
+            <small>${escapeText(chartModeLabel(currentFinanceChartMode))}</small>
           </div>
         </div>
 
@@ -1245,9 +1305,11 @@
           <div class="finance-market-chart-meta">
             <div class="finance-market-chart-meta-main">
               <div class="finance-market-legend">
-                <span class="finance-market-legend-item total">Total net</span>
+                <span class="finance-market-legend-item total">${escapeText(translateFinanceText("Total net"))}</span>
               </div>
-              <p class="finance-market-scale">Benefice ou perte, consolide par periode.</p>
+              <p class="finance-market-scale">${escapeText(
+                translateFinanceText("Benefice ou perte, consolide par periode.")
+              )}</p>
             </div>
             ${renderChartModeSwitch()}
           </div>
@@ -1256,22 +1318,22 @@
 
         <div class="finance-market-summary-grid">
           <article class="finance-insight-card">
-            <span>Recettes</span>
+            <span>${escapeText(translateFinanceText("Recettes"))}</span>
             <strong class="positive">${escapeText(formatCurrency(totals.income))}</strong>
           </article>
           <article class="finance-insight-card">
-            <span>Depenses</span>
+            <span>${escapeText(translateFinanceText("Depenses"))}</span>
             <strong class="negative">${escapeText(formatCurrency(totals.expense))}</strong>
           </article>
         </div>
 
         <div class="finance-market-summary-grid">
           <article class="finance-insight-card">
-            <span>En attente</span>
+            <span>${escapeText(translateFinanceText("En attente"))}</span>
             <strong>${escapeText(formatCurrency(totals.pending))}</strong>
           </article>
           <article class="finance-insight-card">
-            <span>Missions rentables</span>
+            <span>${escapeText(translateFinanceText("Missions rentables"))}</span>
             <strong>${escapeText(String(profitableMissions))}/${escapeText(String(missionGroups.length))}</strong>
           </article>
         </div>
@@ -1296,12 +1358,14 @@
 
   function getRowSourceLabel(row) {
     if (row.sourceType === "invoice") {
-      return normalizeCategory(row.category) === "external_invoices" ? "Facture externe" : "Facture client";
+      return translateFinanceText(
+        normalizeCategory(row.category) === "external_invoices" ? "Facture externe" : "Facture client"
+      );
     }
     if (row.sourceType === "mission") {
-      return "Mission";
+      return translateFinanceText("Mission");
     }
-    return "Ligne libre";
+    return translateFinanceText("Ligne libre");
   }
 
   function getRowSortDate(row) {
@@ -1332,9 +1396,11 @@
     const actionMarkup = row.editable
       ? `<button class="secondary-action finance-ledger-action" type="button" data-finance-row-key="${escapeText(
           row.rowKey
-        )}">${row.sourceType === "mission" ? "Ajuster" : "Modifier"}</button>`
+        )}">${escapeText(translateFinanceText(row.sourceType === "mission" ? "Ajuster" : "Modifier"))}</button>`
       : row.linkHref
-        ? `<a class="secondary-action finance-ledger-action" href="${escapeText(row.linkHref)}">Voir</a>`
+        ? `<a class="secondary-action finance-ledger-action" href="${escapeText(row.linkHref)}">${escapeText(
+            translateFinanceText("Voir")
+          )}</a>`
         : "";
     const rowDate = getRowDateKey(row);
 
@@ -1342,13 +1408,13 @@
       <article class="finance-ledger-row ${compact ? "compact" : ""}">
         <div class="finance-ledger-primary">
           <span class="finance-ledger-source">${escapeText(getRowSourceLabel(row))}</span>
-          <strong>${escapeText(row.label || "Valeur")}</strong>
-          <p>${escapeText(row.description || row.note || "Aucun detail")}</p>
+          <strong>${escapeText(translateFinanceText(row.label || "Valeur"))}</strong>
+          <p>${escapeText(translateFinanceText(row.description || row.note || "Aucun detail"))}</p>
         </div>
         <div class="finance-ledger-meta">
-          <span class="finance-ledger-chip">${escapeText(categoryLabels[normalizeCategory(row.category)])}</span>
+          <span class="finance-ledger-chip">${escapeText(categoryLabel(row.category))}</span>
           <span class="finance-ledger-chip finance-ledger-chip-${escapeText(normalizeStatus(row.status))}">
-            ${escapeText(statusLabels[normalizeStatus(row.status)])}
+            ${escapeText(statusLabel(row.status))}
           </span>
           ${rowDate ? `<span class="finance-ledger-date">${escapeText(formatDate(rowDate))}</span>` : ""}
         </div>
@@ -1372,13 +1438,15 @@
           aria-expanded="${isExpanded ? "true" : "false"}"
         >
           <div class="finance-ledger-primary">
-            <span class="finance-ledger-source">Mission</span>
-            <strong>${escapeText(summaryRow.code || "Mission")} - ${escapeText(summaryRow.label || "Sans libelle")}</strong>
-            <p>${escapeText(summaryRow.description || "Details de mission")}</p>
+            <span class="finance-ledger-source">${escapeText(translateFinanceText("Mission"))}</span>
+            <strong>${escapeText(summaryRow.code || translateFinanceText("Mission"))} - ${escapeText(
+              translateFinanceText(summaryRow.label || "Sans libelle")
+            )}</strong>
+            <p>${escapeText(translateFinanceText(summaryRow.description || "Details de mission"))}</p>
           </div>
           <div class="finance-ledger-mission-overview">
-            <span>Recettes ${escapeText(formatCurrency(summaryRow.income))}</span>
-            <span>Depenses ${escapeText(formatCurrency(summaryRow.expense))}</span>
+            <span>${escapeText(translateFinanceText("Recettes"))} ${escapeText(formatCurrency(summaryRow.income))}</span>
+            <span>${escapeText(translateFinanceText("Depenses"))} ${escapeText(formatCurrency(summaryRow.expense))}</span>
             <strong class="finance-ledger-value ${summaryRow.net < 0 ? "negative" : "positive"}">
               ${escapeText(formatCurrency(summaryRow.net))}
             </strong>
@@ -1387,11 +1455,11 @@
         </button>
         <div class="finance-ledger-mission-details" ${isExpanded ? "" : "hidden"}>
           <div class="finance-ledger-mission-details-head">
-            <span>${group.rows.length} valeur(s) detaillee(s)</span>
+            <span>${escapeText(translateFinanceText(`${group.rows.length} valeur(s) detaillee(s)`))}</span>
             <button class="secondary-action finance-ledger-action" type="button" data-finance-add-mission="${escapeText(
               group.id
             )}">
-              Ajouter une ligne mission
+              ${escapeText(translateFinanceText("Ajouter une ligne mission"))}
             </button>
           </div>
           <div class="finance-ledger-detail-list">
@@ -1474,13 +1542,13 @@
       <section class="finance-ledger-card">
         <div class="finance-ledger-head">
           <div>
-            <p class="detail-kicker">Valeurs</p>
-            <h4>Liste consolidee</h4>
+            <p class="detail-kicker">${escapeText(translateFinanceText("Valeurs"))}</p>
+            <h4>${escapeText(translateFinanceText("Liste consolidee"))}</h4>
           </div>
           <div class="finance-ledger-head-actions">
-            <span class="finance-section-count">${ledgerItems.length} valeur(s)</span>
+            <span class="finance-section-count">${escapeText(translateFinanceText(`${ledgerItems.length} valeur(s)`))}</span>
             <button class="panel-action finance-ledger-add" type="button" data-open-finance-entry>
-              + Ajouter une ligne
+              ${escapeText(translateFinanceText("+ Ajouter une ligne"))}
             </button>
           </div>
         </div>
@@ -1494,7 +1562,9 @@
                       : renderLedgerValueRow(item.row)
                   )
                   .join("")
-              : '<article class="finance-empty-state"><strong>Aucune valeur trouvee</strong><p>Modifiez les filtres ou ajoutez une ligne.</p></article>'
+              : `<article class="finance-empty-state"><strong>${escapeText(
+                  translateFinanceText("Aucune valeur trouvee")
+                )}</strong><p>${escapeText(translateFinanceText("Modifiez les filtres ou ajoutez une ligne."))}</p></article>`
           }
         </div>
       </section>
@@ -1717,6 +1787,11 @@
       if ([financeEntriesStorageKey, invoicesStorageKey].includes(event.key || "")) {
         renderFinances();
       }
+    });
+
+    window.addEventListener("route-pilote-language-changed", () => {
+      renderFinanceMissionOptions(clean(financeLinkedMissionInput?.value || ""));
+      renderFinances();
     });
   }
 
