@@ -1815,7 +1815,7 @@ async function fetchBundledAppSnapshot() {
 }
 
 async function bootstrapBundledAppSnapshot() {
-  if (hasMeaningfulLocalData()) {
+  if (hasRichAppData(getLocalAppSnapshot())) {
     return false;
   }
 

@@ -9,6 +9,7 @@ const rootDir = process.cwd();
 const localDbConfigPath = path.join(rootDir, "db-config.local.json");
 const schemaPath = path.join(rootDir, "database", "schema.sql");
 const seedPath = path.join(rootDir, "database", "seed.sql");
+const bundledAppStatePath = path.join(rootDir, "data", "app_state.json");
 const defaultCompanyId = "11111111-1111-1111-1111-111111111111";
 const maxJsonBodyBytes = 15 * 1024 * 1024;
 const uuidPattern =
@@ -355,6 +356,75 @@ function normalizeSharedStatePayload(payload) {
   };
 }
 
+function snapshotHasRichAppData(snapshot) {
+  return Boolean(
+    normalizeJsonArray(snapshot?.invoices).length > 1 ||
+    normalizeJsonArray(snapshot?.financeEntries).length > 0 ||
+    normalizeJsonArray(snapshot?.customMissions).length > 0
+  );
+}
+
+async function readBundledAppStateSnapshot() {
+  try {
+    const rawSnapshot = await fsp.readFile(bundledAppStatePath, "utf8");
+    const parsedSnapshot = JSON.parse(rawSnapshot);
+    return parsedSnapshot && typeof parsedSnapshot === "object" ? parsedSnapshot : null;
+  } catch (error) {
+    return null;
+  }
+}
+
+async function databaseHasRichAppData(client, companyId) {
+  const result = await client.query(
+    `SELECT
+       (SELECT COUNT(*)::int FROM invoices WHERE company_id = $1) AS invoice_count,
+       (SELECT COUNT(*)::int FROM finance_entries WHERE company_id = $1) AS finance_count,
+       COALESCE(
+         (
+           SELECT CASE
+             WHEN JSONB_TYPEOF(payload) = 'array' THEN JSONB_ARRAY_LENGTH(payload)
+             ELSE 0
+           END
+           FROM app_shared_state
+           WHERE company_id = $1
+             AND state_key = 'customMissions'
+           LIMIT 1
+         ),
+         0
+       )::int AS custom_mission_count`,
+    [companyId]
+  );
+  const row = result.rows[0] || {};
+
+  return (
+    Number(row.invoice_count || 0) > 1 ||
+    Number(row.finance_count || 0) > 0 ||
+    Number(row.custom_mission_count || 0) > 0
+  );
+}
+
+async function seedBundledAppStateSnapshot(client, companyId) {
+  const snapshot = await readBundledAppStateSnapshot();
+  if (!snapshotHasRichAppData(snapshot) || (await databaseHasRichAppData(client, companyId))) {
+    return;
+  }
+
+  const collaborators = normalizeJsonArray(snapshot.collaborators).map(normalizeCollaboratorPayload);
+  const vehicles = normalizeJsonArray(snapshot.vehicles)
+    .map(normalizeVehiclePayload)
+    .filter((vehicle) => vehicle.plate);
+  const invoices = normalizeJsonArray(snapshot.invoices)
+    .map(normalizeInvoicePayload)
+    .filter((invoice) => invoice.number);
+  const financeEntries = normalizeJsonArray(snapshot.financeEntries).map(normalizeFinanceEntryPayload);
+
+  await upsertCollaborators(client, companyId, collaborators);
+  await upsertVehicles(client, companyId, vehicles);
+  await upsertInvoices(client, companyId, invoices);
+  await upsertFinanceEntries(client, companyId, financeEntries);
+  await upsertSharedState(client, companyId, normalizeSharedStatePayload(snapshot));
+}
+
 async function ensureDatabaseInitialized() {
   if (!databaseInitPromise) {
     databaseInitPromise = (async () => {
@@ -382,6 +452,7 @@ async function ensureDatabaseInitialized() {
            ON CONFLICT (id) DO NOTHING`,
           [runtimeConfig.companyId]
         );
+        await seedBundledAppStateSnapshot(client, runtimeConfig.companyId);
       } finally {
         client.release();
       }
